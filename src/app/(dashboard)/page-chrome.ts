@@ -69,6 +69,8 @@ const WHITE_CONTENT_TOP = [
   /^\/product-catalog\/global-bond(\/|$)/, // GlobalBondAllPage, GlobalBondDetail
   /^\/product-catalog\/product$/, // StructuredProductAllPage
   /^\/product-catalog\/mutual-fund\//, // MutualFundDetail
+  /^\/product-catalog\/robo-advisory(\/|$)/, // RoboAdvisoryDetail
+  /^\/product-catalog\/definit(\/|$)/, // DefinitDetail
 ];
 
 export function usePageChrome(): PageChrome {
@@ -102,7 +104,10 @@ export function usePageChrome(): PageChrome {
     // Full Profile puts the breadcrumb inside its own sticky identity bar (and
     // pulls itself up over the layout's padding to do it), so a second one
     // above would overlap.
-    ownsMobileBreadcrumb: pathname.startsWith("/client/"),
+    ownsMobileBreadcrumb:
+      pathname.startsWith("/client/") ||
+      pathname === "/product-catalog/robo-advisory" ||
+      pathname === "/product-catalog/definit",
     contentTopIsWhite: WHITE_CONTENT_TOP.some((re) => re.test(pathname)),
   };
 }

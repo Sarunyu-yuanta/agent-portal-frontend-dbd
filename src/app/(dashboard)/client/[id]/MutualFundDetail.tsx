@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import Image from "next/image";
 import { Button } from "@sarunyu/system-one";
+import { ArrowLeftIcon, ClockIcon } from "@phosphor-icons/react";
 import {
-  ArrowLeftIcon,
-  ClockIcon,
-  HeartIcon,
-  MagnifyingGlassIcon,
-} from "@phosphor-icons/react";
-import type { MutualFundDetail as MutualFundDetailData } from "./mutual-fund-data";
+  getNavHistory,
+  type MutualFundDetail as MutualFundDetailData,
+} from "./mutual-fund-data";
+import { NAV_RANGES, NavHistoryChart, type NavRange } from "@/components/nav-history-chart";
 import { MF_ASSETS, mutualFundRiskMeterSrc } from "./mutual-fund-assets";
 import { MutualFundInvestmentPolicyModal } from "./MutualFundInvestmentPolicyModal";
 import {
@@ -20,10 +19,10 @@ import { AllocationDonut } from "@/components/allocation-donut";
 
 const DETAIL_TABS = ["ภาพรวม", "ผลตอบแทน", "สัดส่วนการลงทุน", "ข้อมูลกองทุน"] as const;
 
-const CHART_RANGES = ["YTD", "1W", "1M", "3M", "6M", "1Y", "5Y", "MAX"] as const;
+const CHART_RANGES = NAV_RANGES;
 
 type DetailTab = (typeof DETAIL_TABS)[number];
-type ChartRange = (typeof CHART_RANGES)[number];
+type ChartRange = NavRange;
 
 function RiskTag({ risk }: { risk: number }) {
   return (
@@ -121,48 +120,6 @@ function FundInfoRow({ label, value, link }: { label: string; value: ReactNode; 
   );
 }
 
-function PerformanceChart() {
-  return (
-    <div className="relative h-[227px] w-full">
-      <div className="absolute inset-x-0 bottom-0 top-3 flex flex-col justify-between">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-px w-full bg-black/[0.06]" />
-        ))}
-      </div>
-      <div className="absolute inset-x-0 bottom-2.5 flex h-[144px] items-end justify-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={MF_ASSETS.detailChartArea}
-          alt=""
-          className="absolute inset-x-0 bottom-0 h-[117px] w-full max-w-none object-fill"
-        />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={MF_ASSETS.detailChartLine}
-          alt=""
-          className="relative z-[1] h-[144px] w-full max-w-none object-fill"
-        />
-      </div>
-      <div className="absolute left-1/2 top-7 z-[2] flex -translate-x-1/2 flex-col items-center gap-1">
-        <div className="flex min-w-[48px] flex-col items-start rounded-2xl bg-white p-1.5 shadow-[0px_0px_1px_rgba(102,102,102,0.16),0px_4px_4px_rgba(102,102,102,0.12)]">
-          <p className="w-full text-center text-xs leading-4 text-black/40">3 May 2025</p>
-          <p className="w-full text-center text-sm leading-5 text-black/75">
-            55.00 <span className="text-black/40">THB</span>
-          </p>
-        </div>
-        <span className="size-3.5 rounded-full border-2 border-white bg-[#f5212d] shadow-[0px_4px_4px_rgba(28,25,23,0.03),0px_8px_8px_rgba(28,25,23,0.02)]" />
-      </div>
-      <div className="absolute inset-x-4 bottom-0 flex justify-between text-xs leading-4 text-black/40 md:inset-x-8 lg:inset-x-4">
-        {["13:30", "13:45", "14:00", "14:15", "14:30", "14:45", "15:00"].map((t) => (
-          <span key={t} className="flex-1 text-center">
-            {t}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ChartRangeSelector({
   active,
   onChange,
@@ -195,6 +152,7 @@ function ChartRangeSelector({
 
 function OverviewContent({ fund }: { fund: MutualFundDetailData }) {
   const [chartRange, setChartRange] = useState<ChartRange>("YTD");
+  const navHistory = getNavHistory(fund.id);
   const [policyModalOpen, setPolicyModalOpen] = useState(false);
   const returnRows = [
     fund.historicalReturns.slice(0, 3),
@@ -203,12 +161,22 @@ function OverviewContent({ fund }: { fund: MutualFundDetailData }) {
 
   return (
     <>
-      <div className="w-full py-5">
-        <PerformanceChart />
-        <div className="mx-auto mt-6 w-full max-w-[768px] lg:px-0">
-          <ChartRangeSelector active={chartRange} onChange={setChartRange} />
+      {/* No NAV series, no chart block — an invented line, or a range selector
+          with nothing to select over, is worse than an absent one on a page an
+          RM quotes from. */}
+      {navHistory && (
+        <div className="w-full py-5">
+          <NavHistoryChart
+            points={navHistory.points}
+            range={chartRange}
+            currency={navHistory.currency}
+            className="h-[227px] w-full"
+          />
+          <div className="mx-auto mt-6 w-full max-w-[768px] lg:px-0">
+            <ChartRangeSelector active={chartRange} onChange={setChartRange} />
+          </div>
         </div>
-      </div>
+      )}
 
       <section className="flex w-full flex-col gap-4 py-4 lg:px-0">
         <h2 className="text-base font-bold leading-6 text-black">ผลตอบแทนย้อนหลัง</h2>
@@ -562,6 +530,97 @@ export function MutualFundDetail({
 }) {
   const [activeTab, setActiveTab] = useState<DetailTab>("ภาพรวม");
 
+  // The tab bar parks directly under the identity block, so its sticky offset
+  // is that block's height — measured rather than hardcoded, since the block
+  // is taller on a phone (the fund name wraps) than on a desktop. Measuring
+  // also sidesteps a trap: `system-one`'s stylesheet is unlayered, so its
+  // plain `.top-12` outranks every `lg:top-*` in Tailwind's utilities layer.
+  // An inline `top` answers to nobody.
+  const [identityEl, setIdentityEl] = useState<HTMLDivElement | null>(null);
+  const [tabsEl, setTabsEl] = useState<HTMLDivElement | null>(null);
+  const [tabsAnchorEl, setTabsAnchorEl] = useState<HTMLDivElement | null>(null);
+  const [tabsTop, setTabsTop] = useState(0);
+  // A short tab — one table and nothing else — leaves the page too short to
+  // scroll its own tab bar up to the top: the browser clamps the scroll and
+  // you land back at the fund's NAV instead of the panel you asked for. Floor
+  // the panel at the height left under the parked bar and the room is always
+  // there.
+  const [bodyMinHeight, setBodyMinHeight] = useState(0);
+
+  useEffect(() => {
+    if (!identityEl || !tabsEl) return;
+    const main = document.querySelector("main");
+    const measure = () => {
+      // The bar parks under the identity block below `lg`; above it that block
+      // scrolls away and the bar parks at the top of `main` — see the classes
+      // on each.
+      const identityHeight = identityEl.offsetHeight;
+      const parkedAt = window.matchMedia("(min-width: 64rem)").matches
+        ? 0
+        : identityHeight;
+      setTabsTop(identityHeight);
+      setBodyMinHeight(
+        Math.max(
+          0,
+          (main?.clientHeight ?? window.innerHeight) - parkedAt - tabsEl.offsetHeight,
+        ),
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(identityEl);
+    observer.observe(tabsEl);
+    if (main) observer.observe(main);
+    return () => observer.disconnect();
+  }, [identityEl, tabsEl]);
+
+  /**
+   * How far the page is from having the tab bar parked: negative once the bar
+   * has travelled up and stuck, zero or positive while it is still below.
+   *
+   * The bar is sticky, so its own rect reads as "already at the top" the whole
+   * way down — hence the zero-height anchor right above it, which stays put in
+   * the flow and gives the distance the bar really travelled. The resting
+   * offset comes off the computed style rather than the breakpoint, so it is
+   * whatever CSS says: the identity block's height on a phone, 0 on a desktop.
+   */
+  const tabsDelta = () => {
+    const main = document.querySelector("main");
+    if (!main || !tabsEl || !tabsAnchorEl) return null;
+    const stickyTop = parseFloat(getComputedStyle(tabsEl).top) || 0;
+    return (
+      tabsAnchorEl.getBoundingClientRect().top -
+      main.getBoundingClientRect().top -
+      stickyTop
+    );
+  };
+
+  const scrollTabsIntoPlace = () => {
+    const main = document.querySelector("main");
+    const delta = tabsDelta();
+    if (!main || delta === null || Math.abs(delta) <= 0.5) return;
+    main.scrollTop += delta;
+  };
+
+  /**
+   * Switching tabs deep in a long one leaves you halfway down the new one, so
+   * bring the bar back to where it parks — but only ever upward. Read from the
+   * top of the fund the bar has not moved yet, and dragging the page down
+   * there would swallow the NAV you are looking at.
+   *
+   * When it does move, it runs twice: once now, once after the new panel has
+   * laid out. The first pass moves while the old panel is still up; if the new
+   * one is shorter the browser can clamp the scroll back, and the second pass
+   * puts it right. When nothing clamps, the second pass is a no-op.
+   */
+  const selectTab = (tab: DetailTab) => {
+    const delta = tabsDelta();
+    setActiveTab(tab);
+    if (delta === null || delta >= -0.5) return;
+    scrollTabsIntoPlace();
+    requestAnimationFrame(scrollTabsIntoPlace);
+  };
+
   useEffect(() => {
     const main = document.querySelector("main");
     if (main) {
@@ -576,27 +635,51 @@ export function MutualFundDetail({
   return (
     <div className="flex w-full flex-col pb-20 max-lg:bg-white lg:bg-[#f9fafb] lg:pt-2">
       <div className="mx-auto flex w-full max-w-[996px] flex-col gap-2 px-4 md:px-8 lg:px-0">
-        <div className="max-lg:sticky max-lg:top-0 max-lg:z-30 flex h-12 items-center gap-2 max-lg:border-b max-lg:border-black/10 max-lg:bg-white py-2 max-lg:px-0 lg:h-auto lg:min-h-[46px] lg:py-2 lg:pr-2">
+        {/* Desktop keeps its own bar above the card: there the card's title
+            block is fully visible anyway, so a back arrow parked next to the
+            content would just be a second copy of it. Below `lg` the card's
+            own title does this job instead — see the row inside it. */}
+        {/* `hidden lg:flex`, never `flex max-lg:hidden`: `system-one` ships an
+            unlayered `.flex` that outranks any `max-lg:hidden` in Tailwind's
+            utilities layer, so the bar would show at every width. */}
+        <div className="hidden min-h-[46px] items-center gap-2 py-2 pr-2 lg:flex">
           <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
             <ArrowLeftIcon size={18} />
           </Button>
           <div className="flex min-w-0 flex-1 items-center gap-1">
-            <h1 className="shrink-0 text-base font-bold leading-6 text-[#101828]">{fund.symbol}</h1>
-            <p className="hidden min-w-0 flex-1 truncate text-sm leading-5 text-[#4a5565] lg:block">
+            <p className="shrink-0 text-base font-bold leading-6 text-[#101828]">{fund.symbol}</p>
+            <p className="min-w-0 flex-1 truncate text-sm leading-5 text-[#4a5565]">
               {fund.name}
             </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <MagnifyingGlassIcon size={24} className="text-[#101828]" />
-            <HeartIcon size={24} className="text-[#101828]" />
           </div>
         </div>
 
         <div className="flex w-full flex-col lg:rounded-t-3xl lg:bg-white lg:px-14 lg:py-8 lg:shadow-[0px_0px_8px_0px_rgba(0,0,0,0.02)]">
-          <div className="flex flex-col gap-1.5 pb-3 pt-4 lg:pt-0">
-            <p className="text-lg font-bold leading-7 text-[#101828]">{fund.symbol}</p>
-            <p className="text-sm leading-5 text-[#4a5565]">{fund.name}</p>
+          {/* Below `lg` this row is the page's only header, so it carries the
+              back arrow and sticks; the full name stays behind because three
+              lines of Thai is too much to keep pinned on a phone. At `lg` the
+              arrow moves to the bar above and this goes back to being a plain
+              title. */}
+          <div
+            ref={setIdentityEl}
+            className="max-lg:sticky max-lg:top-0 max-lg:z-30 flex items-center gap-2 bg-white pt-4 lg:pt-0"
+          >
+            <Button
+              variant="plain"
+              size="icon-sm"
+              onClick={onBack}
+              aria-label="กลับ"
+              className="shrink-0 lg:hidden"
+            >
+              <ArrowLeftIcon size={18} />
+            </Button>
+            <h1 className="min-w-0 flex-1 text-lg font-bold leading-7 text-[#101828]">
+              {fund.symbol}
+            </h1>
           </div>
+          {/* `pl-9` keeps the name under the symbol rather than under the
+              arrow — the 28px button plus the row's 8px gap. */}
+          <p className="pb-3 pl-9 pt-1.5 text-sm leading-5 text-[#4a5565] lg:pl-0">{fund.name}</p>
 
           <div className="flex flex-col gap-2.5 pb-3">
             <div className="flex items-end gap-1">
@@ -624,9 +707,18 @@ export function MutualFundDetail({
             </div>
           </div>
 
+          {/* Below `lg` the strip runs edge to edge — the negative margins
+              cancel the page gutter its container paints — and scrolls
+              sideways when four Thai labels outrun a phone. */}
+          {/* Zero-height, so it costs nothing in the column — it exists only to
+              mark where the tab bar sits when it is not stuck. */}
+          <div ref={setTabsAnchorEl} aria-hidden />
           <div
-            className="sticky top-12 z-20 flex w-full overflow-x-auto border-b border-black/10 bg-white md:overflow-visible lg:top-0 lg:bg-white"
-            style={{ scrollbarWidth: "none" }}
+            ref={setTabsEl}
+            className="sticky max-lg:top-[var(--tabs-top)] lg:top-0 z-20 -mx-4 flex overflow-x-auto border-b border-black/10 bg-white md:-mx-8 md:overflow-visible lg:mx-0"
+            style={
+              { "--tabs-top": `${tabsTop}px`, scrollbarWidth: "none" } as CSSProperties
+            }
           >
             {DETAIL_TABS.map((tab) => {
               const active = activeTab === tab;
@@ -634,7 +726,7 @@ export function MutualFundDetail({
                 <button
                   key={tab}
                   type="button"
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => selectTab(tab)}
                   className={`flex shrink-0 items-center justify-center border-b-[1.5px] px-3 py-2.5 text-sm font-bold leading-5 whitespace-nowrap md:min-w-[80px] md:flex-1 md:shrink lg:min-w-[80px] lg:flex-1 ${
                     active
                       ? "border-[#0a6ee7] text-[#0a6ee7]"
@@ -647,7 +739,15 @@ export function MutualFundDetail({
             })}
           </div>
 
-          <DetailBody fund={fund} activeTab={activeTab} />
+          {/* `overflowAnchor: none` keeps Chrome's scroll anchoring out of the
+              swap — left on, it re-adjusts the scroll to hold whatever row was
+              on screen, undoing the jump we just made. */}
+          <div
+            className="flex w-full flex-col"
+            style={{ minHeight: bodyMinHeight, overflowAnchor: "none" }}
+          >
+            <DetailBody fund={fund} activeTab={activeTab} />
+          </div>
         </div>
       </div>
     </div>

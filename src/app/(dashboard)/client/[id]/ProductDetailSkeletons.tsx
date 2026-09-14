@@ -415,13 +415,19 @@ export function MutualFundDetailSkeleton() {
   return (
     <div className="flex w-full flex-col pb-20 max-lg:bg-white lg:bg-[#f9fafb] lg:pt-2">
       <div className="mx-auto flex w-full max-w-[996px] flex-col gap-2 px-4 md:px-8 lg:px-0">
-        <div className="sticky top-0 z-30 border-b border-black/10 bg-white py-2 lg:border-b-0 lg:bg-[#f9fafb] lg:py-2 lg:pr-2">
+        <div className="hidden py-2 lg:block lg:pr-2">
           <DetailHeaderSkeleton maxWidth="w-full" center={false} />
         </div>
 
         <div className="flex w-full flex-col gap-6 lg:rounded-t-2xl lg:bg-white lg:px-14 lg:py-8 lg:shadow-[0px_0px_8px_0px_rgba(0,0,0,0.02)]">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-7 w-28" />
+          {/* Symbol and name, with the back arrow alongside only below `lg` —
+              above it the arrow lives in the header bar, same as the real
+              detail. */}
+          <div className="flex flex-col gap-2 pt-4 lg:pt-0">
+            <div className="flex items-center gap-2">
+              <Skeleton className="size-7 rounded-lg shrink-0 lg:hidden" />
+              <Skeleton className="h-7 w-28" />
+            </div>
             <Skeleton className="h-4 w-full max-w-lg" />
           </div>
           <div className="flex flex-col gap-2">
@@ -432,7 +438,7 @@ export function MutualFundDetailSkeleton() {
               <Skeleton className="h-5 w-36 rounded-2xl" />
             </div>
           </div>
-          <div className="sticky top-12 z-20 flex gap-2 overflow-x-auto border-b border-black/10 bg-white pb-2 md:overflow-visible lg:top-[62px]">
+          <div className="sticky top-0 z-20 flex gap-2 overflow-x-auto border-b border-black/10 bg-white pb-2 md:overflow-visible">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-8 w-24 shrink-0 md:flex-1 md:shrink" />
             ))}

@@ -1,0 +1,368 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { Button } from "@sarunyu/system-one";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
+import { ResponsiveBreadcrumb } from "@/components/layout/ResponsiveBreadcrumb";
+import { usePrivacy } from "@/contexts/privacy-context";
+import { useClients } from "@/hooks/use-api";
+import { usePageBreadcrumb } from "../../page-breadcrumbs";
+import { ROBO_ASSETS } from "./robo-advisory-assets";
+import { ROBO_ADVISORY_PLANS, type RoboAdvisoryPlan } from "./robo-advisory-plan-data";
+import { RoboAdvisoryPlanDetailModal } from "./RoboAdvisoryPlanDetailModal";
+import { RoboRiskLevel } from "./RoboRiskLevel";
+
+const PLAN_CARD_SHADOW =
+  "0px 0px 1px rgba(102, 102, 102, 0.16), 0px 4px 4px rgba(102, 102, 102, 0.12)";
+const SECTION_SHADOW =
+  "0px 1px 2px 0px rgba(0, 0, 0, 0.1), 0px 1px 3px 1px rgba(0, 0, 0, 0.05)";
+
+/** Figma 33772:197802 — mobile hero 233×40 (2×20px lines, body-2 14px). */
+const ROBO_DETAIL_MOBILE_HERO_LINES = [
+  "คือบริการลงทุนแบบอัตโนมัติด้วย AI ที่จะช่วยให้บรรลุเป้าหมายการลงทุน",
+  "ได้อย่างง่ายดาย",
+] as const;
+
+/** Figma 33777:105237 — tablet hero body-1 16px single paragraph. */
+const ROBO_DETAIL_TABLET_HERO_DESCRIPTION =
+  "คือบริการลงทุนแบบอัตโนมัติด้วย AI ที่จะช่วยให้บรรลุเป้าหมายการลงทุนได้อย่างง่ายดาย";
+
+/** Figma 34174:773574 / 33787:149487 — back arrow + title above 996px section. */
+function DesktopBackHeader({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="flex w-full items-center gap-3 rounded-lg p-2">
+      <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="size-[34px] shrink-0 p-2">
+        <ArrowLeftIcon size={18} />
+      </Button>
+      <h1 className="shrink-0 text-lg font-bold leading-6 text-black">Robo Advisory</h1>
+    </div>
+  );
+}
+
+function StatItem({
+  iconSrc,
+  labelLines,
+  value,
+  valueClassName,
+  labelWidth,
+}: {
+  iconSrc: string;
+  labelLines: [string, string];
+  value: string;
+  valueClassName?: string;
+  labelWidth?: number;
+}) {
+  return (
+    <div className="flex min-w-0 flex-[1_0_0] flex-col items-center gap-1">
+      <div className="flex shrink-0 items-center justify-center rounded-full bg-[#eff6ff] p-2.5">
+        <Image src={iconSrc} alt="" width={20} height={20} className="size-5 shrink-0" />
+      </div>
+      <div
+        className="flex flex-col items-center gap-1 text-center"
+        style={labelWidth != null ? { width: labelWidth } : undefined}
+      >
+        <div className="text-center leading-none">
+          <p className="mb-0 text-xs font-bold leading-4 text-[#101828]">{labelLines[0]}</p>
+          <p className="text-xs font-bold leading-4 text-[#101828]">{labelLines[1]}</p>
+        </div>
+        <p className={`whitespace-nowrap text-xs leading-4 ${valueClassName ?? "text-[#4a5565]"}`}>{value}</p>
+      </div>
+    </div>
+  );
+}
+
+/** Mobile/tablet breadcrumb — px-16 mobile, px-32 tablet (layout owns this route). */
+function RoboAdvisoryMobileBreadcrumb() {
+  const pathname = usePathname();
+  const clients = useClients();
+  const { isPrivate } = usePrivacy();
+  const breadcrumb = usePageBreadcrumb(pathname, { clients, isPrivate });
+
+  if (!breadcrumb) return null;
+
+  return (
+    <div className="shrink-0 bg-white px-4 pt-4 pb-3 md:px-8 lg:hidden">
+      <ResponsiveBreadcrumb items={breadcrumb} />
+    </div>
+  );
+}
+
+/** Figma 33787:149512 — flex-[1_0_0] in 884px row → 436×302; tablet 33777:105243 p-16. */
+function RoboPlanCard({
+  plan,
+  onDetailsClick,
+}: {
+  plan: RoboAdvisoryPlan;
+  onDetailsClick: () => void;
+}) {
+  return (
+    <div
+      className="box-border flex h-[302px] w-full flex-col gap-4 rounded-lg bg-white p-4 max-lg:h-auto lg:min-w-0 lg:flex-[1_0_0] lg:p-3"
+      style={{ boxShadow: PLAN_CARD_SHADOW }}
+    >
+      <div className="flex w-full shrink-0 flex-col gap-4">
+        <div className="flex w-full flex-col gap-1">
+          <div className="flex w-full flex-col gap-1">
+            <div className="flex flex-col gap-1 pt-1">
+              <p className="text-[9px] leading-[14px] text-[#4a5565]">{plan.provider}</p>
+              <p className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-lg font-bold leading-6 text-transparent">
+                {plan.name}
+              </p>
+            </div>
+            <p className="text-sm leading-5 text-[#4a5565]">{plan.description}</p>
+          </div>
+          <div className="flex w-full items-center">
+            <RoboRiskLevel tier={plan.riskTier} />
+            <div className="flex min-w-0 flex-[1_0_0] items-center justify-end gap-1 whitespace-nowrap">
+              <p className="text-xs font-bold leading-4 text-[#101828]">Available Room</p>
+              <p className="text-xs leading-4 text-[#4a5565]">{plan.availableRoom}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex w-full items-end">
+          <StatItem iconSrc={ROBO_ASSETS.iconMoney} labelLines={["เงินตั้งต้น", "ขั้นต่ำ (บาท)"]} value={plan.minInvestment} />
+          <div className="h-[58px] w-px shrink-0 bg-black/10" />
+          <StatItem iconSrc={ROBO_ASSETS.iconClock} labelLines={["ระยะเวลา", "ถือครอง"]} value={plan.holdingPeriod} />
+          <div className="h-[58px] w-px shrink-0 bg-black/10" />
+          <StatItem
+            iconSrc={ROBO_ASSETS.iconHandCoins}
+            labelLines={["เงินปันผล", "ต่อปี"]}
+            value={plan.dividendPerYear}
+            labelWidth={50}
+          />
+          <div className="h-[58px] w-px shrink-0 bg-black/10" />
+          <StatItem
+            iconSrc={ROBO_ASSETS.iconChartLineDown}
+            labelLines={["Max ", "Drawdown "]}
+            value={plan.maxDrawdown}
+            valueClassName="text-[#c10007]"
+          />
+        </div>
+      </div>
+
+      <div className="flex w-full shrink-0 items-center">
+        <Button
+          variant="plain"
+          size="lg"
+          onClick={onDetailsClick}
+          className="gap-1 pl-3.5 pr-2.5"
+          rightIcon={
+            <Image src={ROBO_ASSETS.iconCaretDown} alt="" width={20} height={20} className="size-5 shrink-0" />
+          }
+        >
+          รายละเอียด
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Figma 33777:105245 — chart decoration over gradient; fades out so no hard edge. */
+function RoboAdvisoryChartOverlay({ layout }: { layout: "mobile" | "tablet" }) {
+  return (
+    <div
+      className="pointer-events-none absolute inset-x-0 top-0 overflow-hidden [mask-image:linear-gradient(to_bottom,black_55%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_55%,transparent_100%)]"
+      style={{ height: layout === "tablet" ? 347 : 280 }}
+      aria-hidden
+    >
+      <Image
+        src={ROBO_ASSETS.detailChartBg}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className={
+          layout === "tablet"
+            ? "object-cover object-right-top"
+            : "object-cover object-[32%_top]"
+        }
+      />
+    </div>
+  );
+}
+
+function RoboAdvisoryHeroMobile({
+  plans,
+  onPlanDetails,
+}: {
+  plans: RoboAdvisoryPlan[];
+  onPlanDetails: (plan: RoboAdvisoryPlan) => void;
+}) {
+  return (
+    <div className="relative flex w-full flex-1 flex-col items-center overflow-x-clip bg-gradient-to-t from-white to-[#063f84] pb-20">
+      <RoboAdvisoryChartOverlay layout="mobile" />
+
+      <div className="relative z-10 flex h-[170px] w-full shrink-0 items-center gap-2 py-4 pl-5 pr-4">
+        <div className="relative h-[138px] w-[98px] shrink-0">
+          <Image
+            src={ROBO_ASSETS.roboIllustration}
+            alt=""
+            width={98}
+            height={138}
+            priority
+            className="pointer-events-none h-[138px] w-[98px] object-contain object-bottom"
+          />
+        </div>
+        <div className="flex min-w-0 flex-[1_0_0] flex-col gap-2 text-white">
+          <p className="whitespace-nowrap text-2xl font-bold leading-9">Robo Advisory</p>
+          <div className="w-full text-sm leading-5">
+            {ROBO_DETAIL_MOBILE_HERO_LINES.map((line, index) => (
+              <p key={line} className={index < ROBO_DETAIL_MOBILE_HERO_LINES.length - 1 ? "mb-0" : undefined}>
+                {line}
+              </p>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="relative z-10 flex w-full flex-col items-center gap-3">
+        <div className="flex w-full items-center px-4">
+          <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+        </div>
+        <div className="flex w-[343px] max-w-[calc(100%-32px)] flex-col gap-3">
+          {plans.map((plan) => (
+            <RoboPlanCard key={plan.id} plan={plan} onDetailsClick={() => onPlanDetails(plan)} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Figma 33777:105223 — tablet full-bleed hero, 704px stacked plan cards. */
+function RoboAdvisoryHeroTablet({
+  plans,
+  onPlanDetails,
+}: {
+  plans: RoboAdvisoryPlan[];
+  onPlanDetails: (plan: RoboAdvisoryPlan) => void;
+}) {
+  return (
+    <div className="relative flex min-h-[910px] w-full flex-1 flex-col gap-3 overflow-x-clip bg-gradient-to-t from-white to-[#063f84] pb-20">
+      <RoboAdvisoryChartOverlay layout="tablet" />
+
+      <div className="relative z-10 flex h-[170px] w-full shrink-0 items-center gap-2 px-8 py-6">
+        <div className="relative h-[138px] w-[98px] shrink-0">
+          <Image
+            src={ROBO_ASSETS.roboIllustration}
+            alt=""
+            width={98}
+            height={138}
+            priority
+            className="pointer-events-none h-[138px] w-[98px] object-contain object-bottom"
+          />
+        </div>
+        <div className="flex min-w-0 flex-[1_0_0] flex-col gap-2 text-white">
+          <p className="text-2xl font-bold leading-9">Robo Advisory</p>
+          <p className="text-base leading-5">{ROBO_DETAIL_TABLET_HERO_DESCRIPTION}</p>
+        </div>
+      </div>
+
+      <div className="relative z-10 flex w-full flex-col gap-4 px-8">
+        <div className="flex w-full items-center">
+          <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+        </div>
+        <div className="flex w-full flex-col gap-4">
+          {plans.map((plan) => (
+            <RoboPlanCard key={plan.id} plan={plan} onDetailsClick={() => onPlanDetails(plan)} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Figma 33787:149490 — gradient hero inside 996px white section. */
+function RoboAdvisoryHeroDesktop({
+  plans,
+  onPlanDetails,
+}: {
+  plans: RoboAdvisoryPlan[];
+  onPlanDetails: (plan: RoboAdvisoryPlan) => void;
+}) {
+  return (
+    <div className="relative flex w-full flex-col items-center bg-gradient-to-t from-white to-[#063f84] px-14 pb-12">
+      <div
+        className="pointer-events-none absolute left-[214px] top-0 h-[347px] w-[768px] overflow-hidden"
+        aria-hidden
+      >
+        <Image src={ROBO_ASSETS.detailChartBg} alt="" fill className="object-cover object-left-top" sizes="768px" />
+      </div>
+
+      <div className="relative z-10 flex w-full items-center gap-6 px-10 py-8">
+        <div className="relative h-[153px] w-[101px] shrink-0">
+          <Image
+            src={ROBO_ASSETS.roboIllustration}
+            alt=""
+            fill
+            priority
+            className="pointer-events-none object-contain object-bottom"
+          />
+        </div>
+        <div className="flex min-w-0 flex-[1_0_0] flex-col gap-2 text-white">
+          <p className="text-2xl font-bold leading-9">Robo Advisory</p>
+          <p className="text-base leading-5">
+            คือบริการลงทุนแบบอัตโนมัติด้วย AI ที่จะช่วยให้บรรลุเป้าหมายการลงทุนได้อย่างง่ายดาย
+          </p>
+        </div>
+      </div>
+
+      <div className="relative z-10 flex w-full flex-col gap-4">
+        <div className="flex w-full items-center">
+          <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+        </div>
+
+        <div className="flex w-full items-start gap-3">
+          {plans.map((plan) => (
+            <RoboPlanCard key={plan.id} plan={plan} onDetailsClick={() => onPlanDetails(plan)} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Figma 33787:149486 — 996px column; breadcrumb from layout, desktop back bar in-page. */
+export function RoboAdvisoryDetail({ onBack }: { onBack?: () => void }) {
+  const [detailPlan, setDetailPlan] = useState<RoboAdvisoryPlan | null>(null);
+
+  useEffect(() => {
+    const main = document.querySelector("main");
+    if (main) {
+      main.scrollTop = 0;
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
+  return (
+    <div className="flex w-full flex-1 flex-col max-lg:min-h-[calc(100dvh-60px)] max-lg:overflow-x-clip max-lg:bg-white lg:bg-[#f9fafb] lg:pb-20 lg:pt-2">
+      <div className="flex min-h-[calc(100dvh-60px)] w-full flex-1 flex-col lg:hidden">
+        <RoboAdvisoryMobileBreadcrumb />
+        <div className="md:hidden">
+          <RoboAdvisoryHeroMobile plans={ROBO_ADVISORY_PLANS} onPlanDetails={setDetailPlan} />
+        </div>
+        <div className="hidden md:block">
+          <RoboAdvisoryHeroTablet plans={ROBO_ADVISORY_PLANS} onPlanDetails={setDetailPlan} />
+        </div>
+      </div>
+
+      <div className="mx-auto hidden w-full max-w-[996px] flex-col gap-2 px-4 md:px-8 lg:flex lg:px-0">
+        {onBack ? <DesktopBackHeader onBack={onBack} /> : null}
+
+        <div className="w-full overflow-clip rounded-xl bg-white" style={{ boxShadow: SECTION_SHADOW }}>
+          <RoboAdvisoryHeroDesktop plans={ROBO_ADVISORY_PLANS} onPlanDetails={setDetailPlan} />
+        </div>
+      </div>
+
+      <RoboAdvisoryPlanDetailModal
+        plan={detailPlan}
+        open={detailPlan != null}
+        onClose={() => setDetailPlan(null)}
+      />
+    </div>
+  );
+}

@@ -2,13 +2,20 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { Chip, SearchInput, Tag, TabGroup } from "@sarunyu/system-one";
-import { ArrowUpLeftIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
+import {
+  ArrowUpLeftIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+  ChartLineUpIcon,
+} from "@phosphor-icons/react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { FixedIncomeTab } from "./FixedIncomeTab";
 import { FixedIncomeDetail } from "./FixedIncomeDetail";
 import { FixedIncomeCompanyDetail } from "./FixedIncomeCompanyDetail";
 import type { FixedIncomeBond } from "./fixed-income-data";
 import { GlobalBondTab } from "./GlobalBondTab";
 import { MutualFundTab } from "./MutualFundTab";
+import { RoboAdvisoryTab } from "./RoboAdvisoryTab";
 import { MutualFundDetail } from "./MutualFundDetail";
 import { getMutualFund } from "./mutual-fund-data";
 import { GlobalBondDetail } from "./GlobalBondDetail";
@@ -29,6 +36,7 @@ import { PRODUCT_CATEGORIES } from "@/lib/product-catalog-routes";
 import { useScrollThreshold } from "./use-scroll-threshold";
 import { useDragScroll } from "./use-drag-scroll";
 import { useProductCatalogLoading } from "@/hooks/use-catalog";
+import { useRouter } from "next/navigation";
 import { FadeIn } from "@/components/ui/fade-in";
 import { ProductCatalogTabSkeleton } from "./ProductCatalogSkeletons";
 import type { StructuredProduct } from "./structured-product-data";
@@ -194,6 +202,8 @@ export type CatalogNavigation = {
   onAllGlobalBondsView: () => void;
   onThaiProductSelect: (product: ThaiStructuredProduct) => void;
   onMutualFundSelect: (fundId: string) => void;
+  onRoboAdvisorySelect: () => void;
+  onDefinitSelect: () => void;
 };
 
 export function ProductCatalogTab({
@@ -224,6 +234,7 @@ export function ProductCatalogTab({
   activeCategory?: string;
   onCategoryChange?: (id: string) => void;
 } = {}) {
+  const router = useRouter();
   const [activeTabInternal, setActiveTabInternal] = useState("structured");
   const activeProductTab = activeCategory ?? activeTabInternal;
   const [selectedFixedIncomeBond, setSelectedFixedIncomeBond] = useState<FixedIncomeBond | null>(null);
@@ -367,6 +378,10 @@ export function ProductCatalogTab({
     onThaiProductSelect: navigation?.onThaiProductSelect ?? setSelectedThaiProduct,
     onMutualFundSelect:
       navigation?.onMutualFundSelect ?? ((fundId: string) => setSelectedMutualFundId(fundId)),
+    onRoboAdvisorySelect:
+      navigation?.onRoboAdvisorySelect ?? (() => router.push("/product-catalog/robo-advisory")),
+    onDefinitSelect:
+      navigation?.onDefinitSelect ?? (() => router.push("/product-catalog/definit")),
   };
 
   function handleSearchSelect(item: ProductSearchItem) {
@@ -747,7 +762,21 @@ export function ProductCatalogTab({
 
       {/* ── Tab content ─────────────────────────────────────────────────────── */}
       <FadeIn key={activeProductTab} className="flex flex-col w-full">
-        {isLoading ? (
+        {/* Stock and Robo Advisory have no data behind them yet, so there is
+            nothing for a loading skeleton to stand in for — go straight to
+            the empty state. */}
+        {activeProductTab === "stock" ? (
+          <EmptyState
+            icon={<ChartLineUpIcon size={40} className="text-[var(--text-default-placeholder)]" />}
+            title="No stocks yet"
+            body="Stock products will appear here soon."
+          />
+        ) : activeProductTab === "robo-advisory" ? (
+          <RoboAdvisoryTab
+            onRoboAdvisorySelect={nav.onRoboAdvisorySelect}
+            onDefinitSelect={nav.onDefinitSelect}
+          />
+        ) : isLoading ? (
           <ProductCatalogTabSkeleton tab={activeProductTab} />
         ) : (
           <>

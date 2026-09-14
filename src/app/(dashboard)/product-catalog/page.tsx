@@ -87,6 +87,8 @@ function ProductCatalogPageInner() {
       ),
     onMutualFundSelect: (fundId) =>
       router.push(`/product-catalog/mutual-fund/${encodeURIComponent(fundId)}`),
+    onRoboAdvisorySelect: () => router.push("/product-catalog/robo-advisory"),
+    onDefinitSelect: () => router.push("/product-catalog/definit"),
   };
 
   return (

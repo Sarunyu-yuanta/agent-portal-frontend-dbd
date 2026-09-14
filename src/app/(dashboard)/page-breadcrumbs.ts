@@ -298,5 +298,8 @@ function catalogLabel(pathname: string): string | null {
   const fundId = segment(MUTUAL_FUND);
   if (fundId) return getMutualFundSymbol(fundId) ?? "Mutual Fund";
 
+  if (pathname === "/product-catalog/robo-advisory") return "Robo Advisory";
+  if (pathname === "/product-catalog/definit") return "Definit x Yuanta";
+
   return null;
 }

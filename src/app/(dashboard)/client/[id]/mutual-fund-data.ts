@@ -1,4 +1,5 @@
 import mutualFundsRaw from "@/data/mutual-funds.json";
+import navHistoryRaw from "@/data/mutual-fund-nav-history.json";
 
 export type MutualFundCategoryId =
   | "global-equity"
@@ -246,4 +247,36 @@ export function getMutualFund(id: string): MutualFundDetail | undefined {
 
 export function getMutualFundSymbol(id: string): string | undefined {
   return allCatalogFunds().find((f) => f.id === id)?.symbol;
+}
+
+/* ── NAV history ───────────────────────────────────────────────────────────── */
+
+/** One priced day: `[ISO date, NAV]`, oldest first. */
+export type NavPoint = { date: string; nav: number };
+
+export type NavHistory = {
+  currency: string;
+  points: NavPoint[];
+};
+
+/**
+ * Five years of NAV, weekly until a year back and every business day after —
+ * a 5Y line reads the same at weekly resolution and the file stays small.
+ *
+ * The series is built to agree with `historicalReturns`: the NAV one month
+ * back really is 2.82% below the latest one, and so on down the list, so the
+ * chart and the returns under it can never tell different stories.
+ */
+const NAV_HISTORY: Record<
+  string,
+  { currency: string; points: (string | number)[][] } | undefined
+> = navHistoryRaw;
+
+export function getNavHistory(fundId: string): NavHistory | undefined {
+  const raw = NAV_HISTORY[fundId];
+  if (!raw) return undefined;
+  return {
+    currency: raw.currency,
+    points: raw.points.map(([date, nav]) => ({ date: String(date), nav: Number(nav) })),
+  };
 }

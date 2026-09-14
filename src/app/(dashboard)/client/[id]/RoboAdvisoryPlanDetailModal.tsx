@@ -1,0 +1,295 @@
+"use client";
+
+import type { ReactNode } from "react";
+import Image from "next/image";
+import { Alert, BottomSheet, Button, Modal, useIsMobile } from "@sarunyu/system-one";
+import { DownloadSimpleIcon } from "@phosphor-icons/react";
+import { AllocationDonut } from "@/components/allocation-donut";
+import { ROBO_ASSETS } from "./robo-advisory-assets";
+import type { RoboAdvisoryPlan } from "./robo-advisory-plan-data";
+import { RoboRiskLevel } from "./RoboRiskLevel";
+
+/** Figma 33787:150208 — desktop body px-36; cancel library Modal body px-4 (16px). */
+const MODAL_BODY_BLEED = "-mx-4";
+const MODAL_BODY_PX_DESKTOP = "px-9";
+
+/** Mobile bottom sheet — cancel library px-4, then apply 12px (px-3). */
+const MODAL_BODY_PX_MOBILE = "px-3";
+
+function StatItem({
+  iconSrc,
+  labelLines,
+  value,
+  valueClassName,
+  labelWidth,
+}: {
+  iconSrc: string;
+  labelLines: [string, string];
+  value: string;
+  valueClassName?: string;
+  labelWidth?: number;
+}) {
+  return (
+    <div className="flex min-w-0 flex-[1_0_0] flex-col items-center gap-1">
+      <div className="flex shrink-0 items-center justify-center rounded-full bg-[#eff6ff] p-2.5">
+        <Image src={iconSrc} alt="" width={20} height={20} className="size-5 shrink-0" />
+      </div>
+      <div
+        className="flex flex-col items-center gap-1 text-center"
+        style={labelWidth != null ? { width: labelWidth } : undefined}
+      >
+        <div className="text-center leading-none">
+          <p className="mb-0 text-xs font-bold leading-4 text-[#101828]">{labelLines[0]}</p>
+          <p className="text-xs font-bold leading-4 text-[#101828]">{labelLines[1]}</p>
+        </div>
+        <p className={`whitespace-nowrap text-xs leading-4 ${valueClassName ?? "text-[#4a5565]"}`}>{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({
+  iconSrc,
+  title,
+  children,
+}: {
+  iconSrc: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex w-full gap-3 rounded-lg bg-[#f9fafb] px-3 py-2">
+      <Image src={iconSrc} alt="" width={24} height={24} className="size-6 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold leading-5 text-[#101828]">{title}</p>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ModalBodyPadding({ isMobile, children }: { isMobile: boolean; children: ReactNode }) {
+  return <div className={`pb-6 pt-4 ${isMobile ? "" : MODAL_BODY_PX_DESKTOP}`}>{children}</div>;
+}
+
+function DownloadDocumentsButton({ className }: { className?: string }) {
+  return (
+    <Button
+      variant="outline"
+      size="lg"
+      leftIcon={<DownloadSimpleIcon size={20} />}
+      className={className ?? "shrink-0"}
+    >
+      ดาวน์โหลดเอกสารเพิ่มเติม
+    </Button>
+  );
+}
+
+/** Figma 33787:150203 — plan detail modal body. */
+function PlanDetailContent({ plan, isMobile }: { plan: RoboAdvisoryPlan; isMobile: boolean }) {
+  const { detail } = plan;
+
+  return (
+    <div className="flex w-full flex-col gap-4">
+        {/* Header summary */}
+        <div className="flex w-full flex-col gap-1">
+          <div className="flex w-full items-start justify-between gap-3">
+            <div className="min-w-0 flex flex-1 flex-col gap-1">
+              <p className="text-[9px] leading-[14px] text-black/60">{plan.provider}</p>
+              <p className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-lg font-bold leading-6 text-transparent">
+                {plan.name}
+              </p>
+            </div>
+            {!isMobile ? <DownloadDocumentsButton /> : null}
+          </div>
+          <p className="text-sm leading-5 text-[#4a5565]">{plan.description.trim()}</p>
+          <div className="flex w-full items-center">
+            <RoboRiskLevel tier={plan.riskTier} />
+            <div className="flex min-w-0 flex-[1_0_0] items-center justify-end gap-1 whitespace-nowrap">
+              <p className="text-xs font-bold leading-4 text-black/75">Available Room</p>
+              <p className="text-xs leading-4 text-black/60">{plan.availableRoom}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div className="flex w-full items-end">
+          <StatItem iconSrc={ROBO_ASSETS.iconMoney} labelLines={["เงินตั้งต้น", "ขั้นต่ำ (บาท)"]} value={plan.minInvestment} />
+          <div className="h-[58px] w-px shrink-0 bg-black/10" />
+          <StatItem iconSrc={ROBO_ASSETS.iconClock} labelLines={["ระยะเวลา", "ถือครอง"]} value={plan.holdingPeriod} />
+          <div className="h-[58px] w-px shrink-0 bg-black/10" />
+          <StatItem
+            iconSrc={ROBO_ASSETS.iconHandCoins}
+            labelLines={["เงินปันผล", "ต่อปี"]}
+            value={plan.dividendPerYear}
+            labelWidth={50}
+          />
+          <div className="h-[58px] w-px shrink-0 bg-black/10" />
+          <StatItem
+            iconSrc={ROBO_ASSETS.iconChartLineDown}
+            labelLines={["Max ", "Drawdown "]}
+            value={plan.maxDrawdown}
+            valueClassName="text-[#c10007]"
+          />
+        </div>
+
+        {/* Detail list */}
+        <div className="flex w-full flex-col gap-2">
+          <DetailRow iconSrc={ROBO_ASSETS.modalIconHeadCircuit} title="Trading style:">
+            <p className="text-sm leading-5 text-[#4a5565]">{detail.tradingStyle}</p>
+          </DetailRow>
+          <DetailRow iconSrc={ROBO_ASSETS.modalIconClockAfternoon} title="Market Timing">
+            <p className="text-sm leading-5 text-[#4a5565]">{detail.marketTiming}</p>
+          </DetailRow>
+          <DetailRow iconSrc={ROBO_ASSETS.modalIconTimer} title="Timing">
+            <p className="text-sm leading-5 text-[#4a5565]">{detail.timing}</p>
+          </DetailRow>
+          <DetailRow iconSrc={ROBO_ASSETS.modalIconMoneyWavy} title="ยอดขั้นต่ำสำหรับการเพิ่มทุน (ต่อครั้ง)">
+            <p className="text-sm leading-5 text-[#4a5565]">{detail.topUpMin}</p>
+          </DetailRow>
+          <DetailRow iconSrc={ROBO_ASSETS.modalIconBrain} title="Knowledge style:">
+            <ul className="list-disc pl-5 text-sm leading-5 text-[#4a5565]">
+              {detail.knowledgeStyles.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </DetailRow>
+          <DetailRow iconSrc={ROBO_ASSETS.modalIconSealCheck} title="แผนที่เหมาะกับนักลงทุนแบบไหน:">
+            <ul className="list-disc pl-5 text-sm leading-5 text-[#4a5565]">
+              {detail.targetInvestors.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </DetailRow>
+
+          {/* Allocation card */}
+          <div
+            className="w-full overflow-hidden rounded-lg bg-white"
+            style={{
+              boxShadow:
+                "0px 0px 2px rgba(102, 102, 102, 0.16), 0px 4px 8px rgba(102, 102, 102, 0.12)",
+            }}
+          >
+            <div className="bg-[#f3f4f6] px-3 py-2">
+              <p className="text-sm font-bold leading-5 text-[#101828]">สัดส่วนการลงทุน</p>
+            </div>
+            <div className="flex flex-col items-center gap-3 px-3 pb-4 pt-3">
+              <p className="w-full text-xs leading-4 text-[#4a5565]">การลงทุนทั้งหมด = 100%</p>
+              <div className="flex w-full items-center justify-between px-2 max-sm:flex-col max-sm:gap-4">
+                <AllocationDonut slices={detail.allocation} className="size-[120px]" />
+                <div className="flex flex-col gap-2">
+                  {detail.allocation.map((item) => (
+                    <div key={item.label} className="flex items-start gap-2">
+                      <div className="flex w-[115px] items-center gap-1 px-2 py-1">
+                        <span
+                          className="size-3 shrink-0 rounded-full"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-xs leading-4 text-[#4a5565]">{item.label}</span>
+                      </div>
+                      <span className="text-xs leading-4 text-[#4a5565]">{item.percent}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Fees */}
+        <div className="flex w-full flex-col gap-2">
+          <div className="flex items-center gap-1">
+            <p className="text-sm font-bold leading-5 text-[#101828]">ค่าธรรมเนียม</p>
+            <Image src={ROBO_ASSETS.modalIconInfo} alt="" width={16} height={16} className="size-4 shrink-0" />
+          </div>
+          <div className="flex w-full flex-col gap-1">
+            <div className="overflow-hidden rounded-lg bg-[#eff6ff]">
+              {detail.fees.map((fee, index) => (
+                <div
+                  key={fee.label}
+                  className={`flex items-center gap-1 p-2 ${
+                    index < detail.fees.length - 1 ? "border-b border-dashed border-black/10" : ""
+                  }`}
+                >
+                  <p className="min-w-0 flex-1 text-xs leading-4 text-[#101828]">{fee.label}</p>
+                  <p className="shrink-0 text-sm font-bold leading-5 text-[#0a6ee7]">{fee.value}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-[9px] leading-[14px] text-[#4a5565]">{detail.feeFootnote}</p>
+          </div>
+        </div>
+
+        <Alert status="warning" message={detail.accountOpeningNote} className="w-full" />
+
+        {isMobile ? <DownloadDocumentsButton className="w-full" /> : null}
+    </div>
+  );
+}
+
+/** Figma 33787:150203 — opens from plan card "รายละเอียด". */
+export function RoboAdvisoryPlanDetailModal({
+  plan,
+  open,
+  onClose,
+}: {
+  plan: RoboAdvisoryPlan | null;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const isMobile = useIsMobile();
+
+  if (!plan) return null;
+
+  const content = (
+    <ModalBodyPadding isMobile={isMobile}>
+      <PlanDetailContent plan={plan} isMobile={isMobile} />
+    </ModalBodyPadding>
+  );
+
+  if (isMobile) {
+    return (
+      <BottomSheet
+        open={open}
+        onOpenChange={(next) => {
+          if (!next) onClose();
+        }}
+        title="รายละเอียด"
+        showHandle
+        rightSide="action"
+        actionLabel="Close"
+        onActionClick={onClose}
+        contentClassName={`flex max-h-[calc(100dvh-10rem)] flex-col overflow-y-auto ${MODAL_BODY_BLEED} ${MODAL_BODY_PX_MOBILE} pt-0 pb-4`}
+      >
+        {content}
+      </BottomSheet>
+    );
+  }
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-16 backdrop-blur-[2px]"
+      style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="max-h-[calc(100vh-8rem)] w-full max-w-[720px] overflow-hidden" onMouseDown={(e) => e.stopPropagation()}>
+        <Modal
+          variant="content"
+          title="รายละเอียด"
+          showClose
+          onClose={onClose}
+          actionLayout="none"
+          className="!max-w-[720px] w-full"
+        >
+          <div className={`${MODAL_BODY_BLEED} max-h-[calc(100vh-14rem)] overflow-y-auto [scrollbar-gutter:stable]`}>
+            {content}
+          </div>
+        </Modal>
+      </div>
+    </div>
+  );
+}

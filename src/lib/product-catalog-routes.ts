@@ -13,6 +13,8 @@ export const PRODUCT_CATEGORIES = [
   { id: "fixed-income",    title: "Fixed Income" },
   { id: "global-bond",     title: "Global Bond" },
   { id: "mutual-fund",     title: "Mutual Fund" },
+  { id: "stock",           title: "Stock" },
+  { id: "robo-advisory",   title: "Portfolio Advisory" },
 ];
 
 export const CATALOG_PATH = "/product-catalog";
@@ -52,6 +54,8 @@ const CATEGORY_BY_PATH: [RegExp, string][] = [
   [/^\/product-catalog\/global-bond(\/|$)/, "global-bond"],
   [/^\/product-catalog\/thai-structured\//, "thai-structured"],
   [/^\/product-catalog\/mutual-fund\//, "mutual-fund"],
+  [/^\/product-catalog\/robo-advisory(\/|$)/, "robo-advisory"],
+  [/^\/product-catalog\/definit(\/|$)/, "robo-advisory"],
 ];
 
 export function catalogCategoryForPath(pathname: string): string | null {
