@@ -346,5 +346,101 @@
         }
       ]
     }
-  ]
+  ],
+  "fundDetails": {
+    "mf-ugisfx-n": {
+      "nav": "10.3208",
+      "navDate": "ราคาหน่วยลงทุน (NAV) ณ 8 ก.ค 69",
+      "changePct": "+6.47%",
+      "fxRisk": "ความเสี่ยง FX: ป้องกันบางส่วน",
+      "acceptsCreditCard": true,
+      "investmentPolicy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing Library in London, took a 1914 Cicero translation and scrambled it to make dummy text for Letraset's Body Type sheets. It has survived not only many decades, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised thanks to these sheets and more recently with desktop publishing software like Aldus PageMaker and Microsoft Word including versions of Lorem Ipsum.",
+      "fees": {
+        "frontEnd": "0.00%",
+        "backEnd": "1.00%",
+        "management": "0.75%"
+      },
+      "dividend": {
+        "bookCloseDate": "31 May 2026",
+        "paymentDate": "16 Apl 2026",
+        "amountPerUnit": "0.2500"
+      },
+      "historicalReturns": [
+        { "period": "1W", "value": "+0.01%" },
+        { "period": "1M", "value": "+2.82%" },
+        { "period": "3M", "value": "+3.75%" },
+        { "period": "6M", "value": "+6.96%" },
+        { "period": "YTD", "value": "+6.34%" },
+        { "period": "1Y", "value": "+0.01%" }
+      ],
+      "performanceReturns": [
+        { "period": "1W", "return": "+0.32%", "volatility": "-", "maxDrawdown": "-" },
+        { "period": "1M", "return": "+2.16%", "volatility": "-", "maxDrawdown": "-" },
+        { "period": "3M", "return": "+4.39%", "volatility": "-", "maxDrawdown": "-" },
+        { "period": "6M", "return": "+6.50%", "volatility": "-", "maxDrawdown": "-" },
+        { "period": "YTD", "return": "+6.68%", "volatility": "-", "maxDrawdown": "-" },
+        { "period": "1Y", "return": "+8.89%", "volatility": "+7.73%", "maxDrawdown": "-4.79%" },
+        { "period": "3Y", "return": "-", "volatility": "-", "maxDrawdown": "-" },
+        { "period": "5Y", "return": "-", "volatility": "-", "maxDrawdown": "-" },
+        { "period": "SI", "return": "+1.65%", "volatility": "-", "maxDrawdown": "-" }
+      ],
+      "dividendHistory": [
+        { "bookCloseDate": "31 Mar 2026", "paymentDate": "16 Apr 2026", "amountPerUnit": "0.2500" },
+        { "bookCloseDate": "05 Jan 2026", "paymentDate": "15 Jan 2026", "amountPerUnit": "0.3500" },
+        { "bookCloseDate": "30 Sep 2025", "paymentDate": "14 Oct 2025", "amountPerUnit": "0.2500" },
+        { "bookCloseDate": "30 Jun 2025", "paymentDate": "14 Jul 2025", "amountPerUnit": "0.2500" },
+        { "bookCloseDate": "01 Apr 2025", "paymentDate": "11 Apr 2025", "amountPerUnit": "0.2500" },
+        { "bookCloseDate": "02 Jan 2025", "paymentDate": "14 Jan 2025", "amountPerUnit": "0.2000" },
+        { "bookCloseDate": "02 Jan 2025", "paymentDate": "14 Jan 2025", "amountPerUnit": "0.2000" },
+        { "bookCloseDate": "02 Jan 2025", "paymentDate": "14 Jan 2025", "amountPerUnit": "0.2000" },
+        { "bookCloseDate": "02 Jan 2025", "paymentDate": "14 Jan 2025", "amountPerUnit": "0.2000" },
+        { "bookCloseDate": "02 Jan 2025", "paymentDate": "14 Jan 2025", "amountPerUnit": "0.2000" },
+        { "bookCloseDate": "02 Jan 2025", "paymentDate": "14 Jan 2025", "amountPerUnit": "0.2000" },
+        { "bookCloseDate": "02 Jan 2025", "paymentDate": "14 Jan 2025", "amountPerUnit": "0.2000" },
+        { "bookCloseDate": "02 Jan 2025", "paymentDate": "14 Jan 2025", "amountPerUnit": "0.2000" },
+        { "bookCloseDate": "02 Jan 2025", "paymentDate": "14 Jan 2025", "amountPerUnit": "0.2000" }
+      ],
+      "topHoldings": [
+        { "label": "PIMCO GIS Income Fund 'I' (USD) ACC -PIMINIA", "percent": 99.36, "color": "#074EA4" },
+        { "label": "KASIKORNBANK PUBLIC COMPANY LIMITED", "percent": 2.65, "color": "#51A2FF" },
+        { "label": "OPERATING ACCOUNT", "percent": 0.1, "color": "#A3B3FF" }
+      ],
+      "assetAllocation": [
+        { "label": "หน่วยลงทุน", "percent": 99.36, "color": "#074EA4" },
+        { "label": "เงินฝาก/ตราสารเทียบเท่า", "percent": 1.82, "color": "#51A2FF" },
+        { "label": "สินทรัพย์อื่นๆ/หนี้สินอื่นๆ", "percent": 1.63, "color": "#A3B3FF" }
+      ],
+      "tradingInfo": {
+        "minInitialPurchase": "0.01 บาท",
+        "minSubsequentPurchase": "0.01 บาท",
+        "minRedemption": "0.00 บาท",
+        "purchaseCutoff": "ก่อน 15:30",
+        "redemptionCutoff": "ก่อน 15.30",
+        "settlementDays": "3 วันหลังทำรายการขาย (T+3)"
+      },
+      "feeDetails": [
+        { "label": "ค่าธรรมเนียมการซื้อ", "actual": "1%", "maximum": "2%" },
+        { "label": "ค่าธรรมเนียมการขาย", "actual": "0%", "maximum": "1%" },
+        { "label": "ค่าธรรมเนียมการสับเปลี่ยนเข้า", "actual": "1%", "maximum": "2%" },
+        { "label": "ค่าธรรมเนียมการสับเปลี่ยนออก", "actual": "0%", "maximum": "1%" },
+        { "label": "ค่าธรรมเนียมการจัดการ", "actual": "0.75%", "maximum": "2.14%" },
+        { "label": "ค่าใช้จ่ายรวมทั้งหมด", "actual": "0.85%", "maximum": "5.35%" }
+      ],
+      "fundInfo": {
+        "prospectusUrl": "#",
+        "managementCompany": "UOBAM",
+        "fundType": "ตลาดเงินทั่วไป",
+        "taxBenefit": "-",
+        "foreignInvestment": "-",
+        "fxRiskPolicy": "-",
+        "riskScore": 5,
+        "dividendPolicy": "ไม่จ่าย",
+        "currencyPolicy": "ป้องกันความเสี่ยงอัตรา แลกเปลี่ยนตามดุลยพินิจ ของผู้จัดการกองทุน",
+        "managementFee": "0.75% ต่อปี",
+        "minimumInvestment": "-",
+        "registrationDate": "11 ก.ค 67",
+        "netAssetValue": "2,932,246,830.39 บาท"
+      }
+    }
+  }
 }

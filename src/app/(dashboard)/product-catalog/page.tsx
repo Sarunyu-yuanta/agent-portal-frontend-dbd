@@ -85,6 +85,8 @@ function ProductCatalogPageInner() {
       router.push(
         `/product-catalog/thai-structured/${encodeURIComponent(p.theme)}`,
       ),
+    onMutualFundSelect: (fundId) =>
+      router.push(`/product-catalog/mutual-fund/${encodeURIComponent(fundId)}`),
   };
 
   return (

@@ -51,6 +51,7 @@ const CATEGORY_BY_PATH: [RegExp, string][] = [
   [/^\/product-catalog\/fixed-income\//, "fixed-income"],
   [/^\/product-catalog\/global-bond(\/|$)/, "global-bond"],
   [/^\/product-catalog\/thai-structured\//, "thai-structured"],
+  [/^\/product-catalog\/mutual-fund\//, "mutual-fund"],
 ];
 
 export function catalogCategoryForPath(pathname: string): string | null {

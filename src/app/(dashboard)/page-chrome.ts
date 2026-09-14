@@ -68,6 +68,7 @@ const WHITE_CONTENT_TOP = [
   /^\/product-catalog\/investment-solution\//, // InvestmentSolutionDetail
   /^\/product-catalog\/global-bond(\/|$)/, // GlobalBondAllPage, GlobalBondDetail
   /^\/product-catalog\/product$/, // StructuredProductAllPage
+  /^\/product-catalog\/mutual-fund\//, // MutualFundDetail
 ];
 
 export function usePageChrome(): PageChrome {

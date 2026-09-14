@@ -9,6 +9,8 @@ import { FixedIncomeCompanyDetail } from "./FixedIncomeCompanyDetail";
 import type { FixedIncomeBond } from "./fixed-income-data";
 import { GlobalBondTab } from "./GlobalBondTab";
 import { MutualFundTab } from "./MutualFundTab";
+import { MutualFundDetail } from "./MutualFundDetail";
+import { getMutualFund } from "./mutual-fund-data";
 import { GlobalBondDetail } from "./GlobalBondDetail";
 import { GlobalBondAllPage } from "./GlobalBondAllPage";
 import { getIssuerIdForBondRow, type GlobalBondIssuerId } from "./global-bond-data";
@@ -191,6 +193,7 @@ export type CatalogNavigation = {
   onGlobalBondIssuerSelect: (issuerId: GlobalBondIssuerId) => void;
   onAllGlobalBondsView: () => void;
   onThaiProductSelect: (product: ThaiStructuredProduct) => void;
+  onMutualFundSelect: (fundId: string) => void;
 };
 
 export function ProductCatalogTab({
@@ -234,6 +237,7 @@ export function ProductCatalogTab({
   const [showAllTopIdeas, setShowAllTopIdeas] = useState(false);
   const [showAllStructuredProducts, setShowAllStructuredProducts] = useState(false);
   const [selectedThaiProduct, setSelectedThaiProduct] = useState<ThaiStructuredProduct | null>(null);
+  const [selectedMutualFundId, setSelectedMutualFundId] = useState<string | null>(null);
 
   const [searchValueInternal, setSearchValueInternal] = useState("");
   const searchValue = searchValueProp ?? searchValueInternal;
@@ -339,7 +343,8 @@ export function ProductCatalogTab({
     selectedInvestmentSolution ||
     showAllTopIdeas ||
     showAllStructuredProducts ||
-    selectedThaiProduct
+    selectedThaiProduct ||
+    selectedMutualFundId
   );
 
   useEffect(() => {
@@ -360,6 +365,8 @@ export function ProductCatalogTab({
     onGlobalBondIssuerSelect: navigation?.onGlobalBondIssuerSelect ?? setSelectedGlobalBondIssuer,
     onAllGlobalBondsView: navigation?.onAllGlobalBondsView ?? (() => setShowAllGlobalBonds(true)),
     onThaiProductSelect: navigation?.onThaiProductSelect ?? setSelectedThaiProduct,
+    onMutualFundSelect:
+      navigation?.onMutualFundSelect ?? ((fundId: string) => setSelectedMutualFundId(fundId)),
   };
 
   function handleSearchSelect(item: ProductSearchItem) {
@@ -400,10 +407,22 @@ export function ProductCatalogTab({
     setSelectedGlobalBondIssuer(null);
     setShowAllGlobalBonds(false);
     setSelectedThaiProduct(null);
+    setSelectedMutualFundId(null);
   };
 
   // ── State-based detail views ────────────────────────────────────────────────
   // Only used when URL navigation is not provided (e.g. client pages).
+
+  if (!navigation && selectedMutualFundId) {
+    const fund = getMutualFund(selectedMutualFundId);
+    if (fund) {
+      return (
+        <div className="flex flex-col w-full">
+          <MutualFundDetail fund={fund} onBack={() => setSelectedMutualFundId(null)} />
+        </div>
+      );
+    }
+  }
 
   if (!navigation && selectedThaiProduct) {
     return (
@@ -788,7 +807,9 @@ export function ProductCatalogTab({
               </div>
             )}
 
-            {activeProductTab === "mutual-fund" && <MutualFundTab />}
+            {activeProductTab === "mutual-fund" && (
+              <MutualFundTab onFundSelect={nav.onMutualFundSelect} />
+            )}
           </>
         )}
       </FadeIn>

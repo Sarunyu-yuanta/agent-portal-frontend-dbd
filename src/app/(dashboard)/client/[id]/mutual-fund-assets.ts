@@ -7,6 +7,11 @@ export const MF_ASSETS = {
   yuantaPick: "/products/mutual-fund/yuanta-pick-icon.svg",
   filterIllustration: "/products/mutual-fund/filter-illustration.png",
   taxIllustration: "/products/mutual-fund/tax-illustration.png",
+  detailChartLine: "/products/mutual-fund/detail-chart-line.svg",
+  detailChartArea: "/products/mutual-fund/detail-chart-area.svg",
+  navPriceIcon: "/products/mutual-fund/nav-price-icon.svg",
+  coinsIcon: "/products/mutual-fund/coins-icon.svg",
+  filePdfIcon: "/products/mutual-fund/file-pdf-icon.svg",
   medal: "/products/mutual-fund/icon-medal.svg",
   insightsSectionBg: "/products/mutual-fund/insights-section-bg.png",
   /** Figma 40135:224291 — mobile insights decorative bg (375×375 @1x) */

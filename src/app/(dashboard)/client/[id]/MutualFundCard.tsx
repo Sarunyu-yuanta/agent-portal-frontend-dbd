@@ -1,9 +1,16 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Tag } from "@sarunyu/system-one";
 import type { MutualFund } from "./mutual-fund-data";
 import { MF_ASSETS, mutualFundRiskMeterSrc } from "./mutual-fund-assets";
+
+function mutualFundDetailHref(fundId: string) {
+  return `/product-catalog/mutual-fund/${encodeURIComponent(fundId)}`;
+}
+
+export { mutualFundDetailHref };
 
 /** Figma Button plain xl — chevron icon (#0A6EE7, 20×20). */
 export function MutualFundSeeMoreIcon() {
@@ -87,37 +94,72 @@ function Sparkline() {
 }
 
 /** Figma node 40118:77260 — Mutual fund card row */
-export function MutualFundCard({ fund }: { fund: MutualFund }) {
-  return (
-    <div className="p-3">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <div className="flex min-w-0 items-center gap-1">
-              <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">
-                {fund.symbol}
-              </span>
-              {fund.isPick && <PickTag />}
-            </div>
-            <p className="truncate text-xs leading-4 text-[#4a5565]">{fund.name}</p>
+export function MutualFundCard({
+  fund,
+  onSelect,
+}: {
+  fund: MutualFund;
+  onSelect?: (fundId: string) => void;
+}) {
+  const content = (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex min-w-0 items-center gap-1">
+            <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">
+              {fund.symbol}
+            </span>
+            {fund.isPick && <PickTag />}
           </div>
-          <Sparkline />
-          <PriceChange fund={fund} />
+          <p className="truncate text-xs leading-4 text-[#4a5565]">{fund.name}</p>
         </div>
-        <RiskBadge risk={fund.risk} />
+        <Sparkline />
+        <PriceChange fund={fund} />
       </div>
+      <RiskBadge risk={fund.risk} />
     </div>
+  );
+
+  const href = mutualFundDetailHref(fund.id);
+  const rowClassName =
+    "block w-full p-3 text-left no-underline text-inherit cursor-pointer hover:bg-black/[0.02] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6ee7] focus-visible:ring-inset";
+
+  if (onSelect) {
+    return (
+      <Link
+        href={href}
+        className={rowClassName}
+        onClick={(e) => {
+          e.preventDefault();
+          onSelect(fund.id);
+        }}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <Link href={href} className={rowClassName}>
+      {content}
+    </Link>
   );
 }
 
 /** Top performers — single white card with row dividers (Figma 40118:77257). */
-export function MutualFundPerformerStack({ funds }: { funds: MutualFund[] }) {
+export function MutualFundPerformerStack({
+  funds,
+  onFundSelect,
+}: {
+  funds: MutualFund[];
+  onFundSelect?: (fundId: string) => void;
+}) {
   const visible = funds.slice(0, 3);
   return (
     <div className="w-full overflow-hidden rounded-lg border border-black/10 bg-white">
       {visible.map((fund, i) => (
         <div key={fund.id} className={i > 0 ? "border-t border-black/10" : ""}>
-          <MutualFundCard fund={fund} />
+          <MutualFundCard fund={fund} onSelect={onFundSelect} />
         </div>
       ))}
     </div>
@@ -125,13 +167,19 @@ export function MutualFundPerformerStack({ funds }: { funds: MutualFund[] }) {
 }
 
 /** Theme list card — single white container with row dividers (Figma 40118:77418, 300×276). */
-export function MutualFundThemeList({ funds }: { funds: MutualFund[] }) {
+export function MutualFundThemeList({
+  funds,
+  onFundSelect,
+}: {
+  funds: MutualFund[];
+  onFundSelect?: (fundId: string) => void;
+}) {
   const visible = funds.slice(0, 3);
   return (
     <div className="h-[276px] w-full shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
       {visible.map((fund, i) => (
         <div key={fund.id} className={i > 0 ? "border-t border-black/10" : ""}>
-          <MutualFundCard fund={fund} />
+          <MutualFundCard fund={fund} onSelect={onFundSelect} />
         </div>
       ))}
     </div>

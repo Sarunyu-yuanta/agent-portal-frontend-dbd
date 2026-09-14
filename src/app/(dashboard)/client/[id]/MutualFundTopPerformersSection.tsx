@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Button, Chip } from "@sarunyu/system-one";
-import { MutualFundPerformerStack, MutualFundSeeMoreIcon } from "./MutualFundCard";
+import { MutualFundPerformerStack, MutualFundSeeMoreIcon, mutualFundDetailHref } from "./MutualFundCard";
 import { MutualFundChipScroller } from "./MutualFundChipScroller";
 import { MF_ASSETS } from "./mutual-fund-assets";
 import {
@@ -16,10 +17,12 @@ export function MutualFundTopPerformersSection({
   categoryId,
   onCategoryChange,
   funds,
+  onFundSelect,
 }: {
   categoryId: MutualFundCategoryId;
   onCategoryChange: (id: MutualFundCategoryId) => void;
   funds: MutualFund[];
+  onFundSelect?: (fundId: string) => void;
 }) {
   return (
     <section className="flex w-full min-w-0 flex-col gap-4">
@@ -60,15 +63,29 @@ export function MutualFundTopPerformersSection({
         </div>
 
         <div className="flex flex-col items-center gap-0.5">
-          <MutualFundPerformerStack funds={funds} />
-          <Button
-            variant="plain"
-            size="xl"
-            rightIcon={<MutualFundSeeMoreIcon />}
-            className="w-fit shrink-0"
-          >
-            ดูเพิ่มเติม
-          </Button>
+          <MutualFundPerformerStack funds={funds} onFundSelect={onFundSelect} />
+          {funds[0] ? (
+            <Link
+              href={mutualFundDetailHref(funds[0].id)}
+              className="inline-flex w-fit shrink-0 no-underline"
+              onClick={
+                onFundSelect
+                  ? (e) => {
+                      e.preventDefault();
+                      onFundSelect(funds[0].id);
+                    }
+                  : undefined
+              }
+            >
+              <Button variant="plain" size="xl" rightIcon={<MutualFundSeeMoreIcon />} className="w-fit shrink-0">
+                ดูเพิ่มเติม
+              </Button>
+            </Link>
+          ) : (
+            <Button variant="plain" size="xl" rightIcon={<MutualFundSeeMoreIcon />} className="w-fit shrink-0" disabled>
+              ดูเพิ่มเติม
+            </Button>
+          )}
         </div>
       </div>
     </section>

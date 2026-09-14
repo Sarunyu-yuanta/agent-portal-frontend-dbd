@@ -24,6 +24,7 @@ import {
   resolveFixedIncomeCompany,
 } from "./client/[id]/fixed-income-data";
 import { getGlobalBondIssuer } from "./client/[id]/global-bond-data";
+import { getMutualFundSymbol } from "./client/[id]/mutual-fund-data";
 import { getThaiStructuredProduct } from "./client/[id]/thai-structured-data";
 import {
   catalogCategoryForPath,
@@ -247,6 +248,7 @@ const FI_BOND = /^\/product-catalog\/fixed-income\/bond\/(.+)$/;
 const FI_COMPANY = /^\/product-catalog\/fixed-income\/company\/(.+)$/;
 const GLOBAL_BOND = /^\/product-catalog\/global-bond\/(.+)$/;
 const THAI = /^\/product-catalog\/thai-structured\/(.+)$/;
+const MUTUAL_FUND = /^\/product-catalog\/mutual-fund\/(.+)$/;
 
 function catalogLabel(pathname: string): string | null {
   const segment = (re: RegExp) => {
@@ -292,6 +294,9 @@ function catalogLabel(pathname: string): string | null {
       ? [product.bbg1, product.bbg2, product.bbg3].filter(Boolean).join(" - ")
       : theme;
   }
+
+  const fundId = segment(MUTUAL_FUND);
+  if (fundId) return getMutualFundSymbol(fundId) ?? "Mutual Fund";
 
   return null;
 }

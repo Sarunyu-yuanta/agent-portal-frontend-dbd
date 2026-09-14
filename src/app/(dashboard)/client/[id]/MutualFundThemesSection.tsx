@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Button, PaginationBanner } from "@sarunyu/system-one";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
-import { MutualFundSeeMoreIcon, MutualFundThemeList } from "./MutualFundCard";
+import Link from "next/link";
+import { MutualFundSeeMoreIcon, MutualFundThemeList, mutualFundDetailHref } from "./MutualFundCard";
 import { MF_ASSETS } from "./mutual-fund-assets";
 import type { MutualFundTheme, MutualFundThemeIcon } from "./mutual-fund-data";
 import { useDragScroll } from "./use-drag-scroll";
@@ -35,7 +36,13 @@ function ThemeIcon({ icon }: { icon: MutualFundThemeIcon }) {
 }
 
 /** Figma 40118:77413 — theme card 308×364 */
-function ThemeCard({ theme }: { theme: MutualFundTheme }) {
+function ThemeCard({
+  theme,
+  onFundSelect,
+}: {
+  theme: MutualFundTheme;
+  onFundSelect?: (fundId: string) => void;
+}) {
   return (
     <div className="flex h-[364px] w-[308px] shrink-0 flex-col gap-[10px] rounded-lg bg-gradient-to-b from-[#0a6ee7] to-[#f3f4f6] to-[85.462%] px-1 pb-1 pt-2">
       <div className="flex w-full items-center gap-1 px-3">
@@ -43,16 +50,30 @@ function ThemeCard({ theme }: { theme: MutualFundTheme }) {
         <span className="min-w-0 flex-1 text-base font-bold leading-6 text-white">{theme.title}</span>
       </div>
       <div className="flex w-full flex-col gap-0.5">
-        <MutualFundThemeList funds={theme.funds} />
+        <MutualFundThemeList funds={theme.funds} onFundSelect={onFundSelect} />
         <div className="flex h-10 w-full items-center justify-center">
-          <Button
-            variant="plain"
-            size="xl"
-            rightIcon={<MutualFundSeeMoreIcon />}
-            className="w-fit shrink-0"
-          >
-            ดูเพิ่มเติม
-          </Button>
+          {theme.funds[0] ? (
+            <Link
+              href={mutualFundDetailHref(theme.funds[0].id)}
+              className="inline-flex w-fit shrink-0 no-underline"
+              onClick={
+                onFundSelect
+                  ? (e) => {
+                      e.preventDefault();
+                      onFundSelect(theme.funds[0].id);
+                    }
+                  : undefined
+              }
+            >
+              <Button variant="plain" size="xl" rightIcon={<MutualFundSeeMoreIcon />} className="w-fit shrink-0">
+                ดูเพิ่มเติม
+              </Button>
+            </Link>
+          ) : (
+            <Button variant="plain" size="xl" rightIcon={<MutualFundSeeMoreIcon />} className="w-fit shrink-0" disabled>
+              ดูเพิ่มเติม
+            </Button>
+          )}
         </div>
       </div>
     </div>
@@ -60,7 +81,13 @@ function ThemeCard({ theme }: { theme: MutualFundTheme }) {
 }
 
 /** Figma 40118:77403 — full-width themes band */
-export function MutualFundThemesSection({ themes }: { themes: MutualFundTheme[] }) {
+export function MutualFundThemesSection({
+  themes,
+  onFundSelect,
+}: {
+  themes: MutualFundTheme[];
+  onFundSelect?: (fundId: string) => void;
+}) {
   const drag = useDragScroll();
   const [activeIndex, setActiveIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);

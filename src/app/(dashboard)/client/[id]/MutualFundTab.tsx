@@ -8,7 +8,7 @@ import { MutualFundTopPerformersSection } from "./MutualFundTopPerformersSection
 import type { MutualFundCategoryId } from "./mutual-fund-data";
 import { useMutualFundCatalog } from "@/hooks/use-catalog";
 
-export function MutualFundTab() {
+export function MutualFundTab({ onFundSelect }: { onFundSelect?: (fundId: string) => void }) {
   const { data } = useMutualFundCatalog();
   const [categoryId, setCategoryId] = useState<MutualFundCategoryId>("global-equity");
   const funds = data.topPerformers[categoryId] ?? data.topPerformers["global-equity"] ?? [];
@@ -18,6 +18,7 @@ export function MutualFundTab() {
       categoryId={categoryId}
       onCategoryChange={setCategoryId}
       funds={funds}
+      onFundSelect={onFundSelect}
     />
   );
 
@@ -41,7 +42,7 @@ export function MutualFundTab() {
       </div>
 
       <div className="mx-auto mt-3 w-full max-w-[1280px] px-4 md:px-8 lg:mt-6 lg:px-6">
-        <MutualFundThemesSection themes={data.themes} />
+        <MutualFundThemesSection themes={data.themes} onFundSelect={onFundSelect} />
       </div>
     </div>
   );
