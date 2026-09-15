@@ -15,36 +15,113 @@
   "topPerformers": {
     "global-equity": [
       {
-        "id": "mf-scbkeqtg",
-        "symbol": "SCBKEQTG",
-        "name": "กองทุนเปิดไทยพาณิชย์หุ้นเกาหลี ชนิดสะสมมูลค่า",
-        "risk": 6,
-        "price": "22.0131",
-        "currency": "THB",
-        "changeAbs": "+0.0430",
-        "changePct": "+61.85%",
-        "isPick": false
-      },
-      {
         "id": "mf-ugisfx-n",
         "symbol": "UGISFX-N",
         "name": "กองทุนเปิด ยูไนเต็ด โกลบอล อินคัม สตราทีจิค บอนด์ เอฟเอ็กซ์ ฟันด์ - ชนิดรับซื้อคืนหน่วยลงทุนแบบปกติ",
         "risk": 4,
-        "price": "10.1527",
+        "price": "10.3316",
         "currency": "THB",
-        "changeAbs": "+0.6000",
-        "changePct": "+4.74%",
+        "changeAbs": "+0.0548",
+        "changePct": "+0.53%",
         "isPick": true
+      },
+      {
+        "id": "mf-es-gqg-uh",
+        "symbol": "ES-GQG-UH",
+        "name": "บริษัท หลักทรัพย์จัดการกองทุนอีสท์สปริง (ประเทศไทย) จำกัด",
+        "risk": 2,
+        "price": "12.4965",
+        "currency": "THB",
+        "changeAbs": "0.0000",
+        "changePct": "+12.75%",
+        "isPick": false
+      },
+      {
+        "id": "mf-scbsemi-a",
+        "symbol": "SCBSEMI(A)",
+        "name": "กองทุนเปิดไทยพาณิชย์ Semiconductor",
+        "risk": 6,
+        "price": "35.9007",
+        "currency": "THB",
+        "changeAbs": "+0.0052",
+        "changePct": "+0.71%",
+        "isPick": false
+      },
+      {
+        "id": "mf-scbkeqtg",
+        "symbol": "SCBKEQTG",
+        "name": "กองทุนเปิดไทยพาณิชย์หุ้นเกาหลี ชนิดสะสมมูลค่า",
+        "risk": 6,
+        "price": "11.2540",
+        "currency": "THB",
+        "changeAbs": "0.0000",
+        "changePct": "+0.71%",
+        "isPick": false
       },
       {
         "id": "mf-daol-defense",
         "symbol": "DAOL-DEFENSE",
         "name": "กองทุนเปิด ดาโอ ดีเฟนส์",
-        "risk": 7,
-        "price": "11.2540",
+        "risk": 4,
+        "price": "14.5998",
         "currency": "THB",
         "changeAbs": "+0.1250",
         "changePct": "+0.71%",
+        "isPick": false
+      },
+      {
+        "id": "mf-lhsemicon-d",
+        "symbol": "LHSEMICON-D",
+        "name": "กองทุนเปิดแลนด์ แอนด์ เฮ้าส์ Semiconductor",
+        "risk": 4,
+        "price": "18.3851",
+        "currency": "THB",
+        "changeAbs": "+0.0850",
+        "changePct": "+0.71%",
+        "isPick": false
+      },
+      {
+        "id": "mf-lhtoppick-r",
+        "symbol": "LHTOPPICK-R",
+        "name": "กองทุนเปิดแลนด์ แอนด์ เฮ้าส์ Top Pick",
+        "risk": 4,
+        "price": "11.2540",
+        "currency": "THB",
+        "changeAbs": "0.0000",
+        "changePct": "+0.71%",
+        "isPick": false
+      },
+      {
+        "id": "mf-i-oil",
+        "symbol": "I-OIL",
+        "name": "กองทุนเปิดทหารไทย Oil",
+        "risk": 8,
+        "price": "7.0963",
+        "currency": "THB",
+        "changeAbs": "+3.5563",
+        "changePct": "+100.71%",
+        "isPick": false
+      },
+      {
+        "id": "mf-tlsemicon-uh",
+        "symbol": "TLSEMICON-UH",
+        "name": "กองทุนเปิดทิสโก้ Semiconductor",
+        "risk": 7,
+        "price": "11.2540",
+        "currency": "THB",
+        "changeAbs": "+9.7956",
+        "changePct": "+73.71%",
+        "isPick": false
+      },
+      {
+        "id": "mf-principal-keq",
+        "symbol": "PRINCIPAL KEQ",
+        "name": "กองทุนเปิดพรินซิเพล Korea Equity",
+        "risk": 6,
+        "price": "15.9930",
+        "currency": "THB",
+        "changeAbs": "+6.4401",
+        "changePct": "+67.71%",
         "isPick": false
       }
     ],

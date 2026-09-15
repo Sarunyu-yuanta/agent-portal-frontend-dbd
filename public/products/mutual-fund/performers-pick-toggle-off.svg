@@ -1,0 +1,24 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="34.4" height="24.6667" viewBox="0 0 34.4 24.6667" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Toggle">
+<path id="Background" fill-rule="evenodd" clip-rule="evenodd" d="M12.3495 0.392786C13.4413 0.32827 14.5318 0.333432 15.6235 0.333432C15.6311 0.333432 21.1558 0.333432 21.1558 0.333432C22.2689 0.333432 23.3594 0.32827 24.4505 0.392786C25.4425 0.450851 26.4088 0.574722 27.3707 0.851496C29.3955 1.43343 31.1636 2.64892 32.4417 4.37214C33.7123 6.0844 34.4 8.18053 34.4 10.3328C34.4 12.4876 33.7123 14.5825 32.4417 16.2947C31.1636 18.0173 29.3955 19.2334 27.3707 19.8154C26.4088 20.0921 25.4425 20.2154 24.4505 20.2741C23.3594 20.3386 22.2689 20.3328 21.1771 20.3328C21.1696 20.3328 15.6436 20.3334 15.6436 20.3334C14.5318 20.3328 13.4413 20.3386 12.3495 20.2741C11.3581 20.2154 10.3918 20.0921 9.42996 19.8154C7.40518 19.2334 5.63702 18.0173 4.3589 16.2947C3.08831 14.5825 2.4 12.4876 2.4 10.3334C2.4 8.18053 3.08831 6.0844 4.3589 4.37214C5.63702 2.64892 7.40518 1.43343 9.42996 0.851496C10.3918 0.574722 11.3581 0.450851 12.3495 0.392786Z" fill="#F3F4F6"/>
+<g id="Knob" filter="url(#filter0_dd_0_1638)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M12 18.6667C16.4183 18.6667 20 14.9357 20 10.3333C20 5.73096 16.4183 2 12 2C7.58172 2 4 5.73096 4 10.3333C4 14.9357 7.58172 18.6667 12 18.6667Z" fill="white"/>
+</g>
+</g>
+<defs>
+<filter id="filter0_dd_0_1638" x="1.19209e-07" y="0" width="24" height="24.6667" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="2"/>
+<feGaussianBlur stdDeviation="2"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.4 0 0 0 0 0.4 0 0 0 0 0.4 0 0 0 0.16 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1638"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset/>
+<feGaussianBlur stdDeviation="0.5"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.4 0 0 0 0 0.4 0 0 0 0 0.4 0 0 0 0.04 0"/>
+<feBlend mode="normal" in2="effect1_dropShadow_0_1638" result="effect2_dropShadow_0_1638"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_0_1638" result="shape"/>
+</filter>
+</defs>
+</svg>

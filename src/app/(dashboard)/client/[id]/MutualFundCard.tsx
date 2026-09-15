@@ -6,6 +6,9 @@ import { Tag } from "@sarunyu/system-one";
 import type { MutualFund } from "./mutual-fund-data";
 import { MF_ASSETS, mutualFundRiskMeterSrc } from "./mutual-fund-assets";
 
+const LIST_CARD_CLASS =
+  "shadow-[0px_0px_1px_rgba(102,102,102,0.16),0px_4px_4px_rgba(102,102,102,0.12)]";
+
 function mutualFundDetailHref(fundId: string) {
   return `/product-catalog/mutual-fund/${encodeURIComponent(fundId)}`;
 }
@@ -48,18 +51,87 @@ function RiskMeterIcon({ risk }: { risk: number }) {
   );
 }
 
-/** Figma risk pill — compact 71×20 badge, not full-width (node 36234:961677). */
-function RiskBadge({ risk }: { risk: number }) {
+/** Figma risk pill — compact badge (node 36234:961677 / 39889:667997). */
+function RiskBadge({ risk, inline }: { risk: number; inline?: boolean }) {
+  const pill = (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-2xl border border-black/10 bg-white px-2 py-0.5">
+      <RiskMeterIcon risk={risk} />
+      <span className="text-xs font-semibold leading-4 text-[#4a5565] whitespace-nowrap">risk: {risk}</span>
+    </span>
+  );
+
+  if (inline) return pill;
+
   return (
     <div className="flex w-full shrink-0 gap-1 items-start">
-      <div className="flex h-5 shrink-0 flex-col items-start">
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-2xl border border-black/10 bg-white px-2 py-0.5">
-          <RiskMeterIcon risk={risk} />
-          <span className="flex flex-col justify-center text-xs font-semibold leading-4 text-[#4a5565] whitespace-nowrap">
-            risk: {risk}
-          </span>
-        </span>
+      <div className="flex h-5 shrink-0 flex-col items-start">{pill}</div>
+    </div>
+  );
+}
+
+function ListCardMetaTag({
+  iconSrc,
+  label,
+  className,
+  labelClassName,
+}: {
+  iconSrc: string;
+  label: string;
+  className: string;
+  labelClassName: string;
+}) {
+  return (
+    <span className={`inline-flex items-center justify-center gap-0.5 overflow-hidden rounded px-1 py-0.5 ${className}`}>
+      <span className="relative size-3.5 shrink-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={iconSrc} alt="" className="absolute inset-0 block size-full max-w-none" />
+      </span>
+      <span className={`text-[9px] font-normal leading-[14px] whitespace-nowrap ${labelClassName}`}>{label}</span>
+    </span>
+  );
+}
+
+function ListCardPercentPill({ changePct }: { changePct: string }) {
+  const positive = changePct.startsWith("+");
+  const value = changePct.replace(/^[+-]/, "");
+
+  return (
+    <span
+      className={`inline-flex items-center overflow-hidden rounded px-1.5 py-0.5 text-xs leading-4 ${
+        positive ? "bg-[#dbfce7] text-[#008236]" : "bg-[#fee2e2] text-[#fb2c36]"
+      }`}
+    >
+      {positive ? <span>+</span> : null}
+      <span>{value}</span>
+    </span>
+  );
+}
+
+/** Figma 39889:667997 — price row (gain vs neutral abs). */
+function ListCardPriceChange({ fund }: { fund: MutualFund }) {
+  const absNeutral = fund.changeAbs === "0.0000";
+  const absValue = fund.changeAbs.replace(/^\+/, "");
+
+  return (
+    <div className="flex shrink-0 flex-col items-end whitespace-nowrap">
+      <div className="flex items-center justify-end gap-1 text-sm font-bold leading-5 text-[#101828]">
+        <span>{fund.price}</span>
+        <span>{fund.currency}</span>
       </div>
+      {absNeutral ? (
+        <div className="flex w-[105px] items-center gap-1">
+          <span className="h-4 flex-1 text-right text-xs leading-4 text-[#4a5565]">{fund.changeAbs}</span>
+          <ListCardPercentPill changePct={fund.changePct} />
+        </div>
+      ) : (
+        <div className="flex items-center gap-1 text-xs leading-4 text-[#008236]">
+          <span className="flex items-center">
+            <span>+</span>
+            <span>{absValue}</span>
+          </span>
+          <ListCardPercentPill changePct={fund.changePct} />
+        </div>
+      )}
     </div>
   );
 }
@@ -90,6 +162,67 @@ function Sparkline() {
     <div className="relative h-[30px] w-12 shrink-0">
       <Image src={MF_ASSETS.sparkline} alt="" fill className="object-contain" sizes="48px" />
     </div>
+  );
+}
+
+/** Figma 39889:667996 — grid card on performers list page. */
+export function MutualFundListCard({
+  fund,
+  onSelect,
+}: {
+  fund: MutualFund;
+  onSelect?: (fundId: string) => void;
+}) {
+  const href = mutualFundDetailHref(fund.id);
+  const inner = (
+    <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-clip">
+      <div className="flex w-full items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">{fund.symbol}</span>
+        </div>
+        <ListCardPriceChange fund={fund} />
+      </div>
+      <div className="flex h-5 w-full items-center gap-1">
+        <div className="flex h-5 shrink-0 flex-col items-start">
+          <RiskBadge risk={fund.risk} inline />
+        </div>
+        <ListCardMetaTag
+          iconSrc={MF_ASSETS.performersTagView}
+          label="View"
+          className="bg-[#f6f3ef]"
+          labelClassName="text-[#935737]"
+        />
+        <ListCardMetaTag
+          iconSrc={MF_ASSETS.performersTagHighlight}
+          label="Highlight"
+          className="bg-[#eff6ff]"
+          labelClassName="text-[#0a6ee7]"
+        />
+      </div>
+    </div>
+  );
+
+  const className = `flex w-full items-center rounded-lg bg-white px-3 py-2 text-left no-underline text-inherit transition-colors hover:bg-black/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6ee7] ${LIST_CARD_CLASS}`;
+
+  if (onSelect) {
+    return (
+      <Link
+        href={href}
+        className={className}
+        onClick={(e) => {
+          e.preventDefault();
+          onSelect(fund.id);
+        }}
+      >
+        {inner}
+      </Link>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {inner}
+    </Link>
   );
 }
 

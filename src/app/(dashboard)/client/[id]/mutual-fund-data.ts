@@ -143,12 +143,69 @@ export const MUTUAL_FUND_CATALOG = mutualFundsRaw as MutualFundCatalog;
 
 export const MUTUAL_FUND_CATEGORIES = MUTUAL_FUND_CATALOG.categories;
 
+/** Figma 39889:665476 — performers list tabs (no ตราสารหนี้ต่างประเทศ). */
+export const TOP_PERFORMERS_TAB_CATEGORIES = MUTUAL_FUND_CATEGORIES.filter(
+  (c) => c.id !== "global-fixed-income",
+);
+
 export function getTopPerformers(categoryId: MutualFundCategoryId): MutualFund[] {
   return (
     MUTUAL_FUND_CATALOG.topPerformers[categoryId] ??
     MUTUAL_FUND_CATALOG.topPerformers["global-equity"] ??
     []
   );
+}
+
+/** Figma 39889:665484 — performers list as-of date. */
+export const TOP_PERFORMERS_LIST_UPDATED_AT = "2 ส.ค 69";
+
+/** Figma 39889:667557 — total catalog count (mock). */
+export const TOP_PERFORMERS_DISPLAY_COUNT = 160;
+
+export const MUTUAL_FUND_PERFORMANCE_PERIODS = [
+  "1M",
+  "3M",
+  "6M",
+  "YTD",
+  "1Y",
+  "3Y",
+  "5Y",
+  "MAX",
+] as const;
+
+export type MutualFundPerformancePeriod = (typeof MUTUAL_FUND_PERFORMANCE_PERIODS)[number];
+
+export function normalizeMutualFundCategoryId(value: string): MutualFundCategoryId {
+  if (value === "global-fixed-income") return "fixed-income";
+  return MUTUAL_FUND_CATEGORIES.some((c) => c.id === value)
+    ? (value as MutualFundCategoryId)
+    : "global-equity";
+}
+
+export function mutualFundCategoryHref(categoryId: MutualFundCategoryId): string {
+  return `/product-catalog/mutual-fund/top-performers/${encodeURIComponent(categoryId)}`;
+}
+
+/** Full list for performers page — category slice plus catalog funds for a fuller grid. */
+/** Tile funds for list grid density (Figma shows 16+ cards). */
+export function getTopPerformersGridFunds(
+  categoryId: MutualFundCategoryId,
+  pickOnly: boolean,
+  targetCount = 16,
+): MutualFund[] {
+  const base = getTopPerformersList(categoryId);
+  const filtered = pickOnly ? base.filter((f) => f.isPick) : base;
+  if (filtered.length === 0) return [];
+  const out: MutualFund[] = [];
+  for (let i = 0; i < targetCount; i += 1) {
+    out.push(filtered[i % filtered.length]);
+  }
+  return out;
+}
+
+/** Category slice only — performers list page order matches Figma grid. */
+export function getTopPerformersList(categoryId: MutualFundCategoryId): MutualFund[] {
+  return getTopPerformers(categoryId);
 }
 
 function allCatalogFunds(): MutualFund[] {

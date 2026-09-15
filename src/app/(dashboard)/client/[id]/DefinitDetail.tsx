@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@sarunyu/system-one";
@@ -10,6 +10,7 @@ import { usePrivacy } from "@/contexts/privacy-context";
 import { useClients } from "@/hooks/use-api";
 import { usePageBreadcrumb } from "../../page-breadcrumbs";
 import { DEFINIT_PLANS, type DefinitPlan } from "./definit-plan-data";
+import { DefinitPlanDetailModal } from "./RoboAdvisoryPlanDetailModal";
 import { ROBO_ASSETS } from "./robo-advisory-assets";
 import { RoboRiskLevel } from "./RoboRiskLevel";
 
@@ -399,6 +400,8 @@ function DefinitHeroDesktop({ plans, onPlanDetails }: { plans: DefinitPlan[]; on
 
 /** Figma 34315:84889 — Definit x Yuanta detail from Portfolio Advisory tab. */
 export function DefinitDetail({ onBack }: { onBack?: () => void }) {
+  const [detailPlan, setDetailPlan] = useState<DefinitPlan | null>(null);
+
   useEffect(() => {
     const main = document.querySelector("main");
     if (main) {
@@ -408,19 +411,15 @@ export function DefinitDetail({ onBack }: { onBack?: () => void }) {
     }
   }, []);
 
-  const handlePlanDetails = (_plan: DefinitPlan) => {
-    // Plan detail modal — to be wired when design is available.
-  };
-
   return (
     <div className="flex w-full flex-1 flex-col max-lg:min-h-[calc(100dvh-60px)] max-lg:overflow-x-clip max-lg:bg-white lg:bg-[#f9fafb] lg:pb-20 lg:pt-2">
       <div className="flex min-h-[calc(100dvh-60px)] w-full flex-1 flex-col lg:hidden">
         <DefinitMobileBreadcrumb />
         <div className="md:hidden">
-          <DefinitHeroMobile plans={DEFINIT_PLANS} onPlanDetails={handlePlanDetails} />
+          <DefinitHeroMobile plans={DEFINIT_PLANS} onPlanDetails={setDetailPlan} />
         </div>
         <div className="hidden md:block">
-          <DefinitHeroTablet plans={DEFINIT_PLANS} onPlanDetails={handlePlanDetails} />
+          <DefinitHeroTablet plans={DEFINIT_PLANS} onPlanDetails={setDetailPlan} />
         </div>
       </div>
 
@@ -428,9 +427,15 @@ export function DefinitDetail({ onBack }: { onBack?: () => void }) {
         {onBack ? <DesktopBackHeader onBack={onBack} /> : null}
 
         <div className="w-full overflow-clip rounded-xl" style={{ boxShadow: SECTION_SHADOW }}>
-          <DefinitHeroDesktop plans={DEFINIT_PLANS} onPlanDetails={handlePlanDetails} />
+          <DefinitHeroDesktop plans={DEFINIT_PLANS} onPlanDetails={setDetailPlan} />
         </div>
       </div>
+
+      <DefinitPlanDetailModal
+        plan={detailPlan}
+        open={detailPlan != null}
+        onClose={() => setDetailPlan(null)}
+      />
     </div>
   );
 }

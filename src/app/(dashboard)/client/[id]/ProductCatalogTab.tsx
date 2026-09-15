@@ -17,7 +17,7 @@ import { GlobalBondTab } from "./GlobalBondTab";
 import { MutualFundTab } from "./MutualFundTab";
 import { RoboAdvisoryTab } from "./RoboAdvisoryTab";
 import { MutualFundDetail } from "./MutualFundDetail";
-import { getMutualFund } from "./mutual-fund-data";
+import { getMutualFund, mutualFundCategoryHref, type MutualFundCategoryId } from "./mutual-fund-data";
 import { GlobalBondDetail } from "./GlobalBondDetail";
 import { GlobalBondAllPage } from "./GlobalBondAllPage";
 import { getIssuerIdForBondRow, type GlobalBondIssuerId } from "./global-bond-data";
@@ -202,6 +202,7 @@ export type CatalogNavigation = {
   onAllGlobalBondsView: () => void;
   onThaiProductSelect: (product: ThaiStructuredProduct) => void;
   onMutualFundSelect: (fundId: string) => void;
+  onMutualFundTopPerformersSeeAll: (categoryId: MutualFundCategoryId) => void;
   onRoboAdvisorySelect: () => void;
   onDefinitSelect: () => void;
 };
@@ -378,6 +379,9 @@ export function ProductCatalogTab({
     onThaiProductSelect: navigation?.onThaiProductSelect ?? setSelectedThaiProduct,
     onMutualFundSelect:
       navigation?.onMutualFundSelect ?? ((fundId: string) => setSelectedMutualFundId(fundId)),
+    onMutualFundTopPerformersSeeAll:
+      navigation?.onMutualFundTopPerformersSeeAll ??
+      ((categoryId: MutualFundCategoryId) => router.push(mutualFundCategoryHref(categoryId))),
     onRoboAdvisorySelect:
       navigation?.onRoboAdvisorySelect ?? (() => router.push("/product-catalog/robo-advisory")),
     onDefinitSelect:
@@ -837,7 +841,10 @@ export function ProductCatalogTab({
             )}
 
             {activeProductTab === "mutual-fund" && (
-              <MutualFundTab onFundSelect={nav.onMutualFundSelect} />
+              <MutualFundTab
+                onFundSelect={nav.onMutualFundSelect}
+                onTopPerformersSeeAll={nav.onMutualFundTopPerformersSeeAll}
+              />
             )}
           </>
         )}

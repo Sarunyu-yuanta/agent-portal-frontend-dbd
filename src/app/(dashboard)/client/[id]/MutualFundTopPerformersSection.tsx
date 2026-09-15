@@ -3,11 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button, Chip } from "@sarunyu/system-one";
-import { MutualFundPerformerStack, MutualFundSeeMoreIcon, mutualFundDetailHref } from "./MutualFundCard";
+import { MutualFundPerformerStack, MutualFundSeeMoreIcon } from "./MutualFundCard";
 import { MutualFundChipScroller } from "./MutualFundChipScroller";
 import { MF_ASSETS } from "./mutual-fund-assets";
 import {
   MUTUAL_FUND_CATEGORIES,
+  mutualFundCategoryHref,
   type MutualFund,
   type MutualFundCategoryId,
 } from "./mutual-fund-data";
@@ -18,12 +19,15 @@ export function MutualFundTopPerformersSection({
   onCategoryChange,
   funds,
   onFundSelect,
+  onSeeAll,
 }: {
   categoryId: MutualFundCategoryId;
   onCategoryChange: (id: MutualFundCategoryId) => void;
   funds: MutualFund[];
   onFundSelect?: (fundId: string) => void;
+  onSeeAll?: (categoryId: MutualFundCategoryId) => void;
 }) {
+  const seeAllHref = mutualFundCategoryHref(categoryId);
   return (
     <section className="flex w-full min-w-0 flex-col gap-4">
       <div className="flex flex-col gap-3">
@@ -64,15 +68,15 @@ export function MutualFundTopPerformersSection({
 
         <div className="flex flex-col items-center gap-0.5">
           <MutualFundPerformerStack funds={funds} onFundSelect={onFundSelect} />
-          {funds[0] ? (
+          {funds.length > 0 ? (
             <Link
-              href={mutualFundDetailHref(funds[0].id)}
+              href={seeAllHref}
               className="inline-flex w-fit shrink-0 no-underline"
               onClick={
-                onFundSelect
+                onSeeAll
                   ? (e) => {
                       e.preventDefault();
-                      onFundSelect(funds[0].id);
+                      onSeeAll(categoryId);
                     }
                   : undefined
               }
