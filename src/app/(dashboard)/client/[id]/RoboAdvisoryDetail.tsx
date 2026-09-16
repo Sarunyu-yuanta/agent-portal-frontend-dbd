@@ -4,13 +4,19 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@sarunyu/system-one";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, FunnelSimpleIcon } from "@phosphor-icons/react";
 import { ResponsiveBreadcrumb } from "@/components/layout/ResponsiveBreadcrumb";
 import { usePrivacy } from "@/contexts/privacy-context";
 import { useClients } from "@/hooks/use-api";
 import { usePageBreadcrumb } from "../../page-breadcrumbs";
 import { ROBO_ASSETS } from "./robo-advisory-assets";
 import { ROBO_ADVISORY_PLANS, type RoboAdvisoryPlan } from "./robo-advisory-plan-data";
+import {
+  EMPTY_ROBO_ADVISORY_FILTERS,
+  filterRoboAdvisoryPlans,
+  type RoboAdvisoryFilters,
+} from "./robo-advisory-filter-data";
+import { RoboAdvisoryFilterModal } from "./RoboAdvisoryFilterModal";
 import { RoboAdvisoryPlanDetailModal } from "./RoboAdvisoryPlanDetailModal";
 import { RoboRiskLevel } from "./RoboRiskLevel";
 
@@ -18,6 +24,9 @@ const PLAN_CARD_SHADOW =
   "0px 0px 1px rgba(102, 102, 102, 0.16), 0px 4px 4px rgba(102, 102, 102, 0.12)";
 const SECTION_SHADOW =
   "0px 1px 2px 0px rgba(0, 0, 0, 0.1), 0px 1px 3px 1px rgba(0, 0, 0, 0.05)";
+
+/** Hidden pending sign-off on the filter behavior — flip to true to re-enable. */
+const SHOW_ROBO_FILTER_BUTTON = false;
 
 /** Figma 33772:197802 — mobile hero 233×40 (2×20px lines, body-2 14px). */
 const ROBO_DETAIL_MOBILE_HERO_LINES = [
@@ -187,9 +196,11 @@ function RoboAdvisoryChartOverlay({ layout }: { layout: "mobile" | "tablet" }) {
 function RoboAdvisoryHeroMobile({
   plans,
   onPlanDetails,
+  onFilterClick,
 }: {
   plans: RoboAdvisoryPlan[];
   onPlanDetails: (plan: RoboAdvisoryPlan) => void;
+  onFilterClick: () => void;
 }) {
   return (
     <div className="relative flex w-full flex-1 flex-col items-center overflow-x-clip bg-gradient-to-t from-white to-[#063f84] pb-20">
@@ -219,8 +230,13 @@ function RoboAdvisoryHeroMobile({
       </div>
 
       <div className="relative z-10 flex w-full flex-col items-center gap-3">
-        <div className="flex w-full items-center px-4">
+        <div className="flex w-full items-center justify-between px-4">
           <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+          {SHOW_ROBO_FILTER_BUTTON ? (
+            <Button variant="outline-black" size="icon-sm" aria-label="ตัวกรอง" onClick={onFilterClick}>
+              <FunnelSimpleIcon size={18} />
+            </Button>
+          ) : null}
         </div>
         <div className="flex w-[343px] max-w-[calc(100%-32px)] flex-col gap-3">
           {plans.map((plan) => (
@@ -236,9 +252,11 @@ function RoboAdvisoryHeroMobile({
 function RoboAdvisoryHeroTablet({
   plans,
   onPlanDetails,
+  onFilterClick,
 }: {
   plans: RoboAdvisoryPlan[];
   onPlanDetails: (plan: RoboAdvisoryPlan) => void;
+  onFilterClick: () => void;
 }) {
   return (
     <div className="relative flex min-h-[910px] w-full flex-1 flex-col gap-3 overflow-x-clip bg-gradient-to-t from-white to-[#063f84] pb-20">
@@ -262,8 +280,13 @@ function RoboAdvisoryHeroTablet({
       </div>
 
       <div className="relative z-10 flex w-full flex-col gap-4 px-8">
-        <div className="flex w-full items-center">
+        <div className="flex w-full items-center justify-between">
           <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+          {SHOW_ROBO_FILTER_BUTTON ? (
+            <Button variant="outline-black" size="icon-sm" aria-label="ตัวกรอง" onClick={onFilterClick}>
+              <FunnelSimpleIcon size={18} />
+            </Button>
+          ) : null}
         </div>
         <div className="flex w-full flex-col gap-4">
           {plans.map((plan) => (
@@ -279,9 +302,11 @@ function RoboAdvisoryHeroTablet({
 function RoboAdvisoryHeroDesktop({
   plans,
   onPlanDetails,
+  onFilterClick,
 }: {
   plans: RoboAdvisoryPlan[];
   onPlanDetails: (plan: RoboAdvisoryPlan) => void;
+  onFilterClick: () => void;
 }) {
   return (
     <div className="relative flex w-full flex-col items-center bg-gradient-to-t from-white to-[#063f84] px-14 pb-12">
@@ -311,8 +336,13 @@ function RoboAdvisoryHeroDesktop({
       </div>
 
       <div className="relative z-10 flex w-full flex-col gap-4">
-        <div className="flex w-full items-center">
+        <div className="flex w-full items-center justify-between">
           <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+          {SHOW_ROBO_FILTER_BUTTON ? (
+            <Button variant="outline-black" size="icon-sm" aria-label="ตัวกรอง" onClick={onFilterClick}>
+              <FunnelSimpleIcon size={18} />
+            </Button>
+          ) : null}
         </div>
 
         <div className="flex w-full items-start gap-3">
@@ -328,6 +358,9 @@ function RoboAdvisoryHeroDesktop({
 /** Figma 33787:149486 — 996px column; breadcrumb from layout, desktop back bar in-page. */
 export function RoboAdvisoryDetail({ onBack }: { onBack?: () => void }) {
   const [detailPlan, setDetailPlan] = useState<RoboAdvisoryPlan | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState<RoboAdvisoryFilters>(EMPTY_ROBO_ADVISORY_FILTERS);
+  const filteredPlans = filterRoboAdvisoryPlans(ROBO_ADVISORY_PLANS, filters);
 
   useEffect(() => {
     const main = document.querySelector("main");
@@ -343,10 +376,18 @@ export function RoboAdvisoryDetail({ onBack }: { onBack?: () => void }) {
       <div className="flex min-h-[calc(100dvh-60px)] w-full flex-1 flex-col lg:hidden">
         <RoboAdvisoryMobileBreadcrumb />
         <div className="md:hidden">
-          <RoboAdvisoryHeroMobile plans={ROBO_ADVISORY_PLANS} onPlanDetails={setDetailPlan} />
+          <RoboAdvisoryHeroMobile
+            plans={filteredPlans}
+            onPlanDetails={setDetailPlan}
+            onFilterClick={() => setFiltersOpen(true)}
+          />
         </div>
         <div className="hidden md:block">
-          <RoboAdvisoryHeroTablet plans={ROBO_ADVISORY_PLANS} onPlanDetails={setDetailPlan} />
+          <RoboAdvisoryHeroTablet
+            plans={filteredPlans}
+            onPlanDetails={setDetailPlan}
+            onFilterClick={() => setFiltersOpen(true)}
+          />
         </div>
       </div>
 
@@ -354,9 +395,23 @@ export function RoboAdvisoryDetail({ onBack }: { onBack?: () => void }) {
         {onBack ? <DesktopBackHeader onBack={onBack} /> : null}
 
         <div className="w-full overflow-clip rounded-xl bg-white" style={{ boxShadow: SECTION_SHADOW }}>
-          <RoboAdvisoryHeroDesktop plans={ROBO_ADVISORY_PLANS} onPlanDetails={setDetailPlan} />
+          <RoboAdvisoryHeroDesktop
+            plans={filteredPlans}
+            onPlanDetails={setDetailPlan}
+            onFilterClick={() => setFiltersOpen(true)}
+          />
         </div>
       </div>
+
+      <RoboAdvisoryFilterModal
+        open={filtersOpen}
+        filters={filters}
+        onClose={() => setFiltersOpen(false)}
+        onApply={(nextFilters) => {
+          setFilters(nextFilters);
+          setFiltersOpen(false);
+        }}
+      />
 
       <RoboAdvisoryPlanDetailModal
         plan={detailPlan}

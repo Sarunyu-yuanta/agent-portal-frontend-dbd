@@ -1,4 +1,4 @@
-import type { MutualFundCategoryId } from "./mutual-fund-data";
+import type { MobileFundGroupId, MutualFundCategoryId } from "./mutual-fund-data";
 
 /** Figma-exported assets for the Mutual Fund catalog tab. */
 export const MF_ASSETS = {
@@ -6,7 +6,6 @@ export const MF_ASSETS = {
   bookOpen: "/products/mutual-fund/book-open-text.svg",
   arrowRightBlue: "/products/mutual-fund/arrow-right-blue.svg",
   sparkline: "/products/mutual-fund/sparkline-positive.svg",
-  yuantaPick: "/products/mutual-fund/yuanta-pick-icon.svg",
   filterIllustration: "/products/mutual-fund/filter-illustration.png",
   taxIllustration: "/products/mutual-fund/tax-illustration.png",
   navPriceIcon: "/products/mutual-fund/nav-price-icon.svg",
@@ -37,9 +36,22 @@ export const MF_ASSETS = {
     commodities: "/products/mutual-fund/performers-hero-commodities.png",
     gold: "/products/mutual-fund/performers-hero-gold.png",
   },
-  performersPickToggleOff: "/products/mutual-fund/performers-pick-toggle-off.svg",
+  /** Figma 39839:522570 (mobile) — "ทั้งหมด" tab hero, raw icon with no baked-in glow. */
+  performersHeroAllFunds: "/products/mutual-fund/performers-hero-all-funds.png",
+  /** Figma mobile tab-group heroes (40473:71xxxx) — raw icons, no baked-in glow (see MOBILE_GROUP_HERO). */
+  mobileGroupHero: {
+    "fixed-income": "/products/mutual-fund/mobile-thai-fixed-income.png",
+    "global-fixed-income": "/products/mutual-fund/mobile-foreign-fixed-income-1.png",
+    "thai-equity": "/products/mutual-fund/mobile-thai-equity.png",
+    "foreign-equity": "/products/mutual-fund/mobile-foreign-equity.png",
+    "commodities-group": "/products/mutual-fund/mobile-commodities.png",
+    "tax-saving": "/products/mutual-fund/mobile-tax-saving.png",
+    others: "/products/mutual-fund/mobile-others-globe.png",
+  },
   performersTagView: "/products/mutual-fund/performers-tag-view.svg",
   performersTagHighlight: "/products/mutual-fund/performers-tag-highlight.svg",
+  /** Figma 40544:190783 — corner checkmark badge shown on a selected View/Highlight filter chip. */
+  tagChipSelectedBadge: "/products/mutual-fund/tag-chip-selected-badge.svg",
   themeIcon: {
     "head-circuit": "/products/mutual-fund/icon-head-circuit.svg",
     bank: "/products/mutual-fund/icon-bank.svg",
@@ -52,6 +64,124 @@ export const MF_ASSETS = {
 /** Figma performers list — one hero illustration per category tab. */
 export function mutualFundPerformersHeroSrc(categoryId: MutualFundCategoryId): string {
   return MF_ASSETS.performersHero[categoryId] ?? MF_ASSETS.performersHero["global-equity"];
+}
+
+export type MutualFundPerformersHeroSpec = {
+  /** Offset from the top of the ~996×70 heading text container. */
+  top: number;
+  /** Offset from the right edge of the heading text container (negative = overflow past it). */
+  right: number;
+  width: number;
+  height: number;
+};
+
+/**
+ * Figma per-category hero bounding boxes (39889:665472, 668602, 669119, 669516,
+ * 669794, 670098, 670283, 670388, 670538, 670886) — each measured relative to its
+ * own "Heading Text Container". Only the globe (global-equity) overflows the
+ * container's right edge; every other category sits flush (right: 0).
+ */
+const PERFORMERS_HERO_SPEC: Record<MutualFundCategoryId, MutualFundPerformersHeroSpec> = {
+  "global-equity": { top: -22.5, right: -3, width: 136, height: 180 },
+  "thai-equity": { top: -1, right: 0, width: 124, height: 159 },
+  /** Figma group height 159 assumes the asset's native 278×318 aspect (139×159), not 124×159. */
+  "us-equity": { top: -1, right: 0, width: 139, height: 159 },
+  "japan-equity": { top: -1, right: 0, width: 124, height: 159 },
+  "europe-equity": { top: -1, right: 0, width: 124, height: 159 },
+  "emerging-equity": { top: -7, right: 0, width: 128, height: 165 },
+  "fixed-income": { top: -3, right: 0, width: 124, height: 161 },
+  "global-fixed-income": { top: -3, right: 0, width: 124, height: 161 },
+  reits: { top: -3, right: 0, width: 124, height: 161 },
+  commodities: { top: -3, right: 0, width: 124, height: 161 },
+  gold: { top: -3, right: 0, width: 124, height: 161 },
+};
+
+export function mutualFundPerformersHeroSpec(
+  categoryId: MutualFundCategoryId,
+): MutualFundPerformersHeroSpec {
+  return PERFORMERS_HERO_SPEC[categoryId] ?? PERFORMERS_HERO_SPEC["global-equity"];
+}
+
+/** A single decorative icon within a tab group's hero graphic — none of these have a baked-in glow, unlike the desktop per-category PNGs. */
+export type MobileGroupHeroLayer = {
+  src: string;
+  /** Offset from the bottom/right edge of the Header Section (375×126 on mobile; reused as-is on desktop). */
+  bottom: number;
+  right: number;
+  width: number;
+  height: number;
+  rotationDeg?: number;
+};
+
+export type MobileGroupHero = {
+  glow: { bottom: number; right: number; size: number };
+  layers: MobileGroupHeroLayer[];
+};
+
+const ALL_FUNDS_HERO: MobileGroupHero = {
+  glow: { bottom: -61, right: 21, size: 124 },
+  layers: [{ src: MF_ASSETS.performersHeroAllFunds, bottom: 16, right: 41, width: 85, height: 85 }],
+};
+
+/**
+ * Figma mobile tab-group heroes (40473:719391, 719154, 718914, 718673, 719628,
+ * 720351, 719868) — each is a raw icon composited over a shared #eff6ff glow
+ * circle at the Header Section's bottom-right corner, not a flattened PNG.
+ */
+const MOBILE_GROUP_HERO: Record<MobileFundGroupId, MobileGroupHero> = {
+  all: ALL_FUNDS_HERO,
+  "fixed-income": {
+    glow: { bottom: -61, right: 21, size: 124 },
+    layers: [
+      {
+        src: MF_ASSETS.mobileGroupHero["fixed-income"],
+        bottom: -8,
+        right: 24,
+        width: 114,
+        height: 116,
+        rotationDeg: -24,
+      },
+    ],
+  },
+  "global-fixed-income": {
+    glow: { bottom: -61, right: 21, size: 124 },
+    layers: [
+      {
+        src: MF_ASSETS.mobileGroupHero["global-fixed-income"],
+        bottom: -8,
+        right: 23,
+        width: 94,
+        height: 101,
+        rotationDeg: -25,
+      },
+    ],
+  },
+  "thai-equity": {
+    glow: { bottom: -61, right: 21, size: 124 },
+    layers: [{ src: MF_ASSETS.mobileGroupHero["thai-equity"], bottom: -11, right: 39, width: 85, height: 110 }],
+  },
+  "foreign-equity": {
+    glow: { bottom: -61, right: 21, size: 124 },
+    layers: [{ src: MF_ASSETS.mobileGroupHero["foreign-equity"], bottom: -11, right: 37, width: 91, height: 110 }],
+  },
+  "commodities-group": {
+    glow: { bottom: -61, right: 21, size: 124 },
+    layers: [
+      { src: MF_ASSETS.mobileGroupHero["commodities-group"], bottom: -11, right: 37, width: 91, height: 112 },
+    ],
+  },
+  "tax-saving": {
+    glow: { bottom: -61, right: 21, size: 124 },
+    layers: [{ src: MF_ASSETS.mobileGroupHero["tax-saving"], bottom: 16, right: 41, width: 81, height: 81 }],
+  },
+  others: {
+    glow: { bottom: -61, right: 21, size: 124 },
+    layers: [{ src: MF_ASSETS.mobileGroupHero.others, bottom: -3, right: 43, width: 66, height: 90 }],
+  },
+};
+
+export function mobileGroupHero(groupId: MobileFundGroupId): MobileGroupHero {
+  return MOBILE_GROUP_HERO[groupId] ?? ALL_FUNDS_HERO;
 }
 
 export function mutualFundRiskMeterSrc(risk: number): string {

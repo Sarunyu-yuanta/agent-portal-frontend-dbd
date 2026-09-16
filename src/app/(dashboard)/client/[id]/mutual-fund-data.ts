@@ -175,6 +175,58 @@ export const MUTUAL_FUND_PERFORMANCE_PERIODS = [
 
 export type MutualFundPerformancePeriod = (typeof MUTUAL_FUND_PERFORMANCE_PERIODS)[number];
 
+/** Figma 39839:522570 (mobile) — tab bar groups several desktop categories under one tab. */
+export type MobileFundGroupId =
+  | "all"
+  | "fixed-income"
+  | "global-fixed-income"
+  | "thai-equity"
+  | "foreign-equity"
+  | "commodities-group"
+  | "tax-saving"
+  | "others";
+
+export type MobileFundGroup = {
+  id: MobileFundGroupId;
+  label: string;
+  /** Underlying categories this group pools funds from; omitted (tax-saving/others) means no catalog data exists yet. */
+  categoryIds?: MutualFundCategoryId[];
+};
+
+export const MOBILE_FUND_GROUPS: MobileFundGroup[] = [
+  { id: "all", label: "ทั้งหมด" },
+  { id: "fixed-income", label: "ตราสารหนี้ไทย", categoryIds: ["fixed-income"] },
+  { id: "global-fixed-income", label: "ตราสารหนี้ต่างประเทศ", categoryIds: ["global-fixed-income"] },
+  { id: "thai-equity", label: "หุ้นไทย", categoryIds: ["thai-equity"] },
+  {
+    id: "foreign-equity",
+    label: "หุ้นต่างประเทศ",
+    categoryIds: ["global-equity", "us-equity", "japan-equity", "europe-equity", "emerging-equity"],
+  },
+  { id: "commodities-group", label: "Commodities", categoryIds: ["reits", "commodities", "gold"] },
+  { id: "tax-saving", label: "ลดหย่อนภาษี" },
+  { id: "others", label: "อื่นๆ" },
+];
+
+/** Funds for a mobile tab — pools every underlying category, deduped by fund id. */
+export function getMobileGroupFunds(groupId: MobileFundGroupId): MutualFund[] {
+  const group = MOBILE_FUND_GROUPS.find((g) => g.id === groupId);
+  const categoryIds = groupId === "all" ? MUTUAL_FUND_CATEGORIES.map((c) => c.id) : (group?.categoryIds ?? []);
+
+  const byId = new Map<string, MutualFund>();
+  for (const categoryId of categoryIds) {
+    for (const fund of getTopPerformers(categoryId)) {
+      byId.set(fund.id, fund);
+    }
+  }
+  return [...byId.values()];
+}
+
+/** Figma mobile period tabs — different set from desktop (adds 1D/1W, drops 3Y/5Y/MAX). */
+export const MOBILE_PERFORMANCE_PERIODS = ["1D", "1W", "1M", "3M", "6M", "YTD", "1Y"] as const;
+
+export type MobilePerformancePeriod = (typeof MOBILE_PERFORMANCE_PERIODS)[number];
+
 export function normalizeMutualFundCategoryId(value: string): MutualFundCategoryId {
   if (value === "global-fixed-income") return "fixed-income";
   return MUTUAL_FUND_CATEGORIES.some((c) => c.id === value)
@@ -194,11 +246,24 @@ export function getTopPerformersGridFunds(
   targetCount = 16,
 ): MutualFund[] {
   const base = getTopPerformersList(categoryId);
-  const filtered = pickOnly ? base.filter((f) => f.isPick) : base;
-  if (filtered.length === 0) return [];
+  return cycleToCount(pickOnly ? base.filter((f) => f.isPick) : base, targetCount);
+}
+
+/** Same density cycling as getTopPerformersGridFunds, for a mobile tab group. */
+export function getMobileGroupGridFunds(
+  groupId: MobileFundGroupId,
+  pickOnly: boolean,
+  targetCount = 16,
+): MutualFund[] {
+  const base = getMobileGroupFunds(groupId);
+  return cycleToCount(pickOnly ? base.filter((f) => f.isPick) : base, targetCount);
+}
+
+function cycleToCount(funds: MutualFund[], targetCount: number): MutualFund[] {
+  if (funds.length === 0) return [];
   const out: MutualFund[] = [];
   for (let i = 0; i < targetCount; i += 1) {
-    out.push(filtered[i % filtered.length]);
+    out.push(funds[i % funds.length]);
   }
   return out;
 }
