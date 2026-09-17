@@ -1,4 +1,4 @@
-import type { MobileFundGroupId, MutualFundCategoryId } from "./mutual-fund-data";
+import type { MobileFundGroupId, MutualFundCategoryId, MutualFundThemeId } from "./mutual-fund-data";
 
 /** Figma-exported assets for the Mutual Fund catalog tab. */
 export const MF_ASSETS = {
@@ -12,6 +12,10 @@ export const MF_ASSETS = {
   coinsIcon: "/products/mutual-fund/coins-icon.svg",
   filePdfIcon: "/products/mutual-fund/file-pdf-icon.svg",
   medal: "/products/mutual-fund/icon-medal.svg",
+  /** Figma 40473:724659 — green up-caret next to a fund's % change. */
+  caretUpFill: "/products/mutual-fund/caret-up-fill.svg",
+  /** Figma 40544:772684 — "ไม่พบผลลัพธ์ที่ตรงกับตัวกรองที่คุณเลือก" empty-state illustration. */
+  filterEmptyState: "/products/mutual-fund/filter-empty-state.png",
   insightsSectionBg: "/products/mutual-fund/insights-section-bg.png",
   /** Figma 40135:224291 — mobile insights decorative bg (375×375 @1x) */
   insightsSectionBgMobile: "/products/mutual-fund/insights-section-bg-mobile.png",
@@ -52,12 +56,34 @@ export const MF_ASSETS = {
   performersTagHighlight: "/products/mutual-fund/performers-tag-highlight.svg",
   /** Figma 40544:190783 — corner checkmark badge shown on a selected View/Highlight filter chip. */
   tagChipSelectedBadge: "/products/mutual-fund/tag-chip-selected-badge.svg",
-  themeIcon: {
-    "head-circuit": "/products/mutual-fund/icon-head-circuit.svg",
-    bank: "/products/mutual-fund/icon-bank.svg",
-    cpu: "/products/mutual-fund/icon-cpu.svg",
-    plant: "/products/mutual-fund/icon-plant.svg",
-    health: "/products/mutual-fund/icon-health.svg",
+  /** Figma 40473:722554/721855/721622/722088/722322 — theme detail page hero illustrations. */
+  themeHero: {
+    ai: "/products/mutual-fund/theme-hero/ai.png",
+    finance: "/products/mutual-fund/theme-hero/finance.png",
+    tech: "/products/mutual-fund/theme-hero/tech.png",
+    energy: "/products/mutual-fund/theme-hero/energy.png",
+    health: "/products/mutual-fund/theme-hero/health.png",
+  } satisfies Record<MutualFundThemeId, string>,
+  /** Figma 39910:727252 — "บริษัทจัดการกองทุน" filter chip logos. */
+  amcLogo: {
+    kasset: "/products/mutual-fund/amc/kasset.png",
+    daolinv: "/products/mutual-fund/amc/daolinv.png",
+    talisam: "/products/mutual-fund/amc/talisam.png",
+    bblam: "/products/mutual-fund/amc/bblam.png",
+    ksam: "/products/mutual-fund/amc/ksam.png",
+    ktam: "/products/mutual-fund/amc/ktam.png",
+    bcap: "/products/mutual-fund/amc/bcap.png",
+    principal: "/products/mutual-fund/amc/principal.png",
+    pamc: "/products/mutual-fund/amc/pamc.png",
+    uobam: "/products/mutual-fund/amc/uobam.png",
+    oneam: "/products/mutual-fund/amc/oneam.png",
+    eastspring: "/products/mutual-fund/amc/eastspring.png",
+    aberdeen: "/products/mutual-fund/amc/aberdeen.png",
+    kkpam: "/products/mutual-fund/amc/kkpam.png",
+    lhfund: "/products/mutual-fund/amc/lhfund.png",
+    assetfund: "/products/mutual-fund/amc/assetfund.png",
+    scbam: "/products/mutual-fund/amc/scbam.png",
+    mfc: "/products/mutual-fund/amc/mfc.png",
   },
 } as const;
 

@@ -132,15 +132,154 @@ export function recordVisit(pathname: string, url: string) {
   if (current) navWrite(PREV_URL_KEY, current);
   navWrite(CURRENT_URL_KEY, url);
 
+  // The forced-entry marker only covers the one navigation it was set for —
+  // once the user has moved on to a different page, it would otherwise go on
+  // suppressing a *later*, genuine cross-section referrer for whatever page
+  // happens to reuse that pathname (e.g. revisiting the same insight from
+  // Product Catalog afterwards).
+  if (navRead(FORCED_ENTRY_KEY) && navRead(FORCED_ENTRY_KEY) !== pathname) {
+    navWrite(FORCED_ENTRY_KEY, "");
+  }
+
   const section = sectionForPath(pathname);
   if (!section) return;
-  navWrite(storageKey(section), url);
-  navWrite(trailKey(section), JSON.stringify(sectionTrail(pathname, url)));
+
+  // A cross-section guest page (e.g. an Insight opened from Product Catalog)
+  // isn't really "being in" Insights — recording it as that section's last
+  // visit would make the sidebar's "resume Insights" link point right back
+  // at this very guest page, so clicking it would silently no-op instead of
+  // navigating anywhere.
+  if (!crossSectionReferrer(pathname)) {
+    navWrite(storageKey(section), url);
+    navWrite(trailKey(section), JSON.stringify(sectionTrail(pathname, url)));
+  }
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(NAV_VISIT_EVENT));
+  }
 }
 
 /** URL the user was on immediately before the current one, across sections. */
 export function previousVisit(): string | null {
   return navRead(PREV_URL_KEY);
+}
+
+function currentVisit(): string | null {
+  return navRead(CURRENT_URL_KEY);
+}
+
+const NAV_VISIT_EVENT = "nav:visit";
+
+/** Lets breadcrumbs re-read session memory after {@link recordVisit} runs. */
+export function subscribeNavVisits(onStoreChange: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const handler = () => onStoreChange();
+  window.addEventListener(NAV_VISIT_EVENT, handler);
+  return () => window.removeEventListener(NAV_VISIT_EVENT, handler);
+}
+
+/** Snapshot for {@link subscribeNavVisits} — changes whenever visit memory updates. */
+export function navVisitSnapshot(): string {
+  return `${navRead(CURRENT_URL_KEY) ?? ""}|${navRead(PREV_URL_KEY) ?? ""}`;
+}
+
+/** Routes that can be opened from another workspace section (guest pages). */
+function borrowsCrossSectionReferrer(pathname: string): boolean {
+  return /^\/insights\/[^/]+$/.test(pathname);
+}
+
+const FORCED_ENTRY_KEY = "nav:forced-entry";
+
+/**
+ * Marks `pathname` as a deliberate entry into its own section, overriding
+ * {@link crossSectionReferrer}'s URL-history heuristic for it.
+ *
+ * That heuristic can't otherwise tell apart two situations that leave
+ * identical breadcrumbs in `previousVisit()`: a Product Catalog card opening
+ * a guest page like `/insights/:id`, versus the sidebar's own "resume where I
+ * left off" link landing on that very same guest page because it's the last
+ * Insights article the user had open. Both have Product Catalog as the
+ * immediately preceding URL — only the *click* (an explicit section-entry
+ * gesture) knows which one this is, so it has to say so up front, before the
+ * navigation happens.
+ */
+export function markSectionEntry(pathname: string) {
+  navWrite(FORCED_ENTRY_KEY, pathname);
+}
+
+/**
+ * The page the user came from when entering `pathname` from another section.
+ *
+ * Only applies on guest routes such as `/insights/:id`. When the user has
+ * already navigated back to their home section (e.g. Product Catalog), we must
+ * not treat `previousVisit` pointing at Insights as a cross-section referrer —
+ * that would hijack the sidebar, breadcrumb, and smart-resume links.
+ *
+ * Checks the stored current URL first — on the first render after a
+ * cross-section navigation, {@link recordVisit} has not run yet, so the
+ * referrer is still in `nav:current-url`. After it runs, the referrer moves
+ * to {@link previousVisit}.
+ *
+ * The two are checked in that order, and `currentVisit` short-circuits
+ * rather than falling through: once it agrees this page belongs to its own
+ * section (an ordinary hop from one guest page to another, or from the
+ * section's own root), older history has nothing to add. Checking
+ * `previousVisit` unconditionally would let a hop two or more pages deep
+ * inside the section resurface a much older, unrelated cross-section
+ * referrer that `currentVisit` had already ruled out.
+ */
+export function crossSectionReferrer(pathname: string): string | null {
+  if (!borrowsCrossSectionReferrer(pathname)) return null;
+  if (navRead(FORCED_ENTRY_KEY) === pathname) return null;
+
+  const pageSection = sectionForPath(pathname);
+  if (!pageSection) return null;
+
+  const current = currentVisit();
+  if (current && urlPathname(current) !== pathname) {
+    const currentSection = sectionForPath(urlPathname(current));
+    if (currentSection) return currentSection === pageSection ? null : current;
+  }
+
+  const prev = previousVisit();
+  if (prev && urlPathname(prev) !== pathname) {
+    const prevSection = sectionForPath(urlPathname(prev));
+    if (prevSection && prevSection !== pageSection) return prev;
+  }
+
+  return null;
+}
+
+/**
+ * When the current page was opened from another section, stitch the referrer
+ * section's trail onto this page — e.g. Product Catalog → House View insight.
+ */
+export function crossSectionTrail(pathname: string, url: string): string[] | null {
+  const referrer = crossSectionReferrer(pathname);
+  if (!referrer) return null;
+
+  const refPathname = urlPathname(referrer);
+  const prefix = sectionTrail(refPathname, referrer);
+  if (prefix.length === 0) return [referrer, url];
+
+  const last = prefix[prefix.length - 1];
+  if (urlPathname(last) !== refPathname) return [...prefix, referrer, url];
+  return [...prefix, url];
+}
+
+/**
+ * Which sidebar section should appear active on `pathname`.
+ *
+ * Cross-section drill-ins (e.g. Product Catalog → `/insights/:id`) keep the
+ * section the user came from lit, not the destination route's section.
+ */
+export function activeSectionForPath(pathname: string): NavSectionKey | null {
+  const referrer = crossSectionReferrer(pathname);
+  if (referrer) {
+    const fromSection = sectionForPath(urlPathname(referrer));
+    if (fromSection) return fromSection;
+  }
+  return sectionForPath(pathname);
 }
 
 /** The trail entry one rung above `pathname`, or `fallback` if it has none. */

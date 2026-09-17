@@ -60,3 +60,15 @@ export function navWrite(key: string, value: string) {
     /* quota — see navRead */
   }
 }
+
+/** Explicitly forget one key — for a "leaving for good" action, as opposed to the transient remounts client-side navigation causes. */
+export function navRemove(key: string) {
+  const s = store();
+  if (!s) return;
+  clearOnce(s);
+  try {
+    s.removeItem(key);
+  } catch {
+    /* nothing to remove is a fine outcome */
+  }
+}

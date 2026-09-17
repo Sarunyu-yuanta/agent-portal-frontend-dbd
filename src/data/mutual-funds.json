@@ -199,34 +199,66 @@
   "insights": [
     {
       "id": "ins-1",
+      "detailId": "s26",
       "title": "Buy List ประจำสัปดาห์: อาศัยจังหวะตลาด ผันผวนทยอยลงทุน Core และ Satellite Portfolio",
       "date": "2 สิงหาคม 2569",
-      "recommendedFunds": ["ES-GQG-UH"]
+      "recommendedFunds": ["UGISFX-N"]
     },
     {
       "id": "ins-2",
+      "detailId": "s9",
       "title": "Buy List ประจำสัปดาห์: อาศัยจังหวะตลาด ผันผวนทยอยลงทุน Core และ Satellite Portfolio",
       "date": "2 สิงหาคม 2569",
-      "recommendedFunds": ["ES-GQG-UH"]
+      "recommendedFunds": ["UGISFX-N"]
     },
     {
       "id": "ins-3",
+      "detailId": "s10",
+      "title": "Buy List ประจำสัปดาห์: อาศัยจังหวะตลาด ผันผวนทยอยลงทุน Core และ Satellite Portfolio",
+      "date": "2 สิงหาคม 2569",
+      "recommendedFunds": ["UGISFX-N"]
+    },
+    {
+      "id": "ins-4",
+      "detailId": "s22",
       "title": "Buy List ประจำสัปดาห์: อาศัยจังหวะตลาด ผันผวนทยอยลงทุน Core และ Satellite Portfolio",
       "date": "2 สิงหาคม 2569",
       "recommendedFunds": ["ES-GQG-UH"]
     },
     {
-      "id": "ins-4",
-      "title": "Buy List ประจำสัปดาห์: เน้นลงทุนในหุ้นเติบโตและเทคโนโลยี",
+      "id": "ins-5",
+      "detailId": "s30",
+      "title": "Hold List: รอดูสถานการณ์ตลาดก่อนตัดสินใจ เพิ่มหรือลดสัดส่วน",
       "date": "2 สิงหาคม 2569",
-      "recommendedFunds": ["SCB-TECH-XY"]
+      "recommendedFunds": ["BBL-GGQY-TR"]
+    },
+    {
+      "id": "ins-6",
+      "detailId": "s14",
+      "title": "Hold List: รอดูสถานการณ์ตลาดก่อนตัดสินใจ เพิ่มหรือลดสัดส่วน",
+      "date": "2 สิงหาคม 2569",
+      "recommendedFunds": ["KTB-OPQ-JL"]
+    },
+    {
+      "id": "ins-7",
+      "detailId": "s30",
+      "title": "Hold List: รอดูสถานการณ์ตลาดก่อนตัดสินใจ เพิ่มหรือลดสัดส่วน",
+      "date": "2 สิงหาคม 2569",
+      "recommendedFunds": ["BBL-GGQY-TR"]
+    },
+    {
+      "id": "ins-8",
+      "detailId": "s14",
+      "title": "Hold List: รอดูสถานการณ์ตลาดก่อนตัดสินใจ เพิ่มหรือลดสัดส่วน",
+      "date": "2 สิงหาคม 2569",
+      "recommendedFunds": ["KTB-OPQ-JL"]
     }
   ],
   "themes": [
     {
       "id": "ai",
-      "title": "กลุ่ม AI",
-      "icon": "head-circuit",
+      "title": "AI & ชิป",
+      "icon": "cpu",
       "funds": [
         {
           "id": "mf-uinc-n",
@@ -304,49 +336,49 @@
       ]
     },
     {
-      "id": "tech",
-      "title": "เทคโนโลยี",
-      "icon": "cpu",
+      "id": "health",
+      "title": "กลาโหม",
+      "icon": "rocket-launch",
       "funds": [
         {
-          "id": "mf-scb-tech",
-          "symbol": "SCB-TECH-XY",
-          "name": "กองทุนเปิดไทยพาณิชย์ Technology",
-          "risk": 7,
-          "price": "16.5500",
+          "id": "mf-khealth",
+          "symbol": "K-HEALTH",
+          "name": "กองทุนเปิดกรุงศรี Healthcare",
+          "risk": 5,
+          "price": "12.8800",
           "currency": "THB",
-          "changeAbs": "+0.4500",
-          "changePct": "+22.10%",
+          "changeAbs": "+0.1800",
+          "changePct": "+6.80%",
           "isPick": true
         },
         {
-          "id": "mf-ktech",
-          "symbol": "K-TECH",
-          "name": "กองทุนเปิดกรุงศรี Global Technology",
-          "risk": 6,
-          "price": "14.2200",
+          "id": "mf-scbhealth",
+          "symbol": "SCBHEALTH",
+          "name": "กองทุนเปิดไทยพาณิชย์ Global Healthcare",
+          "risk": 4,
+          "price": "11.4500",
           "currency": "THB",
-          "changeAbs": "+0.2800",
-          "changePct": "+15.40%",
+          "changeAbs": "+0.0950",
+          "changePct": "+3.50%",
           "isPick": false
         },
         {
-          "id": "mf-es-tech",
-          "symbol": "ES-TECH",
-          "name": "กองทุนเปิดอีสท์สปริง Global Tech",
-          "risk": 6,
-          "price": "11.8800",
+          "id": "mf-bblhealth",
+          "symbol": "BBLHEALTH",
+          "name": "กองทุนเปิดกรุงเทพ Biotech",
+          "risk": 7,
+          "price": "9.8800",
           "currency": "THB",
-          "changeAbs": "+0.1900",
-          "changePct": "+9.80%",
+          "changeAbs": "+0.2200",
+          "changePct": "+7.20%",
           "isPick": false
         }
       ]
     },
     {
       "id": "energy",
-      "title": "พลังงาน",
-      "icon": "plant",
+      "title": "แร่โลหะมีค่า",
+      "icon": "cube",
       "funds": [
         {
           "id": "mf-kenergy",
@@ -384,41 +416,41 @@
       ]
     },
     {
-      "id": "health",
-      "title": "สุขภาพ",
-      "icon": "health",
+      "id": "tech",
+      "title": "ไซเบอร์",
+      "icon": "head-circuit",
       "funds": [
         {
-          "id": "mf-khealth",
-          "symbol": "K-HEALTH",
-          "name": "กองทุนเปิดกรุงศรี Healthcare",
-          "risk": 5,
-          "price": "12.8800",
+          "id": "mf-scb-tech",
+          "symbol": "SCB-TECH-XY",
+          "name": "กองทุนเปิดไทยพาณิชย์ Technology",
+          "risk": 7,
+          "price": "16.5500",
           "currency": "THB",
-          "changeAbs": "+0.1800",
-          "changePct": "+6.80%",
+          "changeAbs": "+0.4500",
+          "changePct": "+22.10%",
           "isPick": true
         },
         {
-          "id": "mf-scbhealth",
-          "symbol": "SCBHEALTH",
-          "name": "กองทุนเปิดไทยพาณิชย์ Global Healthcare",
-          "risk": 4,
-          "price": "11.4500",
+          "id": "mf-ktech",
+          "symbol": "K-TECH",
+          "name": "กองทุนเปิดกรุงศรี Global Technology",
+          "risk": 6,
+          "price": "14.2200",
           "currency": "THB",
-          "changeAbs": "+0.0950",
-          "changePct": "+3.50%",
+          "changeAbs": "+0.2800",
+          "changePct": "+15.40%",
           "isPick": false
         },
         {
-          "id": "mf-bblhealth",
-          "symbol": "BBLHEALTH",
-          "name": "กองทุนเปิดกรุงเทพ Biotech",
-          "risk": 7,
-          "price": "9.8800",
+          "id": "mf-es-tech",
+          "symbol": "ES-TECH",
+          "name": "กองทุนเปิดอีสท์สปริง Global Tech",
+          "risk": 6,
+          "price": "11.8800",
           "currency": "THB",
-          "changeAbs": "+0.2200",
-          "changePct": "+7.20%",
+          "changeAbs": "+0.1900",
+          "changePct": "+9.80%",
           "isPick": false
         }
       ]

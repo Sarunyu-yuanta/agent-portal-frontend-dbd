@@ -2,13 +2,72 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Button, PaginationBanner } from "@sarunyu/system-one";
-import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import Link from "next/link";
-import { MutualFundSeeMoreIcon, MutualFundThemeList, mutualFundDetailHref } from "./MutualFundCard";
+import { Bank, CaretLeftIcon, CaretRightIcon, Cpu, Cube, HeadCircuit, RocketLaunch } from "@phosphor-icons/react";
+import { Button, PaginationBanner } from "@sarunyu/system-one";
+import { MutualFundSeeMoreIcon, MutualFundThemeList } from "./MutualFundCard";
 import { MF_ASSETS } from "./mutual-fund-assets";
-import type { MutualFundTheme, MutualFundThemeIcon } from "./mutual-fund-data";
+import {
+  getThemeDescription,
+  getThemeHeroTitle,
+  mutualFundThemeHref,
+  type MutualFundTheme,
+  type MutualFundThemeIcon,
+  type MutualFundThemeId,
+} from "./mutual-fund-data";
 import { useDragScroll } from "./use-drag-scroll";
+
+/** Figma theme icons resolve to Phosphor glyphs, not exported assets — the mock catalog's icon-*.svg files for bank/cpu/plant/health turned out to be misassigned/decorative filler, not real glyphs. */
+export const THEME_ICON_COMPONENTS: Record<
+  MutualFundThemeIcon,
+  React.ComponentType<{
+    size?: number;
+    className?: string;
+    weight?: "fill" | "regular" | "bold" | "duotone";
+    style?: React.CSSProperties;
+  }>
+> = {
+  "head-circuit": HeadCircuit,
+  bank: Bank,
+  cpu: Cpu,
+  "rocket-launch": RocketLaunch,
+  cube: Cube,
+};
+
+/** Figma 39839:525396's theme-detail hero uses the same light-blue wash and gradient bar for every theme — only the title and illustration change per tab. */
+export const THEME_HERO_COLOR = { glow: "#eff6ff", title: "#074ea4", from: "#00a1e9", to: "#004eba" };
+
+/** Figma 40473:722554/721855/721622/722088/722322 — one hero illustration per theme, glow behind it shared across every theme. */
+export function ThemeHeroGraphic({ themeId, scale = 1 }: { themeId: MutualFundThemeId; scale?: number }) {
+  return (
+    <>
+      <div
+        className="pointer-events-none absolute z-0 rounded-full"
+        style={{
+          backgroundColor: THEME_HERO_COLOR.glow,
+          bottom: -61 * scale,
+          right: 21 * scale,
+          width: 124 * scale,
+          height: 124 * scale,
+        }}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute z-10"
+        style={{ bottom: 8 * scale, right: 24 * scale, width: 100 * scale, height: 100 * scale }}
+        aria-hidden
+      >
+        <Image
+          src={MF_ASSETS.themeHero[themeId]}
+          alt=""
+          fill
+          className="object-contain"
+          sizes={`${100 * scale}px`}
+        />
+      </div>
+    </>
+  );
+}
 
 const THEME_PAGE_COUNT = 2;
 
@@ -24,56 +83,52 @@ function scrollThemeToPage(el: HTMLElement, pageIndex: number) {
 }
 
 function ThemeIcon({ icon }: { icon: MutualFundThemeIcon }) {
-  return (
-    <Image
-      src={MF_ASSETS.themeIcon[icon]}
-      alt=""
-      width={20}
-      height={20}
-      className="size-5 shrink-0 object-contain"
-    />
-  );
+  const Icon = THEME_ICON_COMPONENTS[icon];
+  return <Icon size={20} weight="fill" className="mt-0.5 size-5 shrink-0 text-white" />;
 }
 
-/** Figma 40118:77413 — theme card 308×364 */
+/** Figma 40118:77413 — theme card 308×380 (header row grew to fit the theme description under the title) */
 function ThemeCard({
   theme,
   onFundSelect,
+  onThemeSeeAll,
 }: {
   theme: MutualFundTheme;
   onFundSelect?: (fundId: string) => void;
+  onThemeSeeAll?: (themeId: MutualFundTheme["id"]) => void;
 }) {
   return (
-    <div className="flex h-[364px] w-[308px] shrink-0 flex-col gap-[10px] rounded-lg bg-gradient-to-b from-[#0a6ee7] to-[#f3f4f6] to-[85.462%] px-1 pb-1 pt-2">
-      <div className="flex w-full items-center gap-1 px-3">
+    <div className="flex h-[380px] w-[308px] shrink-0 flex-col gap-[10px] rounded-lg bg-gradient-to-b from-[#0a6ee7] to-[#f3f4f6] to-[85.462%] px-1 pb-1 pt-2">
+      <div className="flex w-full items-start gap-1 px-3">
         <ThemeIcon icon={theme.icon} />
-        <span className="min-w-0 flex-1 text-base font-bold leading-6 text-white">{theme.title}</span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-base font-bold leading-6 text-white">
+            {getThemeHeroTitle(theme.id)}
+          </span>
+          <span className="truncate text-xs font-normal leading-4 text-white">
+            {getThemeDescription(theme.id)}
+          </span>
+        </div>
       </div>
       <div className="flex w-full flex-col gap-0.5">
         <MutualFundThemeList funds={theme.funds} onFundSelect={onFundSelect} />
         <div className="flex h-10 w-full items-center justify-center">
-          {theme.funds[0] ? (
-            <Link
-              href={mutualFundDetailHref(theme.funds[0].id)}
-              className="inline-flex w-fit shrink-0 no-underline"
-              onClick={
-                onFundSelect
-                  ? (e) => {
-                      e.preventDefault();
-                      onFundSelect(theme.funds[0].id);
-                    }
-                  : undefined
-              }
-            >
-              <Button variant="plain" size="xl" rightIcon={<MutualFundSeeMoreIcon />} className="w-fit shrink-0">
-                ดูเพิ่มเติม
-              </Button>
-            </Link>
-          ) : (
-            <Button variant="plain" size="xl" rightIcon={<MutualFundSeeMoreIcon />} className="w-fit shrink-0" disabled>
+          <Link
+            href={mutualFundThemeHref(theme.id)}
+            className="inline-flex w-fit shrink-0 no-underline"
+            onClick={
+              onThemeSeeAll
+                ? (e) => {
+                    e.preventDefault();
+                    onThemeSeeAll(theme.id);
+                  }
+                : undefined
+            }
+          >
+            <Button variant="plain" size="xl" rightIcon={<MutualFundSeeMoreIcon />} className="w-fit shrink-0">
               ดูเพิ่มเติม
             </Button>
-          )}
+          </Link>
         </div>
       </div>
     </div>
@@ -84,9 +139,11 @@ function ThemeCard({
 export function MutualFundThemesSection({
   themes,
   onFundSelect,
+  onThemeSeeAll,
 }: {
   themes: MutualFundTheme[];
   onFundSelect?: (fundId: string) => void;
+  onThemeSeeAll?: (themeId: MutualFundTheme["id"]) => void;
 }) {
   const drag = useDragScroll();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -162,7 +219,7 @@ export function MutualFundThemesSection({
         >
           <div className="flex min-w-max gap-2.5">
             {themes.map((theme) => (
-              <ThemeCard key={theme.id} theme={theme} />
+              <ThemeCard key={theme.id} theme={theme} onFundSelect={onFundSelect} onThemeSeeAll={onThemeSeeAll} />
             ))}
           </div>
         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -16,8 +17,12 @@ import { SidebarUserMenu } from "@/components/layout/SidebarUserMenu";
 import { usePrivacy } from "@/contexts/privacy-context";
 import { CALENDAR_ENABLED, NOTES_ENABLED } from "@/lib/feature-flags";
 import {
+  activeSectionForPath,
   lastSectionPath,
-  sectionForPath,
+  markSectionEntry,
+  navVisitSnapshot,
+  subscribeNavVisits,
+  urlPathname,
   type NavSectionKey,
 } from "@/lib/nav-memory";
 
@@ -112,7 +117,8 @@ function NavSection({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const activeSection = sectionForPath(pathname);
+  useSyncExternalStore(subscribeNavVisits, navVisitSnapshot, () => "");
+  const activeSection = activeSectionForPath(pathname);
 
   /**
    * Smart link: re-entering a section from elsewhere resumes where the user left
@@ -129,7 +135,20 @@ function NavSection({
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
     if (activeSection === item.section) return;
     const last = lastSectionPath(item.section);
-    if (!last || last === item.href) return;
+    // A resume target that is the page you're already on (a stale pointer
+    // left behind by a cross-section guest visit) is not a navigation — fall
+    // through to the plain `href` so the click still goes somewhere.
+    if (!last || last === item.href || urlPathname(last) === pathname) {
+      // Still a deliberate section entry even though it lands on `href` — if
+      // that ever is a guest route, it must not read as cross-section either.
+      markSectionEntry(item.href);
+      return;
+    }
+    // Clicking a section explicitly always means "I'm entering this section
+    // now" — even when the resume target is a guest route (e.g. the last
+    // Insights article, reached from Product Catalog) whose URL history looks
+    // identical to a Product Catalog card opening that same guest page.
+    markSectionEntry(urlPathname(last));
     e.preventDefault();
     router.push(last);
   };

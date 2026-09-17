@@ -16,7 +16,7 @@ export type MutualFundCategoryId =
 
 export type MutualFundThemeId = "ai" | "finance" | "tech" | "energy" | "health";
 
-export type MutualFundThemeIcon = "head-circuit" | "bank" | "cpu" | "plant" | "health";
+export type MutualFundThemeIcon = "head-circuit" | "bank" | "cpu" | "rocket-launch" | "cube";
 
 export type MutualFund = {
   id: string;
@@ -37,6 +37,8 @@ export type MutualFundCategory = {
 
 export type MutualFundInsight = {
   id: string;
+  /** House View strategy id — links to `/insights/[detailId]`. */
+  detailId: string;
   title: string;
   date: string;
   recommendedFunds: string[];
@@ -234,8 +236,68 @@ export function normalizeMutualFundCategoryId(value: string): MutualFundCategory
     : "global-equity";
 }
 
+/** Which mobile tab group a route param falls under — accepts either a group id directly (e.g. "commodities-group") or a single category id (e.g. "us-equity", deep-linked from the catalog grid), so any prior link still lands on the right tab. */
+export function resolveMobileFundGroupId(value: string): MobileFundGroupId {
+  const direct = MOBILE_FUND_GROUPS.find((g) => g.id === value);
+  if (direct) return direct.id;
+  const categoryId = normalizeMutualFundCategoryId(value);
+  const group = MOBILE_FUND_GROUPS.find((g) => g.categoryIds?.includes(categoryId));
+  return group?.id ?? "all";
+}
+
 export function mutualFundCategoryHref(categoryId: MutualFundCategoryId): string {
   return `/product-catalog/mutual-fund/top-performers/${encodeURIComponent(categoryId)}`;
+}
+
+export function mutualFundGroupHref(groupId: MobileFundGroupId): string {
+  return `/product-catalog/mutual-fund/top-performers/${encodeURIComponent(groupId)}`;
+}
+
+export function mutualFundInsightsHref(): string {
+  return "/product-catalog/mutual-fund/insights";
+}
+
+export function mutualFundInsightDetailHref(detailId: string): string {
+  return `/insights/${encodeURIComponent(detailId)}`;
+}
+
+/** Figma 38285:291118 — insights list grid page size. */
+export const MUTUAL_FUND_INSIGHTS_PAGE_SIZE = 8;
+
+/** Figma pagination mock — 10 pages × 8 cards. */
+export const MUTUAL_FUND_INSIGHTS_MOCK_TOTAL = 80;
+
+function cycleInsightsToCount(items: MutualFundInsight[], targetCount: number): MutualFundInsight[] {
+  if (items.length === 0) return [];
+  const out: MutualFundInsight[] = [];
+  for (let i = 0; i < targetCount; i += 1) {
+    const source = items[i % items.length];
+    out.push({ ...source, id: `${source.id}-${i}` });
+  }
+  return out;
+}
+
+export function getMutualFundInsightsCatalog(): MutualFundInsight[] {
+  return cycleInsightsToCount(MUTUAL_FUND_CATALOG.insights, MUTUAL_FUND_INSIGHTS_MOCK_TOTAL);
+}
+
+export function getMutualFundInsightsPage(
+  page: number,
+  pageSize = MUTUAL_FUND_INSIGHTS_PAGE_SIZE,
+): {
+  items: MutualFundInsight[];
+  totalPages: number;
+  currentPage: number;
+} {
+  const all = getMutualFundInsightsCatalog();
+  const totalPages = Math.max(1, Math.ceil(all.length / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const start = (currentPage - 1) * pageSize;
+  return {
+    items: all.slice(start, start + pageSize),
+    totalPages,
+    currentPage,
+  };
 }
 
 /** Full list for performers page — category slice plus catalog funds for a fuller grid. */
@@ -271,6 +333,173 @@ function cycleToCount(funds: MutualFund[], targetCount: number): MutualFund[] {
 /** Category slice only — performers list page order matches Figma grid. */
 export function getTopPerformersList(categoryId: MutualFundCategoryId): MutualFund[] {
   return getTopPerformers(categoryId);
+}
+
+/** Figma 39839:525396 — theme detail page ("ดูเพิ่มเติม" destination) tabs, in card order. */
+export const MUTUAL_FUND_THEME_IDS: MutualFundThemeId[] = MUTUAL_FUND_CATALOG.themes.map((t) => t.id);
+
+export function getMutualFundTheme(themeId: MutualFundThemeId): MutualFundTheme {
+  return MUTUAL_FUND_CATALOG.themes.find((t) => t.id === themeId) ?? MUTUAL_FUND_CATALOG.themes[0];
+}
+
+export function normalizeMutualFundThemeId(value: string): MutualFundThemeId {
+  return MUTUAL_FUND_CATALOG.themes.some((t) => t.id === value)
+    ? (value as MutualFundThemeId)
+    : MUTUAL_FUND_CATALOG.themes[0].id;
+}
+
+export function mutualFundThemeHref(themeId: MutualFundThemeId): string {
+  return `/product-catalog/mutual-fund/themes/${encodeURIComponent(themeId)}`;
+}
+
+/** Same density cycling as getTopPerformersGridFunds, for a theme's fund pool. */
+export function getThemeGridFunds(themeId: MutualFundThemeId, pickOnly: boolean, targetCount = 16): MutualFund[] {
+  const base = getMutualFundTheme(themeId).funds;
+  return cycleToCount(pickOnly ? base.filter((f) => f.isPick) : base, targetCount);
+}
+
+/** Figma 39839:525396 hero heading — the English business name shown above each theme's description. */
+const THEME_HERO_TITLES: Record<MutualFundThemeId, string> = {
+  ai: "Semiconductor & Memory",
+  finance: "Global Financial Services",
+  tech: "Cybersecurity",
+  energy: "Metals & Mining",
+  health: "Defense",
+};
+
+export function getThemeHeroTitle(themeId: MutualFundThemeId): string {
+  return THEME_HERO_TITLES[themeId] ?? "";
+}
+
+/** Figma 39839:525396 hero subtitle. */
+const THEME_DESCRIPTIONS: Record<MutualFundThemeId, string> = {
+  ai: "ผู้ผลิตชิปและหน่วยความจำ ฮาร์ดแวร์เบื้องหลัง AI",
+  finance: "ธนาคารและบริการทางการเงินโลก",
+  tech: "ซอฟต์แวร์ความปลอดภัยไซเบอร์และซอฟต์แวร์องค์กร",
+  energy: "เหมืองแร่โลหะมีค่าและโลหะยุทธศาสตร์ ทั่วโลก",
+  health: "อุตสาหกรรมกลาโหมโลก และโดรนทางทหาร",
+};
+
+export function getThemeDescription(themeId: MutualFundThemeId): string {
+  return THEME_DESCRIPTIONS[themeId] ?? "";
+}
+
+/** Figma 39910:727252 — "ตัวกรอง" filter panel: category chips (catalog categories plus a UI-only "อื่นๆ"). */
+export type FilterCategoryOption = { id: string; label: string };
+export const FILTER_CATEGORY_OPTIONS: FilterCategoryOption[] = [
+  ...MUTUAL_FUND_CATEGORIES.map((c) => ({ id: c.id as string, label: c.label })),
+  { id: "others", label: "อื่นๆ" },
+];
+
+export const TAX_SAVING_FUND_TYPES = ["RMF", "TESG", "TESGX"] as const;
+export type TaxSavingFundType = (typeof TAX_SAVING_FUND_TYPES)[number];
+
+export function normalizeTaxSavingFundType(value: string): TaxSavingFundType {
+  const upper = value.toUpperCase();
+  return (TAX_SAVING_FUND_TYPES as readonly string[]).includes(upper)
+    ? (upper as TaxSavingFundType)
+    : "RMF";
+}
+
+export const DIVIDEND_POLICY_OPTIONS = ["จ่าย", "ไม่จ่าย"] as const;
+export const INVESTMENT_POLICY_OPTIONS = ["เชิงรุก", "เชิงรับ"] as const;
+export const FUND_RISK_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+
+/** Figma 39910:727252 — "บริษัทจัดการกองทุน" chip row; icon looked up via MF_ASSETS.amcLogo[id]. */
+export const FUND_MANAGEMENT_COMPANIES = [
+  { id: "kasset", label: "KASSET" },
+  { id: "daolinv", label: "DAOLINV" },
+  { id: "talisam", label: "TALISAM" },
+  { id: "bblam", label: "BBLAM" },
+  { id: "ksam", label: "KSAM" },
+  { id: "ktam", label: "KTAM" },
+  { id: "bcap", label: "BCAP" },
+  { id: "principal", label: "PRINCIPAL" },
+  { id: "pamc", label: "PAMC" },
+  { id: "uobam", label: "UOBAM" },
+  { id: "oneam", label: "ONEAM" },
+  { id: "eastspring", label: "EASTSPRING" },
+  { id: "aberdeen", label: "ABERDEEN" },
+  { id: "kkpam", label: "KKPAM" },
+  { id: "lhfund", label: "LHFUND" },
+  { id: "assetfund", label: "ASSETFUND" },
+  { id: "scbam", label: "SCBAM" },
+  { id: "mfc", label: "MFC" },
+] as const;
+
+/** Figma 38285:289685 — generic "ตัวกรองกองทุน" results list (full catalog, unfiltered). */
+export function getFilterResultFunds(pickOnly: boolean, targetCount = 16): MutualFund[] {
+  const base = allCatalogFunds();
+  return cycleToCount(pickOnly ? base.filter((f) => f.isPick) : base, targetCount);
+}
+
+/** Figma 40544:772211 — "ตกลง" with no chips selected shows the full, uncapped catalog. */
+export function getAllMutualFunds(pickOnly = false): MutualFund[] {
+  const base = allCatalogFunds();
+  return pickOnly ? base.filter((f) => f.isPick) : base;
+}
+
+/** Stable (non-random) hash so mock per-fund attributes stay consistent across renders. */
+function hashString(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+const FUND_CATEGORY_MAP: Map<string, MutualFundCategoryId[]> = (() => {
+  const map = new Map<string, MutualFundCategoryId[]>();
+  for (const [categoryId, funds] of Object.entries(MUTUAL_FUND_CATALOG.topPerformers)) {
+    for (const fund of funds ?? []) {
+      const list = map.get(fund.id) ?? [];
+      list.push(categoryId as MutualFundCategoryId);
+      map.set(fund.id, list);
+    }
+  }
+  return map;
+})();
+
+/** A fund's category ids (as used by the filter's "หมวดหมู่" chips); "others" if uncategorized. */
+export function getFundCategoryIds(fundId: string): string[] {
+  const categories = FUND_CATEGORY_MAP.get(fundId);
+  return categories && categories.length > 0 ? categories : ["others"];
+}
+
+/**
+ * No fund data models tax-saving type, dividend policy, investment policy, or
+ * management company per-fund — these are mock catalog options only. Derive a
+ * stable pseudo-assignment per fund (not random per render) so the filter's
+ * "no matches" empty state is reachable and repeatable.
+ */
+export function getFundTaxSavingType(fundId: string): TaxSavingFundType | null {
+  const hash = hashString(`tax-${fundId}`);
+  if (hash % 4 !== 0) return null;
+  return TAX_SAVING_FUND_TYPES[hash % TAX_SAVING_FUND_TYPES.length];
+}
+
+export function getFundDividendPolicy(fundId: string): (typeof DIVIDEND_POLICY_OPTIONS)[number] {
+  return DIVIDEND_POLICY_OPTIONS[hashString(`div-${fundId}`) % DIVIDEND_POLICY_OPTIONS.length];
+}
+
+export function getFundInvestmentPolicy(fundId: string): (typeof INVESTMENT_POLICY_OPTIONS)[number] {
+  return INVESTMENT_POLICY_OPTIONS[hashString(`inv-${fundId}`) % INVESTMENT_POLICY_OPTIONS.length];
+}
+
+export function getFundManagementCompanyId(fundId: string): string {
+  const options = FUND_MANAGEMENT_COMPANIES;
+  return options[hashString(`amc-${fundId}`) % options.length].id;
+}
+
+/** Figma 38372:395507 — tax-planning recommended funds; same mock pool for every fund type. */
+export function getTaxSavingFunds(pickOnly: boolean, targetCount = 16): MutualFund[] {
+  return getFilterResultFunds(pickOnly, targetCount);
+}
+
+/** Figma 38372:395507 — "ลงทุนได้สูงสุด" is 30% of entered annual income for every fund type. */
+export function taxSavingMaxInvestment(annualIncomeThb: number): number {
+  if (!Number.isFinite(annualIncomeThb) || annualIncomeThb <= 0) return 0;
+  return Math.round(annualIncomeThb * 0.3);
 }
 
 function allCatalogFunds(): MutualFund[] {

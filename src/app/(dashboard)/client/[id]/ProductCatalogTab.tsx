@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Chip, SearchInput, Tag, TabGroup } from "@sarunyu/system-one";
-import {
-  ArrowUpLeftIcon,
-  CaretLeftIcon,
-  CaretRightIcon,
-  ChartLineUpIcon,
-} from "@phosphor-icons/react";
+import { ArrowUpLeftIcon, ChartLineUpIcon } from "@phosphor-icons/react";
+import { ChipScroller } from "@/components/ui/chip-scroller";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FixedIncomeTab } from "./FixedIncomeTab";
 import { FixedIncomeDetail } from "./FixedIncomeDetail";
@@ -17,7 +13,14 @@ import { GlobalBondTab } from "./GlobalBondTab";
 import { MutualFundTab } from "./MutualFundTab";
 import { RoboAdvisoryTab } from "./RoboAdvisoryTab";
 import { MutualFundDetail } from "./MutualFundDetail";
-import { getMutualFund, mutualFundCategoryHref, type MutualFundCategoryId } from "./mutual-fund-data";
+import {
+  getMutualFund,
+  mutualFundGroupHref,
+  mutualFundInsightsHref,
+  mutualFundThemeHref,
+  type MobileFundGroupId,
+  type MutualFundThemeId,
+} from "./mutual-fund-data";
 import { GlobalBondDetail } from "./GlobalBondDetail";
 import { GlobalBondAllPage } from "./GlobalBondAllPage";
 import { getIssuerIdForBondRow, type GlobalBondIssuerId } from "./global-bond-data";
@@ -85,112 +88,6 @@ function highlightMatch(text: string, query: string): ReactNode {
   return parts;
 }
 
-/**
- * A horizontal chip strip for the search overlay. It scrolls by swipe on
- * touch, but a desktop mouse has no horizontal axis to scroll it with — so on
- * desktop it also gets caret buttons, shown only on the side that still has
- * something left to reveal.
- */
-function SearchChipScroller({
-  children,
-  rowClassName = "px-3 py-2",
-  style,
-}: {
-  children: ReactNode;
-  /** Padding for the scrolling row itself; sits inside the scroll area. */
-  rowClassName?: string;
-  /** Applied to the outer wrapper — the arrow buttons position against it. */
-  style?: CSSProperties;
-}) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [overflow, setOverflow] = useState({ left: false, right: false });
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    const content = contentRef.current;
-    if (!el || !content) return;
-    // 1px of slack: fractional layout widths mean scrollLeft rarely lands
-    // exactly on 0 or on the maximum, which would leave a dead arrow visible.
-    const update = () =>
-      setOverflow({
-        left: el.scrollLeft > 1,
-        right: el.scrollLeft < el.scrollWidth - el.clientWidth - 1,
-      });
-    update();
-    el.addEventListener("scroll", update, { passive: true });
-    // The viewport and the content are measured separately: the recent-search
-    // row's chips come and go, which changes the content width without ever
-    // resizing the scroll container.
-    const observer = new ResizeObserver(update);
-    observer.observe(el);
-    observer.observe(content);
-    return () => {
-      el.removeEventListener("scroll", update);
-      observer.disconnect();
-    };
-  }, []);
-
-  const step = (direction: 1 | -1) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({
-      left: direction * Math.round(el.clientWidth * 0.7),
-      behavior: "smooth",
-    });
-  };
-
-  return (
-    <div className="relative" style={style}>
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto"
-        style={{ scrollbarWidth: "none" }}
-      >
-        <div ref={contentRef} className={`flex items-center gap-2 ${rowClassName}`}>
-          {children}
-        </div>
-      </div>
-      {overflow.left && (
-        <ChipScrollButton side="left" onClick={() => step(-1)} />
-      )}
-      {overflow.right && (
-        <ChipScrollButton side="right" onClick={() => step(1)} />
-      )}
-    </div>
-  );
-}
-
-function ChipScrollButton({
-  side,
-  onClick,
-}: {
-  side: "left" | "right";
-  onClick: () => void;
-}) {
-  const isLeft = side === "left";
-  return (
-    // The wrapper is click-through so it only fades the chips sliding under it;
-    // the button itself takes pointer events back.
-    <div
-      className={`pointer-events-none absolute inset-y-0 hidden lg:flex items-center ${
-        isLeft
-          ? "left-0 pl-1.5 pr-6 bg-gradient-to-r from-white via-white to-transparent"
-          : "right-0 pr-1.5 pl-6 bg-gradient-to-l from-white via-white to-transparent"
-      }`}
-    >
-      <button
-        type="button"
-        onClick={onClick}
-        aria-label={isLeft ? "เลื่อนไปทางซ้าย" : "เลื่อนไปทางขวา"}
-        className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-black/10 bg-white shadow-sm transition-colors cursor-pointer hover:bg-muted active:bg-[var(--fill-gray-200)]"
-      >
-        {isLeft ? <CaretLeftIcon size={14} /> : <CaretRightIcon size={14} />}
-      </button>
-    </div>
-  );
-}
-
 export type CatalogNavigation = {
   onProductSelect: (product: StructuredProduct) => void;
   onAllProductsView: () => void;
@@ -202,7 +99,9 @@ export type CatalogNavigation = {
   onAllGlobalBondsView: () => void;
   onThaiProductSelect: (product: ThaiStructuredProduct) => void;
   onMutualFundSelect: (fundId: string) => void;
-  onMutualFundTopPerformersSeeAll: (categoryId: MutualFundCategoryId) => void;
+  onMutualFundTopPerformersSeeAll: (groupId: MobileFundGroupId) => void;
+  onMutualFundInsightsSeeAll: () => void;
+  onMutualFundThemeSeeAll: (themeId: MutualFundThemeId) => void;
   onRoboAdvisorySelect: () => void;
   onDefinitSelect: () => void;
 };
@@ -381,7 +280,12 @@ export function ProductCatalogTab({
       navigation?.onMutualFundSelect ?? ((fundId: string) => setSelectedMutualFundId(fundId)),
     onMutualFundTopPerformersSeeAll:
       navigation?.onMutualFundTopPerformersSeeAll ??
-      ((categoryId: MutualFundCategoryId) => router.push(mutualFundCategoryHref(categoryId))),
+      ((groupId: MobileFundGroupId) => router.push(mutualFundGroupHref(groupId))),
+    onMutualFundInsightsSeeAll:
+      navigation?.onMutualFundInsightsSeeAll ?? (() => router.push(mutualFundInsightsHref())),
+    onMutualFundThemeSeeAll:
+      navigation?.onMutualFundThemeSeeAll ??
+      ((themeId: MutualFundThemeId) => router.push(mutualFundThemeHref(themeId))),
     onRoboAdvisorySelect:
       navigation?.onRoboAdvisorySelect ?? (() => router.push("/product-catalog/robo-advisory")),
     onDefinitSelect:
@@ -698,7 +602,7 @@ export function ProductCatalogTab({
                   ล้างประวัติ
                 </button>
               </div>
-              <SearchChipScroller rowClassName="px-3">
+              <ChipScroller rowClassName="px-3">
                 {recentSearches.map((term) => (
                   <button
                     key={term}
@@ -720,10 +624,10 @@ export function ProductCatalogTab({
                     />
                   </button>
                 ))}
-              </SearchChipScroller>
+              </ChipScroller>
             </div>
           )}
-          <SearchChipScroller style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+          <ChipScroller style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
             {SEARCH_FILTER_CHIPS.map((chip) => (
               <Chip
                 key={chip.id ?? "all"}
@@ -734,7 +638,7 @@ export function ProductCatalogTab({
                 className="shrink-0"
               />
             ))}
-          </SearchChipScroller>
+          </ChipScroller>
           <div className="flex flex-col max-h-[420px] overflow-y-auto py-2">
             {searchResults.length === 0 ? (
               <p className="px-4 py-8 text-center type-caption text-muted-foreground">
@@ -844,6 +748,8 @@ export function ProductCatalogTab({
               <MutualFundTab
                 onFundSelect={nav.onMutualFundSelect}
                 onTopPerformersSeeAll={nav.onMutualFundTopPerformersSeeAll}
+                onInsightsSeeAll={nav.onMutualFundInsightsSeeAll}
+                onThemeSeeAll={nav.onMutualFundThemeSeeAll}
               />
             )}
           </>

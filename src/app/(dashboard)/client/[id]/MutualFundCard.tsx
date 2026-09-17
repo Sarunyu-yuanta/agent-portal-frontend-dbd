@@ -52,9 +52,9 @@ function RiskMeterIcon({ risk }: { risk: number }) {
 }
 
 /** Figma risk pill — compact badge (node 36234:961677 / 39889:667997). */
-function RiskBadge({ risk, inline }: { risk: number; inline?: boolean }) {
+export function RiskBadge({ risk, inline }: { risk: number; inline?: boolean }) {
   const pill = (
-    <span className="inline-flex h-5 shrink-0 items-center gap-1 rounded-2xl border border-black/10 bg-white px-2">
+    <span className="inline-flex h-5 shrink-0 self-start items-center gap-1 rounded-2xl border border-black/10 bg-white px-2">
       <RiskMeterIcon risk={risk} />
       <span className="text-xs font-semibold leading-4 text-[#4a5565] whitespace-nowrap">risk: {risk}</span>
     </span>

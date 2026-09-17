@@ -2,7 +2,11 @@
 
 import { useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { catalogListUrl, parentTrailUrl, previousVisit } from "@/lib/nav-memory";
+import {
+  catalogListUrl,
+  crossSectionReferrer,
+  parentTrailUrl,
+} from "@/lib/nav-memory";
 import {
   catalogCategoryForPath,
   catalogListHref,
@@ -36,9 +40,15 @@ function sectionRoot(pathname: string): string {
  * `router.back()` would leave the section entirely; the trail keeps them inside
  * it, which is what a breadcrumb-shaped back button promises.
  *
- * When history's previous entry happens to *be* that parent — the ordinary
- * list → detail → back path — we rewind instead of pushing, so the stack stays
- * clean and forward still works.
+ * Always pushes rather than rewinding through browser history: our own trail
+ * is the source of truth for "one level up," and it can legitimately disagree
+ * with the browser's real history stack — a sidebar smart-resume, a manual
+ * browser back/forward, or a `replace()` elsewhere all change what's actually
+ * behind this page without changing what our trail says is *above* it. Relying
+ * on `router.back()` whenever the two happened to match previously meant a
+ * single mismatch (say, a stale `previousVisit()`) could send the user
+ * somewhere our own trail never pointed at — pushing our own computed target
+ * is what makes the button keep the promise its breadcrumb makes.
  *
  * @param getFallback Overrides {@link sectionRoot} for the cold-entry case.
  *   Called at click time, since resolving it may read storage.
@@ -48,9 +58,15 @@ export function useSectionBack(getFallback?: (pathname: string) => string) {
   const pathname = usePathname();
 
   return useCallback(() => {
+    // Cross-section entry — e.g. Product Catalog → House View insight detail.
+    const referrer = crossSectionReferrer(pathname);
+    if (referrer) {
+      router.push(referrer);
+      return;
+    }
+
     const fallback = (getFallback ?? sectionRoot)(pathname);
     const parent = parentTrailUrl(pathname, fallback);
-    if (previousVisit() === parent) router.back();
-    else router.push(parent);
+    router.push(parent);
   }, [router, pathname, getFallback]);
 }

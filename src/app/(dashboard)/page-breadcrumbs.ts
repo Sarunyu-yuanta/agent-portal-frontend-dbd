@@ -5,8 +5,11 @@ import { mockHouseViewStrategies } from "@/lib/mock-data";
 import { maskName } from "@/lib/mask-name";
 import type { Client } from "@/types/domain";
 import {
+  crossSectionTrail,
+  navVisitSnapshot,
   sectionForPath,
   sectionTrail,
+  subscribeNavVisits,
   urlPathname,
   type NavSectionKey,
 } from "@/lib/nav-memory";
@@ -73,6 +76,9 @@ export function usePageBreadcrumb(
   ctx: BreadcrumbContext,
 ): Crumb[] | null {
   const hydrated = useSyncExternalStore(subscribeNever, onClient, onServer);
+  // Re-read session trail once recordVisit lands — otherwise the first paint
+  // after a cross-section jump can stick on the route fallback (House View).
+  useSyncExternalStore(subscribeNavVisits, navVisitSnapshot, () => "");
   return breadcrumbFor(pathname, ctx, hydrated);
 }
 
@@ -108,7 +114,8 @@ function trailBreadcrumb(
 
   // `pathname` as the current URL: the last rung never links anywhere, so its
   // query string would go unused.
-  const trail = sectionTrail(pathname, pathname);
+  const crossTrail = crossSectionTrail(pathname, pathname);
+  const trail = crossTrail ?? sectionTrail(pathname, pathname);
   const rungs: Crumb[] = [];
 
   for (const [i, url] of trail.entries()) {
@@ -132,7 +139,12 @@ function trailBreadcrumb(
   if (!rungs.length || rungs[rungs.length - 1].href) return null;
 
   // Entering a section straight on a detail page leaves no root in the trail.
-  if (rungs[0].label !== SECTION_ROOT[section].label) {
+  // Cross-section entries already carry the referrer section's rungs — don't
+  // prepend this section's root on top of them.
+  if (
+    !crossTrail &&
+    rungs[0].label !== SECTION_ROOT[section].label
+  ) {
     rungs.unshift(...rootCrumbs(section, pathname));
   }
   return rungs.length > 1 ? finish(rungs) : null;
@@ -253,6 +265,7 @@ const FI_COMPANY = /^\/product-catalog\/fixed-income\/company\/(.+)$/;
 const GLOBAL_BOND = /^\/product-catalog\/global-bond\/(.+)$/;
 const THAI = /^\/product-catalog\/thai-structured\/(.+)$/;
 const MUTUAL_FUND_TOP_PERFORMERS = /^\/product-catalog\/mutual-fund\/top-performers\/(.+)$/;
+const MUTUAL_FUND_INSIGHTS = /^\/product-catalog\/mutual-fund\/insights(\/|$)/;
 const MUTUAL_FUND = /^\/product-catalog\/mutual-fund\/(.+)$/;
 
 function catalogLabel(pathname: string): string | null {
@@ -305,6 +318,8 @@ function catalogLabel(pathname: string): string | null {
     const id = normalizeMutualFundCategoryId(decodeURIComponent(performersCategory));
     return MUTUAL_FUND_CATEGORIES.find((c) => c.id === id)?.label ?? "กองทุนผลตอบแทนเด่น";
   }
+
+  if (MUTUAL_FUND_INSIGHTS.test(pathname)) return "บทวิเคราะห์ทั้งหมด";
 
   const fundId = segment(MUTUAL_FUND);
   if (fundId) return getMutualFundSymbol(fundId) ?? "Mutual Fund";

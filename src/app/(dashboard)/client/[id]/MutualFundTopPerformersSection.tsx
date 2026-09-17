@@ -3,31 +3,31 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button, Chip } from "@sarunyu/system-one";
+import { ChipScroller } from "@/components/ui/chip-scroller";
 import { MutualFundPerformerStack, MutualFundSeeMoreIcon } from "./MutualFundCard";
-import { MutualFundChipScroller } from "./MutualFundChipScroller";
 import { MF_ASSETS } from "./mutual-fund-assets";
 import {
-  MUTUAL_FUND_CATEGORIES,
-  mutualFundCategoryHref,
+  MOBILE_FUND_GROUPS,
+  mutualFundGroupHref,
+  type MobileFundGroupId,
   type MutualFund,
-  type MutualFundCategoryId,
 } from "./mutual-fund-data";
 
 /** Figma 40118:77235 — 568×458 left column */
 export function MutualFundTopPerformersSection({
-  categoryId,
-  onCategoryChange,
+  groupId,
+  onGroupChange,
   funds,
   onFundSelect,
   onSeeAll,
 }: {
-  categoryId: MutualFundCategoryId;
-  onCategoryChange: (id: MutualFundCategoryId) => void;
+  groupId: MobileFundGroupId;
+  onGroupChange: (id: MobileFundGroupId) => void;
   funds: MutualFund[];
   onFundSelect?: (fundId: string) => void;
-  onSeeAll?: (categoryId: MutualFundCategoryId) => void;
+  onSeeAll?: (groupId: MobileFundGroupId) => void;
 }) {
-  const seeAllHref = mutualFundCategoryHref(categoryId);
+  const seeAllHref = mutualFundGroupHref(groupId);
   return (
     <section className="flex w-full min-w-0 flex-col gap-4">
       <div className="flex flex-col gap-3">
@@ -43,19 +43,19 @@ export function MutualFundTopPerformersSection({
         </div>
 
         <div className="-mx-4 md:-mx-8 lg:mx-0">
-          <MutualFundChipScroller leadInset>
-            {MUTUAL_FUND_CATEGORIES.map((cat) => (
+          <ChipScroller leadInset rowClassName="">
+            {MOBILE_FUND_GROUPS.map((group) => (
               <Chip
-                key={cat.id}
-                label={cat.label}
+                key={group.id}
+                label={group.label}
                 type="single"
                 size="small"
-                selected={categoryId === cat.id}
-                onClick={() => onCategoryChange(cat.id)}
+                selected={groupId === group.id}
+                onClick={() => onGroupChange(group.id)}
                 className="shrink-0"
               />
             ))}
-          </MutualFundChipScroller>
+          </ChipScroller>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export function MutualFundTopPerformersSection({
                 onSeeAll
                   ? (e) => {
                       e.preventDefault();
-                      onSeeAll(categoryId);
+                      onSeeAll(groupId);
                     }
                   : undefined
               }

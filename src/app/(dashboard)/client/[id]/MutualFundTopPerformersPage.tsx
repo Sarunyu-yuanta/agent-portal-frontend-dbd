@@ -16,16 +16,9 @@ import {
   TOP_PERFORMERS_LIST_UPDATED_AT,
   type MobileFundGroupId,
   type MobilePerformancePeriod,
-  type MutualFundCategoryId,
 } from "./mutual-fund-data";
 
 const HERO_SUBTITLE = "คัดสรรกองทุนเด่น เพื่อคุณโดยเฉพาะ";
-
-/** Which mobile tab group a desktop entry-link's categoryId falls under, so a deep link (e.g. from the catalog grid) still lands on the right tab. */
-function deriveGroupIdFromCategory(categoryId: MutualFundCategoryId): MobileFundGroupId {
-  const group = MOBILE_FUND_GROUPS.find((g) => g.categoryIds?.includes(categoryId));
-  return group?.id ?? "all";
-}
 
 function CategoryTabs({
   activeId,
@@ -135,15 +128,15 @@ function PerformancePeriodTabs({
 
 /** Figma 39889:665472 — mutual fund top performers list. */
 export function MutualFundTopPerformersPage({
-  categoryId,
+  initialGroupId,
   onBack,
   onFundSelect,
 }: {
-  categoryId: MutualFundCategoryId;
+  initialGroupId: MobileFundGroupId;
   onBack: () => void;
   onFundSelect?: (fundId: string) => void;
 }) {
-  const [groupId, setGroupId] = useState<MobileFundGroupId>(() => deriveGroupIdFromCategory(categoryId));
+  const [groupId, setGroupId] = useState<MobileFundGroupId>(initialGroupId);
   const [pickOnly, setPickOnly] = useState(false);
   const [period, setPeriod] = useState<MobilePerformancePeriod>("1M");
   const [legendOpen, setLegendOpen] = useState(false);

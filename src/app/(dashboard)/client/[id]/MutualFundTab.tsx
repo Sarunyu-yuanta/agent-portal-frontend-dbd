@@ -5,31 +5,37 @@ import { MutualFundInsightsSection } from "./MutualFundInsightsSection";
 import { MutualFundQuickActions } from "./MutualFundQuickActions";
 import { MutualFundThemesSection } from "./MutualFundThemesSection";
 import { MutualFundTopPerformersSection } from "./MutualFundTopPerformersSection";
-import type { MutualFundCategoryId } from "./mutual-fund-data";
+import { getMobileGroupFunds, type MobileFundGroupId, type MutualFundThemeId } from "./mutual-fund-data";
 import { useMutualFundCatalog } from "@/hooks/use-catalog";
 
 export function MutualFundTab({
   onFundSelect,
   onTopPerformersSeeAll,
+  onInsightsSeeAll,
+  onThemeSeeAll,
 }: {
   onFundSelect?: (fundId: string) => void;
-  onTopPerformersSeeAll?: (categoryId: MutualFundCategoryId) => void;
+  onTopPerformersSeeAll?: (groupId: MobileFundGroupId) => void;
+  onInsightsSeeAll?: () => void;
+  onThemeSeeAll?: (themeId: MutualFundThemeId) => void;
 }) {
   const { data } = useMutualFundCatalog();
-  const [categoryId, setCategoryId] = useState<MutualFundCategoryId>("global-equity");
-  const funds = data.topPerformers[categoryId] ?? data.topPerformers["global-equity"] ?? [];
+  const [groupId, setGroupId] = useState<MobileFundGroupId>("all");
+  const funds = getMobileGroupFunds(groupId);
 
   const topPerformers = (
     <MutualFundTopPerformersSection
-      categoryId={categoryId}
-      onCategoryChange={setCategoryId}
+      groupId={groupId}
+      onGroupChange={setGroupId}
       funds={funds}
       onFundSelect={onFundSelect}
       onSeeAll={onTopPerformersSeeAll}
     />
   );
 
-  const insights = <MutualFundInsightsSection insights={data.insights} />;
+  const insights = (
+    <MutualFundInsightsSection insights={data.insights} onSeeAll={onInsightsSeeAll} />
+  );
 
   return (
     <div className="flex w-full flex-col bg-white">
@@ -49,7 +55,7 @@ export function MutualFundTab({
       </div>
 
       <div className="mx-auto mt-3 w-full max-w-[1280px] px-4 md:px-8 lg:mt-6 lg:px-6">
-        <MutualFundThemesSection themes={data.themes} onFundSelect={onFundSelect} />
+        <MutualFundThemesSection themes={data.themes} onFundSelect={onFundSelect} onThemeSeeAll={onThemeSeeAll} />
       </div>
     </div>
   );
