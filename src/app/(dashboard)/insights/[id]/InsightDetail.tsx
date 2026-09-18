@@ -13,6 +13,7 @@ import { RelatedProductsCard } from "../RelatedProductsCard";
 import { PlaybookCardCompact } from "../PlaybookCardCompact";
 import { useSectionBack } from "@/hooks/use-section-back";
 import { useInsightStrategy } from "@/hooks/use-catalog";
+import { findMutualFundInsightByDetailId } from "../../client/[id]/mutual-fund-data";
 import { InsightDetailSkeleton } from "./InsightDetailSkeleton";
 
 export function InsightDetail({ id }: { id: string }) {
@@ -45,8 +46,21 @@ export function InsightDetail({ id }: { id: string }) {
 
   const cat = getCategory(strategy);
   const detail = getInsightDetail(strategy);
+  // Mutual Fund's own insight catalog (Product Catalog → Mutual Fund →
+  // "บทวิเคราะห์ทั้งหมด") tracks a subset of these House View strategies by
+  // `detailId`. When the strategy being viewed is one of them, "บทวิเคราะห์
+  // อื่นๆ" below must stay scoped to that same subset — a reader who came
+  // from the Mutual Fund tab should only ever be offered more Mutual Fund
+  // analyses, not the full, unrelated House View catalog. Strategies reached
+  // any other way (e.g. from the Insights list, which is the "everything"
+  // aggregate) keep seeing every other strategy from the same period, same
+  // as before.
+  const isMutualFundInsight = findMutualFundInsightByDetailId(strategy.id) !== undefined;
   const related = mockHouseViewStrategies.filter(
-    (s) => s.periodLabel === strategy.periodLabel && s.id !== strategy.id,
+    (s) =>
+      s.periodLabel === strategy.periodLabel &&
+      s.id !== strategy.id &&
+      (!isMutualFundInsight || findMutualFundInsightByDetailId(s.id) !== undefined),
   );
 
   const pdfButton = (

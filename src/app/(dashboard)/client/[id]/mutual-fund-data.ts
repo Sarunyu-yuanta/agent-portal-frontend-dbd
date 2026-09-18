@@ -158,6 +158,53 @@ export function getTopPerformers(categoryId: MutualFundCategoryId): MutualFund[]
   );
 }
 
+// ─── Mutual fund insight ↔ House View strategy bridge ──────────────────────
+// A mutual fund insight's `detailId` points at a House View strategy id (see
+// the `MutualFundInsight.detailId` doc comment above) and both the Mutual
+// Fund insights list and Product Catalog's "บทวิเคราะห์ทั้งหมด" list link
+// straight to the shared `/insights/[id]` detail page. That page also serves
+// non-mutual-fund insights, so its Related Products sidebar needs a way to
+// tell the two apart: `findMutualFundInsightByDetailId` is that bridge —
+// when it resolves, the detail page is being viewed as a Mutual Fund
+// insight and should show Mutual Fund related products instead of the
+// generic structured/fixed income/global bond picks.
+
+function buildMutualFundsBySymbol(): Map<string, MutualFund> {
+  const bySymbol = new Map<string, MutualFund>();
+  for (const category of MUTUAL_FUND_CATEGORIES) {
+    for (const fund of getTopPerformers(category.id)) {
+      if (!bySymbol.has(fund.symbol)) bySymbol.set(fund.symbol, fund);
+    }
+  }
+  for (const theme of MUTUAL_FUND_CATALOG.themes) {
+    for (const fund of theme.funds) {
+      if (!bySymbol.has(fund.symbol)) bySymbol.set(fund.symbol, fund);
+    }
+  }
+  return bySymbol;
+}
+
+const MUTUAL_FUNDS_BY_SYMBOL = buildMutualFundsBySymbol();
+
+/** The Mutual Fund catalog's insight entry (if any) for this House View strategy id. */
+export function findMutualFundInsightByDetailId(detailId: string): MutualFundInsight | undefined {
+  return MUTUAL_FUND_CATALOG.insights.find((insight) => insight.detailId === detailId);
+}
+
+/**
+ * Resolves a Mutual Fund insight's `recommendedFunds` symbols (plain strings)
+ * to full catalog records, so they can render as real `MutualFundListCard`s.
+ * Symbols with no matching mock fund yet (e.g. some Hold List picks) are
+ * skipped rather than shown as broken cards.
+ */
+export function getRecommendedFundsForInsight(detailId: string): MutualFund[] {
+  const insight = findMutualFundInsightByDetailId(detailId);
+  if (!insight) return [];
+  return insight.recommendedFunds
+    .map((symbol) => MUTUAL_FUNDS_BY_SYMBOL.get(symbol))
+    .filter((fund): fund is MutualFund => fund !== undefined);
+}
+
 /** Figma 39889:665484 — performers list as-of date. */
 export const TOP_PERFORMERS_LIST_UPDATED_AT = "2 ส.ค 69";
 

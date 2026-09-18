@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
+import { AdvisoryClientPickerModal } from "./AdvisoryClientPickerModal";
+import type { AdvisoryService } from "./portfolio-advisory-client";
 import { ROBO_ASSETS } from "./robo-advisory-assets";
 
 const HOVER_TRANSITION = "duration-500 ease-in-out";
@@ -232,9 +234,13 @@ export function RoboAdvisoryTab({
   onRoboAdvisorySelect,
   onDefinitSelect,
 }: {
-  onRoboAdvisorySelect?: () => void;
-  onDefinitSelect?: () => void;
+  onRoboAdvisorySelect?: (clientId: string) => void;
+  onDefinitSelect?: (clientId: string) => void;
 } = {}) {
+  // An IC reads these plans for one client at a time, so picking the client is
+  // the first step of entering either service rather than a filter inside it.
+  const [pendingService, setPendingService] = useState<AdvisoryService | null>(null);
+
   return (
     <div className="w-full bg-white px-4 py-3 md:px-8 md:pb-10 md:pt-3 lg:bg-[#f9fafb] lg:py-10">
       <div className="mx-auto w-full max-w-[1280px] lg:px-6">
@@ -242,9 +248,23 @@ export function RoboAdvisoryTab({
           className="flex flex-col gap-3 md:gap-6 lg:rounded-xl lg:bg-white lg:px-14 lg:py-8 lg:shadow-[0px_0px_2px_rgba(102,102,102,0.16),0px_4px_8px_rgba(102,102,102,0.12)]"
         >
           <PortfolioAdvisoryHeader />
-          <PortfolioAdvisoryCards onRoboAdvisorySelect={onRoboAdvisorySelect} onDefinitSelect={onDefinitSelect} />
+          <PortfolioAdvisoryCards
+            onRoboAdvisorySelect={() => setPendingService("robo")}
+            onDefinitSelect={() => setPendingService("definit")}
+          />
         </div>
       </div>
+
+      <AdvisoryClientPickerModal
+        open={pendingService != null}
+        service={pendingService ?? "robo"}
+        onClose={() => setPendingService(null)}
+        onConfirm={(clientId) => {
+          if (pendingService === "definit") onDefinitSelect?.(clientId);
+          else onRoboAdvisorySelect?.(clientId);
+          setPendingService(null);
+        }}
+      />
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { StructuredProductCard } from "../client/[id]/StructuredProductCard";
 import { BOND_LOGOS, type FixedIncomeBond } from "../client/[id]/fixed-income-data";
 import { BondLogo } from "../client/[id]/fixed-income-shared";
 import type { GlobalBondIssuer } from "../client/[id]/global-bond-data";
+import { MutualFundListCard } from "../client/[id]/MutualFundCard";
+import { getRecommendedFundsForInsight } from "../client/[id]/mutual-fund-data";
 import { getRelatedProducts } from "./house-view-data";
 
 const CARD_STYLE = {
@@ -95,9 +97,24 @@ function GlobalBondRelatedCard({ issuer }: { issuer: GlobalBondIssuer }) {
 export function RelatedProductsCard({
   strategy,
   variant = "card",
-}: { strategy?: { assetClass?: string }; variant?: "card" | "plain" } = {}) {
+}: { strategy?: { id?: string; assetClass?: string }; variant?: "card" | "plain" } = {}) {
   const { structured, fixedIncome, globalBond } = getRelatedProducts(strategy);
-  const isEmpty = structured.length === 0 && fixedIncome.length === 0 && globalBond.length === 0;
+
+  // This detail page is shared by the Insights list and by Product Catalog's
+  // Mutual Fund tab (`บทวิเคราะห์ทั้งหมด`) — both link straight to
+  // `/insights/[id]`. When the strategy being viewed is one the Mutual Fund
+  // catalog also tracks as an insight, its recommended funds are added
+  // *alongside* whatever the strategy's own asset class already resolves —
+  // an insight can genuinely have a mix (e.g. a structured note and a fund
+  // both tied to the same call), so this never replaces the other groups,
+  // only adds to them. Which groups actually render is entirely data-driven:
+  // whatever the backend returns products for is what shows, for every
+  // insight regardless of which page linked here — the Insights list is the
+  // "show everything" aggregate view, so it must see the same mix.
+  const mutualFund = strategy?.id ? getRecommendedFundsForInsight(strategy.id) : [];
+
+  const isEmpty =
+    structured.length === 0 && fixedIncome.length === 0 && globalBond.length === 0 && mutualFund.length === 0;
 
   return (
     <div
@@ -116,6 +133,16 @@ export function RelatedProductsCard({
         <p className="text-[13px] text-muted-foreground text-center py-4">ยังไม่มีสินค้าที่เกี่ยวข้องในขณะนี้</p>
       ) : (
         <div className="flex flex-col gap-6">
+          {mutualFund.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <GroupLabel>Mutual Fund</GroupLabel>
+              <div className="flex flex-col gap-3">
+                {mutualFund.map((fund) => (
+                  <MutualFundListCard key={fund.id} fund={fund} />
+                ))}
+              </div>
+            </div>
+          )}
           {structured.length > 0 && (
             <div className="flex flex-col gap-2">
               <GroupLabel>Global Structured Product</GroupLabel>

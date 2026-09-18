@@ -8,6 +8,7 @@ import {
   type CatalogNavigation,
 } from "../client/[id]/ProductCatalogTab";
 import {
+  advisoryDetailHref,
   catalogListHref,
   normalizeProductCategory,
 } from "@/lib/product-catalog-routes";
@@ -92,8 +93,10 @@ function ProductCatalogPageInner() {
     onMutualFundInsightsSeeAll: () => router.push("/product-catalog/mutual-fund/insights"),
     onMutualFundThemeSeeAll: (themeId) =>
       router.push(`/product-catalog/mutual-fund/themes/${encodeURIComponent(themeId)}`),
-    onRoboAdvisorySelect: () => router.push("/product-catalog/robo-advisory"),
-    onDefinitSelect: () => router.push("/product-catalog/definit"),
+    onRoboAdvisorySelect: (clientId) =>
+      router.push(advisoryDetailHref("/product-catalog/robo-advisory", clientId)),
+    onDefinitSelect: (clientId) =>
+      router.push(advisoryDetailHref("/product-catalog/definit", clientId)),
   };
 
   return (

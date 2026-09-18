@@ -8,7 +8,16 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { ResponsiveBreadcrumb } from "@/components/layout/ResponsiveBreadcrumb";
 import { usePrivacy } from "@/contexts/privacy-context";
 import { useClients } from "@/hooks/use-api";
+import type { Client } from "@/types/domain";
 import { usePageBreadcrumb } from "../../page-breadcrumbs";
+import {
+  AdvisoryClientBar,
+  AdvisoryClientPicker,
+  useAdvisoryClient,
+  type AdvisoryClientState,
+} from "./AdvisoryClientBar";
+import { advisoryCta, planSuitability } from "./portfolio-advisory-client";
+import { AdvisoryCtaButton, PlanSuitabilityBadge } from "./portfolio-advisory-ui";
 import { DEFINIT_PLANS, type DefinitPlan } from "./definit-plan-data";
 import { DefinitPlanDetailModal } from "./RoboAdvisoryPlanDetailModal";
 import { ROBO_ASSETS } from "./robo-advisory-assets";
@@ -175,10 +184,12 @@ type DefinitPlanCardLayout = "mobile" | "tablet" | "desktop";
 /** Figma 34068:65795 tablet px-24 py-16 (567071); 34315:85739 desktop px-24 py-16 (567116). */
 function DefinitPlanCard({
   plan,
+  client,
   onDetailsClick,
   layout = "desktop",
 }: {
   plan: DefinitPlan;
+  client: Client;
   onDetailsClick: () => void;
   layout?: DefinitPlanCardLayout;
 }) {
@@ -208,8 +219,9 @@ function DefinitPlanCard({
             </div>
             <DefinitPlanDescription plan={plan} />
           </div>
-          <div className="flex w-full shrink-0 items-center justify-between gap-2">
+          <div className="flex w-full shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
             <RoboRiskLevel tier={plan.riskTier} />
+            <PlanSuitabilityBadge suitability={planSuitability(client, plan.riskTier)} />
             <div className="flex min-w-0 flex-1 items-center justify-end gap-1 whitespace-nowrap">
               <p
                 className={
@@ -253,7 +265,7 @@ function DefinitPlanCard({
         </div>
       </div>
 
-      <div className="flex w-full shrink-0 items-center">
+      <div className="flex w-full shrink-0 flex-wrap items-center justify-between gap-2">
         <Button
           variant="plain"
           size="lg"
@@ -265,6 +277,7 @@ function DefinitPlanCard({
         >
           รายละเอียด
         </Button>
+        <AdvisoryCtaButton cta={advisoryCta(client, "definit")} className="shrink-0" />
       </div>
     </div>
   );
@@ -289,7 +302,17 @@ function DefinitHeroDecoration({ compact }: { compact?: boolean }) {
   );
 }
 
-function DefinitHeroMobile({ plans, onPlanDetails }: { plans: DefinitPlan[]; onPlanDetails: (plan: DefinitPlan) => void }) {
+function DefinitHeroMobile({
+  plans,
+  advisory,
+  client,
+  onPlanDetails,
+}: {
+  plans: DefinitPlan[];
+  advisory: AdvisoryClientState;
+  client: Client;
+  onPlanDetails: (plan: DefinitPlan) => void;
+}) {
   return (
     <div className={`relative flex w-full flex-1 flex-col items-center overflow-x-clip pb-20 ${DEFINIT_HERO_BG}`}>
       <DefinitChartOverlay layout="mobile" />
@@ -308,6 +331,9 @@ function DefinitHeroMobile({ plans, onPlanDetails }: { plans: DefinitPlan[]; onP
       </div>
 
       <div className="relative z-10 flex w-full flex-col items-center gap-3">
+        <div className="w-full px-4">
+          <AdvisoryClientBar state={advisory} />
+        </div>
         <div className="flex w-full items-center px-4">
           <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
         </div>
@@ -316,6 +342,7 @@ function DefinitHeroMobile({ plans, onPlanDetails }: { plans: DefinitPlan[]; onP
             <DefinitPlanCard
               key={plan.id}
               plan={plan}
+              client={client}
               layout="mobile"
               onDetailsClick={() => onPlanDetails(plan)}
             />
@@ -326,7 +353,17 @@ function DefinitHeroMobile({ plans, onPlanDetails }: { plans: DefinitPlan[]; onP
   );
 }
 
-function DefinitHeroTablet({ plans, onPlanDetails }: { plans: DefinitPlan[]; onPlanDetails: (plan: DefinitPlan) => void }) {
+function DefinitHeroTablet({
+  plans,
+  advisory,
+  client,
+  onPlanDetails,
+}: {
+  plans: DefinitPlan[];
+  advisory: AdvisoryClientState;
+  client: Client;
+  onPlanDetails: (plan: DefinitPlan) => void;
+}) {
   return (
     <div className={`relative flex min-h-[910px] w-full flex-1 flex-col gap-3 overflow-x-clip pb-20 ${DEFINIT_HERO_BG}`}>
       <DefinitChartOverlay layout="tablet" />
@@ -339,6 +376,7 @@ function DefinitHeroTablet({ plans, onPlanDetails }: { plans: DefinitPlan[]; onP
       </div>
 
       <div className="relative z-10 flex w-full flex-col gap-4 px-8">
+        <AdvisoryClientBar state={advisory} />
         <div className="flex w-full items-center">
           <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
         </div>
@@ -347,6 +385,7 @@ function DefinitHeroTablet({ plans, onPlanDetails }: { plans: DefinitPlan[]; onP
             <DefinitPlanCard
               key={plan.id}
               plan={plan}
+              client={client}
               layout="tablet"
               onDetailsClick={() => onPlanDetails(plan)}
             />
@@ -358,7 +397,17 @@ function DefinitHeroTablet({ plans, onPlanDetails }: { plans: DefinitPlan[]; onP
 }
 
 /** Figma 34315:85721 — 996px section, gradient to #4886e0. */
-function DefinitHeroDesktop({ plans, onPlanDetails }: { plans: DefinitPlan[]; onPlanDetails: (plan: DefinitPlan) => void }) {
+function DefinitHeroDesktop({
+  plans,
+  advisory,
+  client,
+  onPlanDetails,
+}: {
+  plans: DefinitPlan[];
+  advisory: AdvisoryClientState;
+  client: Client;
+  onPlanDetails: (plan: DefinitPlan) => void;
+}) {
   return (
     <div className={`relative flex w-full flex-col items-center overflow-clip px-14 pb-12 ${DEFINIT_HERO_BG}`}>
       <DefinitChartOverlay layout="desktop" />
@@ -378,6 +427,7 @@ function DefinitHeroDesktop({ plans, onPlanDetails }: { plans: DefinitPlan[]; on
         </div>
 
       <div className="relative z-10 flex w-full max-w-[884px] flex-col gap-4">
+        <AdvisoryClientBar state={advisory} />
         <div className="flex w-full items-center">
           <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
         </div>
@@ -387,6 +437,7 @@ function DefinitHeroDesktop({ plans, onPlanDetails }: { plans: DefinitPlan[]; on
             <DefinitPlanCard
               key={plan.id}
               plan={plan}
+              client={client}
               layout="desktop"
               onDetailsClick={() => onPlanDetails(plan)}
             />
@@ -401,6 +452,8 @@ function DefinitHeroDesktop({ plans, onPlanDetails }: { plans: DefinitPlan[]; on
 /** Figma 34315:84889 — Definit x Yuanta detail from Portfolio Advisory tab. */
 export function DefinitDetail({ onBack }: { onBack?: () => void }) {
   const [detailPlan, setDetailPlan] = useState<DefinitPlan | null>(null);
+  const advisory = useAdvisoryClient("definit");
+  const client = advisory.client;
 
   useEffect(() => {
     const main = document.querySelector("main");
@@ -415,26 +468,51 @@ export function DefinitDetail({ onBack }: { onBack?: () => void }) {
     <div className="flex w-full flex-1 flex-col max-lg:min-h-[calc(100dvh-60px)] max-lg:overflow-x-clip max-lg:bg-white lg:bg-[#f9fafb] lg:pb-20 lg:pt-2">
       <div className="flex min-h-[calc(100dvh-60px)] w-full flex-1 flex-col lg:hidden">
         <DefinitMobileBreadcrumb />
-        <div className="md:hidden">
-          <DefinitHeroMobile plans={DEFINIT_PLANS} onPlanDetails={setDetailPlan} />
-        </div>
-        <div className="hidden md:block">
-          <DefinitHeroTablet plans={DEFINIT_PLANS} onPlanDetails={setDetailPlan} />
-        </div>
+        {client ? (
+          <>
+            <div className="md:hidden">
+              <DefinitHeroMobile
+                plans={DEFINIT_PLANS}
+                advisory={advisory}
+                client={client}
+                onPlanDetails={setDetailPlan}
+              />
+            </div>
+            <div className="hidden md:block">
+              <DefinitHeroTablet
+                plans={DEFINIT_PLANS}
+                advisory={advisory}
+                client={client}
+                onPlanDetails={setDetailPlan}
+              />
+            </div>
+          </>
+        ) : null}
       </div>
 
       <div className="mx-auto hidden w-full max-w-[996px] flex-col gap-2 px-4 md:px-8 lg:flex lg:px-0">
         {onBack ? <DesktopBackHeader onBack={onBack} /> : null}
 
-        <div className="w-full overflow-clip rounded-xl" style={{ boxShadow: SECTION_SHADOW }}>
-          <DefinitHeroDesktop plans={DEFINIT_PLANS} onPlanDetails={setDetailPlan} />
-        </div>
+        {client ? (
+          <div className="w-full overflow-clip rounded-xl" style={{ boxShadow: SECTION_SHADOW }}>
+            <DefinitHeroDesktop
+              plans={DEFINIT_PLANS}
+              advisory={advisory}
+              client={client}
+              onPlanDetails={setDetailPlan}
+            />
+          </div>
+        ) : null}
       </div>
+
+      <AdvisoryClientPicker state={advisory} onDismissWithoutClient={onBack} />
 
       <DefinitPlanDetailModal
         plan={detailPlan}
         open={detailPlan != null}
         onClose={() => setDetailPlan(null)}
+        cta={client ? advisoryCta(client, "definit") : undefined}
+        suitability={client && detailPlan ? planSuitability(client, detailPlan.riskTier) : undefined}
       />
     </div>
   );

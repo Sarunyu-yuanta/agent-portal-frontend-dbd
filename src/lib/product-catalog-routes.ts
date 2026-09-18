@@ -36,6 +36,14 @@ export function catalogListHref(category?: string | null): string {
   return category ? `${CATALOG_PATH}?category=${category}` : CATALOG_PATH;
 }
 
+/**
+ * A Portfolio Advisory service, scoped to the client it is being read for.
+ * Plans differ by the client's risk profile, so the client belongs in the URL.
+ */
+export function advisoryDetailHref(path: string, clientId: string): string {
+  return `${path}?clientId=${encodeURIComponent(clientId)}`;
+}
+
 /** The `?category=` a catalog URL carries, if any. */
 export function categoryOfUrl(url: string): string | null {
   return new URLSearchParams(url.split("?")[1] ?? "").get("category");

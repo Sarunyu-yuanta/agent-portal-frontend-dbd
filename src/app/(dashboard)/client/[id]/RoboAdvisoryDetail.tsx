@@ -8,7 +8,16 @@ import { ArrowLeftIcon, FunnelSimpleIcon } from "@phosphor-icons/react";
 import { ResponsiveBreadcrumb } from "@/components/layout/ResponsiveBreadcrumb";
 import { usePrivacy } from "@/contexts/privacy-context";
 import { useClients } from "@/hooks/use-api";
+import type { Client } from "@/types/domain";
 import { usePageBreadcrumb } from "../../page-breadcrumbs";
+import {
+  AdvisoryClientBar,
+  AdvisoryClientPicker,
+  useAdvisoryClient,
+  type AdvisoryClientState,
+} from "./AdvisoryClientBar";
+import { advisoryCta, planSuitability } from "./portfolio-advisory-client";
+import { AdvisoryCtaButton, PlanSuitabilityBadge } from "./portfolio-advisory-ui";
 import { ROBO_ASSETS } from "./robo-advisory-assets";
 import { ROBO_ADVISORY_PLANS, type RoboAdvisoryPlan } from "./robo-advisory-plan-data";
 import {
@@ -101,14 +110,16 @@ function RoboAdvisoryMobileBreadcrumb() {
 /** Figma 33787:149512 — flex-[1_0_0] in 884px row → 436×302; tablet 33777:105243 p-16. */
 function RoboPlanCard({
   plan,
+  client,
   onDetailsClick,
 }: {
   plan: RoboAdvisoryPlan;
+  client: Client;
   onDetailsClick: () => void;
 }) {
   return (
     <div
-      className="box-border flex h-[302px] w-full flex-col gap-4 rounded-lg bg-white p-4 max-lg:h-auto lg:min-w-0 lg:flex-[1_0_0] lg:p-3"
+      className="box-border flex min-h-[302px] w-full flex-col gap-4 rounded-lg bg-white p-4 lg:h-full lg:min-w-0 lg:flex-[1_0_0] lg:p-3"
       style={{ boxShadow: PLAN_CARD_SHADOW }}
     >
       <div className="flex w-full shrink-0 flex-col gap-4">
@@ -122,8 +133,9 @@ function RoboPlanCard({
             </div>
             <p className="text-sm leading-5 text-[#4a5565]">{plan.description}</p>
           </div>
-          <div className="flex w-full items-center">
+          <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-1">
             <RoboRiskLevel tier={plan.riskTier} />
+            <PlanSuitabilityBadge suitability={planSuitability(client, plan.riskTier)} />
             <div className="flex min-w-0 flex-[1_0_0] items-center justify-end gap-1 whitespace-nowrap">
               <p className="text-xs font-bold leading-4 text-[#101828]">Available Room</p>
               <p className="text-xs leading-4 text-[#4a5565]">{plan.availableRoom}</p>
@@ -152,7 +164,7 @@ function RoboPlanCard({
         </div>
       </div>
 
-      <div className="flex w-full shrink-0 items-center">
+      <div className="mt-auto flex w-full shrink-0 flex-wrap items-center justify-between gap-2">
         <Button
           variant="plain"
           size="lg"
@@ -164,6 +176,7 @@ function RoboPlanCard({
         >
           รายละเอียด
         </Button>
+        <AdvisoryCtaButton cta={advisoryCta(client, "robo")} className="shrink-0" />
       </div>
     </div>
   );
@@ -195,10 +208,14 @@ function RoboAdvisoryChartOverlay({ layout }: { layout: "mobile" | "tablet" }) {
 
 function RoboAdvisoryHeroMobile({
   plans,
+  advisory,
+  client,
   onPlanDetails,
   onFilterClick,
 }: {
   plans: RoboAdvisoryPlan[];
+  advisory: AdvisoryClientState;
+  client: Client;
   onPlanDetails: (plan: RoboAdvisoryPlan) => void;
   onFilterClick: () => void;
 }) {
@@ -230,6 +247,9 @@ function RoboAdvisoryHeroMobile({
       </div>
 
       <div className="relative z-10 flex w-full flex-col items-center gap-3">
+        <div className="w-full px-4">
+          <AdvisoryClientBar state={advisory} />
+        </div>
         <div className="flex w-full items-center justify-between px-4">
           <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
           {SHOW_ROBO_FILTER_BUTTON ? (
@@ -240,7 +260,12 @@ function RoboAdvisoryHeroMobile({
         </div>
         <div className="flex w-[343px] max-w-[calc(100%-32px)] flex-col gap-3">
           {plans.map((plan) => (
-            <RoboPlanCard key={plan.id} plan={plan} onDetailsClick={() => onPlanDetails(plan)} />
+            <RoboPlanCard
+              key={plan.id}
+              plan={plan}
+              client={client}
+              onDetailsClick={() => onPlanDetails(plan)}
+            />
           ))}
         </div>
       </div>
@@ -251,10 +276,14 @@ function RoboAdvisoryHeroMobile({
 /** Figma 33777:105223 — tablet full-bleed hero, 704px stacked plan cards. */
 function RoboAdvisoryHeroTablet({
   plans,
+  advisory,
+  client,
   onPlanDetails,
   onFilterClick,
 }: {
   plans: RoboAdvisoryPlan[];
+  advisory: AdvisoryClientState;
+  client: Client;
   onPlanDetails: (plan: RoboAdvisoryPlan) => void;
   onFilterClick: () => void;
 }) {
@@ -280,6 +309,7 @@ function RoboAdvisoryHeroTablet({
       </div>
 
       <div className="relative z-10 flex w-full flex-col gap-4 px-8">
+        <AdvisoryClientBar state={advisory} />
         <div className="flex w-full items-center justify-between">
           <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
           {SHOW_ROBO_FILTER_BUTTON ? (
@@ -290,7 +320,12 @@ function RoboAdvisoryHeroTablet({
         </div>
         <div className="flex w-full flex-col gap-4">
           {plans.map((plan) => (
-            <RoboPlanCard key={plan.id} plan={plan} onDetailsClick={() => onPlanDetails(plan)} />
+            <RoboPlanCard
+              key={plan.id}
+              plan={plan}
+              client={client}
+              onDetailsClick={() => onPlanDetails(plan)}
+            />
           ))}
         </div>
       </div>
@@ -301,10 +336,14 @@ function RoboAdvisoryHeroTablet({
 /** Figma 33787:149490 — gradient hero inside 996px white section. */
 function RoboAdvisoryHeroDesktop({
   plans,
+  advisory,
+  client,
   onPlanDetails,
   onFilterClick,
 }: {
   plans: RoboAdvisoryPlan[];
+  advisory: AdvisoryClientState;
+  client: Client;
   onPlanDetails: (plan: RoboAdvisoryPlan) => void;
   onFilterClick: () => void;
 }) {
@@ -336,6 +375,7 @@ function RoboAdvisoryHeroDesktop({
       </div>
 
       <div className="relative z-10 flex w-full flex-col gap-4">
+        <AdvisoryClientBar state={advisory} />
         <div className="flex w-full items-center justify-between">
           <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
           {SHOW_ROBO_FILTER_BUTTON ? (
@@ -345,9 +385,14 @@ function RoboAdvisoryHeroDesktop({
           ) : null}
         </div>
 
-        <div className="flex w-full items-start gap-3">
+        <div className="flex w-full items-stretch gap-3">
           {plans.map((plan) => (
-            <RoboPlanCard key={plan.id} plan={plan} onDetailsClick={() => onPlanDetails(plan)} />
+            <RoboPlanCard
+              key={plan.id}
+              plan={plan}
+              client={client}
+              onDetailsClick={() => onPlanDetails(plan)}
+            />
           ))}
         </div>
       </div>
@@ -361,6 +406,8 @@ export function RoboAdvisoryDetail({ onBack }: { onBack?: () => void }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<RoboAdvisoryFilters>(EMPTY_ROBO_ADVISORY_FILTERS);
   const filteredPlans = filterRoboAdvisoryPlans(ROBO_ADVISORY_PLANS, filters);
+  const advisory = useAdvisoryClient("robo");
+  const client = advisory.client;
 
   useEffect(() => {
     const main = document.querySelector("main");
@@ -375,33 +422,47 @@ export function RoboAdvisoryDetail({ onBack }: { onBack?: () => void }) {
     <div className="flex w-full flex-1 flex-col max-lg:min-h-[calc(100dvh-60px)] max-lg:overflow-x-clip max-lg:bg-white lg:bg-[#f9fafb] lg:pb-20 lg:pt-2">
       <div className="flex min-h-[calc(100dvh-60px)] w-full flex-1 flex-col lg:hidden">
         <RoboAdvisoryMobileBreadcrumb />
-        <div className="md:hidden">
-          <RoboAdvisoryHeroMobile
-            plans={filteredPlans}
-            onPlanDetails={setDetailPlan}
-            onFilterClick={() => setFiltersOpen(true)}
-          />
-        </div>
-        <div className="hidden md:block">
-          <RoboAdvisoryHeroTablet
-            plans={filteredPlans}
-            onPlanDetails={setDetailPlan}
-            onFilterClick={() => setFiltersOpen(true)}
-          />
-        </div>
+        {client ? (
+          <>
+            <div className="md:hidden">
+              <RoboAdvisoryHeroMobile
+                plans={filteredPlans}
+                advisory={advisory}
+                client={client}
+                onPlanDetails={setDetailPlan}
+                onFilterClick={() => setFiltersOpen(true)}
+              />
+            </div>
+            <div className="hidden md:block">
+              <RoboAdvisoryHeroTablet
+                plans={filteredPlans}
+                advisory={advisory}
+                client={client}
+                onPlanDetails={setDetailPlan}
+                onFilterClick={() => setFiltersOpen(true)}
+              />
+            </div>
+          </>
+        ) : null}
       </div>
 
       <div className="mx-auto hidden w-full max-w-[996px] flex-col gap-2 px-4 md:px-8 lg:flex lg:px-0">
         {onBack ? <DesktopBackHeader onBack={onBack} /> : null}
 
-        <div className="w-full overflow-clip rounded-xl bg-white" style={{ boxShadow: SECTION_SHADOW }}>
-          <RoboAdvisoryHeroDesktop
-            plans={filteredPlans}
-            onPlanDetails={setDetailPlan}
-            onFilterClick={() => setFiltersOpen(true)}
-          />
-        </div>
+        {client ? (
+          <div className="w-full overflow-clip rounded-xl bg-white" style={{ boxShadow: SECTION_SHADOW }}>
+            <RoboAdvisoryHeroDesktop
+              plans={filteredPlans}
+              advisory={advisory}
+              client={client}
+              onPlanDetails={setDetailPlan}
+              onFilterClick={() => setFiltersOpen(true)}
+            />
+          </div>
+        ) : null}
       </div>
+
+      <AdvisoryClientPicker state={advisory} onDismissWithoutClient={onBack} />
 
       <RoboAdvisoryFilterModal
         open={filtersOpen}
@@ -417,6 +478,8 @@ export function RoboAdvisoryDetail({ onBack }: { onBack?: () => void }) {
         plan={detailPlan}
         open={detailPlan != null}
         onClose={() => setDetailPlan(null)}
+        cta={client ? advisoryCta(client, "robo") : undefined}
+        suitability={client && detailPlan ? planSuitability(client, detailPlan.riskTier) : undefined}
       />
     </div>
   );

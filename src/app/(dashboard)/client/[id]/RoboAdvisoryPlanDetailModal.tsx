@@ -5,6 +5,8 @@ import Image from "next/image";
 import { Alert, BottomSheet, Button, Modal, useIsMobile } from "@sarunyu/system-one";
 import { DownloadSimpleIcon } from "@phosphor-icons/react";
 import { AllocationDonut } from "@/components/allocation-donut";
+import { AdvisoryCtaButton, PlanSuitabilityBadge } from "./portfolio-advisory-ui";
+import type { AdvisoryCta, PlanSuitability } from "./portfolio-advisory-client";
 import type { DefinitPlan } from "./definit-plan-data";
 import {
   definitPlanToDetailView,
@@ -109,7 +111,15 @@ function PlanSummary({ summary }: { summary: PlanDetailSummary }) {
   );
 }
 
-function PlanDetailContent({ plan, isMobile }: { plan: PortfolioAdvisoryPlanDetailView; isMobile: boolean }) {
+function PlanDetailContent({
+  plan,
+  isMobile,
+  suitability,
+}: {
+  plan: PortfolioAdvisoryPlanDetailView;
+  isMobile: boolean;
+  suitability?: PlanSuitability;
+}) {
   const { detail, presentation } = plan;
   const drawdownColor = presentation.showDividendStat ? "text-[#c10007]" : "text-[#fb2c36]";
 
@@ -126,8 +136,9 @@ function PlanDetailContent({ plan, isMobile }: { plan: PortfolioAdvisoryPlanDeta
           {!isMobile ? <DownloadDocumentsButton /> : null}
         </div>
         <PlanSummary summary={plan.summary} />
-        <div className="flex w-full items-center">
+        <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-1">
           <RoboRiskLevel tier={plan.riskTier} />
+          {suitability ? <PlanSuitabilityBadge suitability={suitability} /> : null}
           <div className="flex min-w-0 flex-[1_0_0] items-center justify-end gap-1 whitespace-nowrap">
             <p className="text-xs font-bold leading-4 text-black/75">Available Room</p>
             <p className="text-xs leading-4 text-black/60">{plan.availableRoom}</p>
@@ -251,15 +262,28 @@ function PlanDetailContent({ plan, isMobile }: { plan: PortfolioAdvisoryPlanDeta
   );
 }
 
+/** Pinned below the scroll area so the CTA stays reachable however long the plan is. */
+function PlanDetailFooter({ cta, paddingClassName }: { cta: AdvisoryCta; paddingClassName: string }) {
+  return (
+    <div className={`shrink-0 border-t border-black/10 bg-white py-4 ${paddingClassName}`}>
+      <AdvisoryCtaButton cta={cta} className="w-full" />
+    </div>
+  );
+}
+
 /** Shared plan detail modal — Robo Advisory (33787:150203) & Definit (34315:86458). */
 export function PortfolioAdvisoryPlanDetailModal({
   plan,
   open,
   onClose,
+  cta,
+  suitability,
 }: {
   plan: PortfolioAdvisoryPlanDetailView | null;
   open: boolean;
   onClose: () => void;
+  cta?: AdvisoryCta;
+  suitability?: PlanSuitability;
 }) {
   const isMobile = useIsMobile();
 
@@ -267,7 +291,7 @@ export function PortfolioAdvisoryPlanDetailModal({
 
   const content = (
     <ModalBodyPadding isMobile={isMobile}>
-      <PlanDetailContent plan={plan} isMobile={isMobile} />
+      <PlanDetailContent plan={plan} isMobile={isMobile} suitability={suitability} />
     </ModalBodyPadding>
   );
 
@@ -283,9 +307,10 @@ export function PortfolioAdvisoryPlanDetailModal({
         rightSide="action"
         actionLabel="Close"
         onActionClick={onClose}
-        contentClassName={`flex max-h-[calc(100dvh-10rem)] flex-col overflow-y-auto ${MODAL_BODY_BLEED} ${MODAL_BODY_PX_MOBILE} pt-0 pb-4`}
+        contentClassName={`flex max-h-[calc(100dvh-10rem)] flex-col overflow-hidden ${MODAL_BODY_BLEED} pt-0`}
       >
-        {content}
+        <div className={`min-h-0 flex-1 overflow-y-auto ${MODAL_BODY_PX_MOBILE}`}>{content}</div>
+        {cta ? <PlanDetailFooter cta={cta} paddingClassName={MODAL_BODY_PX_MOBILE} /> : null}
       </BottomSheet>
     );
   }
@@ -309,8 +334,14 @@ export function PortfolioAdvisoryPlanDetailModal({
           actionLayout="none"
           className="!max-w-[720px] w-full"
         >
-          <div className={`${MODAL_BODY_BLEED} max-h-[calc(100vh-14rem)] overflow-y-auto [scrollbar-gutter:stable]`}>
-            {content}
+          {/* -mb-6 cancels Modal's own body padding so the footer sits on the modal's bottom edge. */}
+          <div className={`${MODAL_BODY_BLEED} ${cta ? "-mb-6" : ""} flex flex-col`}>
+            <div
+              className={`${cta ? "max-h-[calc(100vh-19rem)]" : "max-h-[calc(100vh-14rem)]"} overflow-y-auto [scrollbar-gutter:stable]`}
+            >
+              {content}
+            </div>
+            {cta ? <PlanDetailFooter cta={cta} paddingClassName={MODAL_BODY_PX_DESKTOP} /> : null}
           </div>
         </Modal>
       </div>
@@ -323,16 +354,22 @@ export function RoboAdvisoryPlanDetailModal({
   plan,
   open,
   onClose,
+  cta,
+  suitability,
 }: {
   plan: RoboAdvisoryPlan | null;
   open: boolean;
   onClose: () => void;
+  cta?: AdvisoryCta;
+  suitability?: PlanSuitability;
 }) {
   return (
     <PortfolioAdvisoryPlanDetailModal
       plan={plan ? roboPlanToDetailView(plan) : null}
       open={open}
       onClose={onClose}
+      cta={cta}
+      suitability={suitability}
     />
   );
 }
@@ -342,16 +379,22 @@ export function DefinitPlanDetailModal({
   plan,
   open,
   onClose,
+  cta,
+  suitability,
 }: {
   plan: DefinitPlan | null;
   open: boolean;
   onClose: () => void;
+  cta?: AdvisoryCta;
+  suitability?: PlanSuitability;
 }) {
   return (
     <PortfolioAdvisoryPlanDetailModal
       plan={plan ? definitPlanToDetailView(plan) : null}
       open={open}
       onClose={onClose}
+      cta={cta}
+      suitability={suitability}
     />
   );
 }

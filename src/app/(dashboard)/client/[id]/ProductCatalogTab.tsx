@@ -35,7 +35,7 @@ import { TopIdeaAllPage } from "./TopIdeaAllPage";
 import { TopIdeaDetail } from "./TopIdeaDetail";
 import { InvestmentSolutionDetail } from "./InvestmentSolutionDetail";
 import type { TopIdeaSector } from "./top-idea-data";
-import { PRODUCT_CATEGORIES } from "@/lib/product-catalog-routes";
+import { PRODUCT_CATEGORIES, advisoryDetailHref } from "@/lib/product-catalog-routes";
 import { useScrollThreshold } from "./use-scroll-threshold";
 import { useDragScroll } from "./use-drag-scroll";
 import { useProductCatalogLoading } from "@/hooks/use-catalog";
@@ -102,8 +102,8 @@ export type CatalogNavigation = {
   onMutualFundTopPerformersSeeAll: (groupId: MobileFundGroupId) => void;
   onMutualFundInsightsSeeAll: () => void;
   onMutualFundThemeSeeAll: (themeId: MutualFundThemeId) => void;
-  onRoboAdvisorySelect: () => void;
-  onDefinitSelect: () => void;
+  onRoboAdvisorySelect: (clientId: string) => void;
+  onDefinitSelect: (clientId: string) => void;
 };
 
 export function ProductCatalogTab({
@@ -287,9 +287,11 @@ export function ProductCatalogTab({
       navigation?.onMutualFundThemeSeeAll ??
       ((themeId: MutualFundThemeId) => router.push(mutualFundThemeHref(themeId))),
     onRoboAdvisorySelect:
-      navigation?.onRoboAdvisorySelect ?? (() => router.push("/product-catalog/robo-advisory")),
+      navigation?.onRoboAdvisorySelect ??
+      ((clientId) => router.push(advisoryDetailHref("/product-catalog/robo-advisory", clientId))),
     onDefinitSelect:
-      navigation?.onDefinitSelect ?? (() => router.push("/product-catalog/definit")),
+      navigation?.onDefinitSelect ??
+      ((clientId) => router.push(advisoryDetailHref("/product-catalog/definit", clientId))),
   };
 
   function handleSearchSelect(item: ProductSearchItem) {

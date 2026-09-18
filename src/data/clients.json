@@ -10,7 +10,8 @@
     "aiScore": 94,
     "status": "success",
     "lastContact": "2 days ago",
-    "riskProfile": "Aggressive"
+    "riskProfile": "Aggressive",
+    "advisoryAccounts": { "robo": "open", "definit": "none" }
   },
   {
     "id": "110002",
@@ -23,7 +24,8 @@
     "aiScore": 87,
     "status": "error",
     "lastContact": "1 week ago",
-    "riskProfile": "Moderate"
+    "riskProfile": "Moderate",
+    "advisoryAccounts": { "robo": "none", "definit": "none" }
   },
   {
     "id": "110003",
@@ -36,7 +38,8 @@
     "aiScore": 72,
     "status": "success",
     "lastContact": "3 days ago",
-    "riskProfile": "Conservative"
+    "riskProfile": "Conservative",
+    "advisoryAccounts": { "robo": "none", "definit": "none" }
   },
   {
     "id": "110004",
@@ -49,7 +52,8 @@
     "aiScore": 91,
     "status": "hold",
     "lastContact": "Today",
-    "riskProfile": "Aggressive"
+    "riskProfile": "Aggressive",
+    "advisoryAccounts": { "robo": "open", "definit": "open" }
   },
   {
     "id": "110005",
@@ -62,7 +66,8 @@
     "aiScore": 65,
     "status": "error",
     "lastContact": "2 weeks ago",
-    "riskProfile": "Moderate"
+    "riskProfile": "Moderate",
+    "advisoryAccounts": { "robo": "open", "definit": "none" }
   },
   {
     "id": "110006",
@@ -75,7 +80,8 @@
     "aiScore": 78,
     "status": "success",
     "lastContact": "5 days ago",
-    "riskProfile": "Conservative"
+    "riskProfile": "Conservative",
+    "advisoryAccounts": { "robo": "none", "definit": "none" }
   },
   {
     "id": "110007",
@@ -88,7 +94,8 @@
     "aiScore": 96,
     "status": "processing",
     "lastContact": "Yesterday",
-    "riskProfile": "Aggressive"
+    "riskProfile": "Aggressive",
+    "advisoryAccounts": { "robo": "open", "definit": "open" }
   },
   {
     "id": "110008",
@@ -101,6 +108,7 @@
     "aiScore": 83,
     "status": "success",
     "lastContact": "4 days ago",
-    "riskProfile": "Moderate"
+    "riskProfile": "Moderate",
+    "advisoryAccounts": { "robo": "none", "definit": "open" }
   }
 ]
