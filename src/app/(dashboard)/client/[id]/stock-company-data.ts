@@ -1,17 +1,33 @@
 /** Figma node 21204:80781 — Company tab / Company Events calendar. */
 
+import type { MarketFact } from "../../calendar/market-feed";
+
 export const COMPANY_SUB_TABS = ["Company Profile", "Financials", "Company Events"] as const;
 
 export type CompanySubTab = (typeof COMPANY_SUB_TABS)[number];
 
-export type CorporateActionKind = "XT" | "XW" | "XD";
+/**
+ * A SET corporate-action code — "XD", "XW", "XT", and the eight others the
+ * exchange publishes.
+ *
+ * A plain string, not a union of the three this mock happens to emit. The
+ * taxonomy belongs to the exchange and the feed, not to this file: the colour,
+ * the sort position and the exchange's own name for a code all resolve at
+ * runtime through `calendar/market-taxonomy`, which answers for a code nobody
+ * has designed for yet. A union here would have made the next code the exchange
+ * adds a compile error in a file that has nothing to do with it.
+ */
+export type CorporateActionKind = string;
 
-/** One labelled line of a corporate action's detail sheet. */
-export type CorporateActionDetailRow = {
-  label: string;
-  /** Pre-formatted by the feed. "-" is the design's own empty marker. */
-  value: string;
-};
+/**
+ * One labelled line of a corporate action's detail sheet.
+ *
+ * The Calendar's own feed calls the same thing a `MarketFact`, and the record
+ * dialog both month grids open is typed against that — aliased rather than
+ * redeclared so the two can never drift into "nearly the same shape".
+ * Pre-formatted by the feed; "-" is the design's own empty marker.
+ */
+export type CorporateActionDetailRow = MarketFact;
 
 /**
  * One corporate action on one day — the only thing this calendar carries.

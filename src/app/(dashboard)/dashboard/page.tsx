@@ -1,41 +1,42 @@
 "use client";
 
-import { Suspense, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card } from "@sarunyu/system-one";
+import { SparkleIcon } from "@phosphor-icons/react";
 import { useClientsResource, useNBAActions } from "@/hooks/use-api";
 import { useNotes } from "@/contexts/notes-context";
 import { usePrivacy } from "@/contexts/privacy-context";
 import { useStoredIds } from "@/hooks/use-stored-ids";
-import { CALENDAR_ENABLED } from "@/lib/feature-flags";
+import { useScrollTopOnChange } from "@/hooks/use-scroll-top";
 import { NOTE_AUTHOR } from "../notes/note-constants";
 import { getClientTotals } from "../client-hub/client-hub-data";
 import { formatAumThb } from "@/lib/client-utils";
 import { maskName } from "@/lib/mask-name";
 import { setQueryState, withQuery } from "@/lib/query-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { addMonths, dayFromKey, todayDateKey } from "../calendar/calendar-grid";
+import { addMonths, todayDateKey } from "../calendar/calendar-grid";
 import { useDayItemModals } from "../calendar/use-day-item-modals";
 import { CardHeader } from "./CardHeader";
 import { StatTiles, type StatTile } from "./StatTiles";
 import { MiniCalendar } from "./MiniCalendar";
 import { RemindersPanel } from "./RemindersPanel";
 import { NbaPanel } from "./NbaPanel";
-import { HouseViewSpotlight } from "./HouseViewSpotlight";
+import { CallLogPanel } from "./CallLogPanel";
+import { KycAlertsPanel } from "./KycAlertsPanel";
+import { AssetSummaryPanel } from "./AssetSummaryPanel";
+import { buildCallLog } from "./call-log-feed";
 import {
-  buildDayQueue,
-  buildMonthDots,
   buildNbaRows,
   buildQueue,
-  groupQueueByBucket,
-  houseViewSpotlight,
   isNbaId,
   isQueueId,
+  remindersByDay,
+  remindersOnDay,
   HIDDEN_NBA_IDS_PREF,
   HIDDEN_QUEUE_IDS_PREF,
-  NBA_ROW_LIMIT,
-  type QueueGroup,
-  type QueueItem,
+  CALL_LOG_ROW_LIMIT,
+  KYC_ROW_LIMIT,
 } from "./dashboard-data";
 
 /**
@@ -46,11 +47,16 @@ import {
  * to work for an hour; every card ends in a link into the section that owns the
  * subject.
  *
- * The shape is three counts in the work column beside a right rail for calendar
- * and reminders: the work on the left, the context on the right. What it deliberately does *not* carry is a wall of AUM and
- * revenue figures — Client 360 already summarises the book above the table
- * those numbers describe, and "how is the quarter going" is not the question
- * being asked at eight in the morning.
+ * The shape is the work on the left — counts, then what to pitch, then where
+ * the desk stands — beside a right rail of dated context: reminders, KYC
+ * expiries, the month.
+ *
+ * The book itself is half of one row, sharing it with the call log — both are
+ * standing-position rather than work, so neither gets a full-width turn. It
+ * earns that place and no more: "how is the quarter going" is not the question
+ * being asked at eight in the morning, and Client 360 already summarises the
+ * book above the table those numbers describe. What this page still refuses to
+ * be is a wall of AUM and revenue figures greeting you on open.
  *
  * See `dashboard-data` for what each block is derived from, and why the
  * derivations live there rather than in these components.
@@ -65,12 +71,91 @@ export default function DashboardPage() {
 
 const PATH = "/dashboard";
 
+/** Column widths, inlined for the reason this page already had to learn once:
+ *  `@sarunyu/system-one` ships a plain `.grid-cols-1` and loads after
+ *  `globals.css`, so it takes the source-order tie against any responsive
+ *  `grid-cols-*` on the same element and the utility never takes. `!important`
+ *  on a named class is the only thing that reliably wins. */
+const DASHBOARD_RAIL_CSS = `
+@media (min-width: 80rem) {
+  .dashboard-split { grid-template-columns: minmax(0, 7fr) minmax(0, 3fr) !important; }
+  .dashboard-rail { width: auto !important; min-width: 0 !important; max-width: none !important; }
+}
+`;
+
+/**
+ * Where the sticky rail should pin.
+ *
+ * A sticky box holds in one direction only, and `top` is the one that keeps a
+ * column in place while the content beside it scrolls on. But a fixed `top: 24`
+ * pins the rail the instant you scroll, and a rail taller than the viewport
+ * then has its last card parked below the fold for good — you can never reach
+ * the calendar.
+ *
+ * The offset is `viewport − rail`, which parks the rail's bottom edge on the
+ * scrollport's: negative when the rail is the taller of the two, letting it
+ * scroll along until its last card lands, and positive when it is shorter,
+ * which pins it that much further down the column. Either way the two columns
+ * end on the same line.
+ *
+ * It used to clamp to a 24px gap, which pinned a short rail near the top
+ * instead — fine while the rail was the longer column, wrong once the KYC card
+ * dropped from four rows to two and it became the shorter one, leaving forty
+ * pixels of nothing under the calendar while the left column ran on.
+ *
+ * Nothing is subtracted for a gap under it: the scrollport's own bottom padding
+ * is the space, and it is the same space the left column ends in. Subtracting
+ * more is what put the right column's floor above the left's.
+ *
+ * It has to be measured because CSS has no term for "this element's own
+ * height" inside `top` — `100%` there resolves against the containing block.
+ *
+ * `null` until the first measurement, so the attribute is simply absent rather
+ * than briefly wrong; the rail is in normal flow for that one frame.
+ */
+function useStickyRailTop() {
+  const railRef = useRef<HTMLElement>(null);
+  const [railTop, setRailTop] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const measure = () => {
+      // The scrollport is `<main>`, not the window — the app header sits above
+      // it and never scrolls, so `innerHeight` would overstate the room by its
+      // height and pin the rail that much too late.
+      const main = rail.closest("main");
+      const port = main?.clientHeight ?? window.innerHeight;
+      // A sticky offset inside a scroll container is measured from its *content*
+      // box, so the container's own bottom padding sits below everything this
+      // calculation can see. Without subtracting it the rail pins with its last
+      // card flush against the bottom edge, and the only breathing room that
+      // ever appears is the page's own padding once the left column has run out
+      // too — which is exactly the gap that was missing.
+      const padBottom = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0;
+      setRailTop(port - padBottom - rail.offsetHeight);
+    };
+
+    // No call here: `ResizeObserver` fires once on `observe`, which does the
+    // first measurement without setting state from inside the effect body.
+    const observer = new ResizeObserver(measure);
+    observer.observe(rail);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  return { railRef, railTop };
+}
+
 function DashboardPageInner() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { data: clients, isLoading } = useClientsResource();
   const nbaActions = useNBAActions();
-  const { notes, editNote } = useNotes();
+  const { notes } = useNotes();
   const { isPrivate } = usePrivacy();
 
   /**
@@ -79,7 +164,7 @@ function DashboardPageInner() {
    * memory would do. The id carries the checkpoint, so it does come back when
    * the expiry gets closer.
    */
-  const [hiddenIds, setHiddenIds] = useStoredIds<string>(
+  const [hiddenIds] = useStoredIds<string>(
     HIDDEN_QUEUE_IDS_PREF,
     isQueueId,
   );
@@ -100,7 +185,6 @@ function DashboardPageInner() {
   const todayKey = todayDateKey();
   const today = useMemo(() => new Date(todayKey), [todayKey]);
 
-  const selectedKey = searchParams.get("day");
   const monthOffset = Number(searchParams.get("month")) || 0;
   const viewDate = useMemo(() => addMonths(today, monthOffset), [today, monthOffset]);
 
@@ -113,28 +197,14 @@ function DashboardPageInner() {
     [queue, hiddenIds],
   );
 
-  /**
-   * What the list shows: the whole horizon, or one day's worth once the
-   * calendar has been used. Either way it is sorted into the same four buckets
-   * a client's own Reminders tab uses.
-   *
-   * The selected-day branch is built from the raw sources rather than filtered
-   * out of `live`, because the calendar can point at days the 15-day horizon
-   * does not reach — see `buildDayQueue`.
-   */
-  const groups: QueueGroup[] = useMemo(() => {
-    const items = selectedKey
-      ? buildDayQueue({ clients, notes, day: dayFromKey(selectedKey), today, isPrivate })
-      : live;
-    return groupQueueByBucket(
-      items.filter((item) => !hiddenIds.has(item.id)),
-      today,
-    );
-  }, [selectedKey, live, clients, notes, today, isPrivate, hiddenIds]);
-
-  const monthDots = useMemo(
-    () => buildMonthDots({ clients, notes, today, viewDate }),
-    [clients, notes, today, viewDate],
+  /** The card is always today. A day on the calendar opens its own popover. */
+  const dayReminders = useMemo(
+    () => remindersOnDay(notes, today, today),
+    [notes, today],
+  );
+  const monthReminders = useMemo(
+    () => remindersByDay(notes, viewDate, today),
+    [notes, viewDate, today],
   );
 
   const nbaRows = useMemo(
@@ -143,6 +213,32 @@ function DashboardPageInner() {
     [nbaActions, isPrivate, dismissedNba],
   );
 
+  /** The same array the KYC tile counts, filtered by source — so the count and
+   *  the list are the same objects and cannot drift apart. */
+  const kycRows = useMemo(() => live.filter((i) => i.source === "kyc"), [live]);
+
+  /**
+   * The expiries that land on today, for the Reminders card above.
+   *
+   * Only today's. The card is a list of what is dated today and a KYC lapsing
+   * this morning belongs on it — the Calendar's Reminder tab reached the same
+   * conclusion. Taking the whole horizon instead would make the card a second
+   * copy of the KYC card two rows below it, which is why the overlap stops at
+   * the one row that genuinely is today's business.
+   *
+   * Sliced off `kycRows` rather than derived again, so the row in the Reminders
+   * card and the row in the KYC card are the same object.
+   */
+  const todayKyc = useMemo(() => kycRows.filter((row) => row.daysLeft === 0), [kycRows]);
+
+  const callLog = useMemo(() => buildCallLog(clients ?? [], isPrivate), [clients, isPrivate]);
+
+  // Arriving from a sub-page — Call Log's back button, or the breadcrumb —
+  // otherwise inherits that page's scroll offset and opens partway down.
+  useScrollTopOnChange([]);
+
+  const { railRef, railTop } = useStickyRailTop();
+
   // Resolved once here rather than per row: the queue, not the row, is the
   // thing that knows every client it mentions.
   const clientNames = useMemo(
@@ -150,41 +246,12 @@ function DashboardPageInner() {
     [clients, isPrivate],
   );
 
-  const spotlight = useMemo(() => houseViewSpotlight(), []);
-
   // `replace`, not `push` — narrowing a list shouldn't fill history with
   // entries the user has to click back through to leave the page.
   const updateQuery = useCallback(
     (updates: Record<string, string | null>) =>
       setQueryState(withQuery(PATH, searchParams, updates), "replace"),
     [searchParams],
-  );
-
-  /**
-   * A reminder or a desk alert opens where it lives — in the modal every other
-   * surface opens it in. A KYC row has no such thing: the record, its countdown
-   * and its forms are the client's own KYC tab, so the row navigates there,
-   * exactly as the bell's KYC rows do.
-   */
-  const handleOpen = useCallback(
-    (item: QueueItem) => {
-      if (item.dayItem) openDayItem(item.dayItem, item.day);
-      else if (item.href) router.push(item.href);
-    },
-    [openDayItem, router],
-  );
-
-  const handleDone = useCallback(
-    (noteId: string) => {
-      const note = notes.find((n) => n.id === noteId);
-      if (note) void editNote({ ...note, reminderDone: true });
-    },
-    [notes, editNote],
-  );
-
-  const handleHide = useCallback(
-    (id: string) => setHiddenIds(new Set([...hiddenIds, id])),
-    [hiddenIds, setHiddenIds],
   );
 
   const handleDismissNba = useCallback(
@@ -231,21 +298,48 @@ function DashboardPageInner() {
 
   if (isLoading) return <DashboardSkeleton />;
 
-  const reminderCount = groups.reduce((n, g) => n + g.items.length, 0);
-
   return (
     <>
+      <style>{DASHBOARD_RAIL_CSS}</style>
       <div className="flex flex-col gap-4 xl:gap-5">
         {/* Main + right rail — greeting and stat tiles live in the work column
             only, so their width matches the NBA card below. The calendar sits
             at the top of the right rail, level with the greeting, like the
             fitness-dashboard reference. */}
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 xl:gap-5 xl:items-start">
+        <div className="dashboard-split grid grid-cols-1 gap-4 xl:gap-5 xl:items-start">
           <div className="min-w-0 flex flex-col gap-4 xl:gap-5 xl:col-start-1 xl:row-start-1 row-start-2">
             <Card
               variant="default"
-              className="gap-1 bg-primary-action-light border-border"
+              className="relative isolate gap-1 overflow-hidden bg-primary-action-light border-border"
             >
+              {/* The Yuanta mark as a watermark: far larger than the card and
+                  pushed off its right edge, so only part of it shows and it
+                  reads as texture rather than a logo. Sized to roughly one and a
+                  half times the card's height: bigger than that and the card would only show
+                  an unrecognisable band through the middle of the mark. Painted as a mask over
+                  `bg-primary-action` instead of an <img>, so it takes the theme
+                  colour rather than the SVG's own blue, and the gradient mask on
+                  the wrapper fades it out toward the greeting so text never sits
+                  on the mark's busiest part. Decorative — hidden from AT and
+                  inert to the pointer. */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 right-0 -z-10 w-2/3 [mask-image:linear-gradient(to_right,transparent,black_55%)]"
+              >
+                <div
+                  className="absolute -right-4 top-1/2 size-32 -translate-y-1/2 rotate-[-12deg] bg-primary-action opacity-[0.12] sm:-right-6 sm:size-36 xl:-right-8 xl:size-40"
+                  style={{
+                    maskImage: "url(/brand/logo-yuanta.svg)",
+                    WebkitMaskImage: "url(/brand/logo-yuanta.svg)",
+                    maskRepeat: "no-repeat",
+                    WebkitMaskRepeat: "no-repeat",
+                    maskSize: "contain",
+                    WebkitMaskSize: "contain",
+                    maskPosition: "center",
+                    WebkitMaskPosition: "center",
+                  }}
+                />
+              </div>
               <h2 className="type-h5 font-bold text-primary-action">
                 Hello, {NOTE_AUTHOR}
               </h2>
@@ -254,79 +348,129 @@ function DashboardPageInner() {
 
             <StatTiles tiles={tiles} />
 
+            {/* The one card on this page that asks for something gets the row
+                to itself — its rows carry two lines plus a drafted message, and
+                sharing the width cost the draft more than a neighbour gained. */}
             <Card variant="default" className="gap-4">
-              <CardHeader
-                title="Next Best Actions"
-                count={nbaRows.length}
-                link={{ href: "/client-hub", label: "Client 360" }}
-              />
-              <NbaPanel rows={nbaRows} onDismiss={handleDismissNba} />
-              {nbaRows.length > NBA_ROW_LIMIT && (
-                <p className="text-[11px] text-muted-foreground">
-                  แสดง {NBA_ROW_LIMIT} จาก {nbaRows.length} ข้อเสนอ
-                </p>
-              )}
+              {/* No count while the card is held behind the blur — a number
+                  promises rows you can read, and these are a preview of a
+                  shape, not four things waiting to be done. */}
+              <CardHeader title="AI Next Best Actions" />
+              {/* Held behind a blur rather than replaced by a placeholder: the
+                  rows are real enough to show the shape of the thing — a client,
+                  a reason, a drafted message — and a reader who can see that
+                  shape understands the promise in a way an empty card never
+                  conveys. Legible as layout, unreadable as content, which is the
+                  honest position for something that is not live yet.
+
+                  `aria-hidden` and `pointer-events-none` because it is now
+                  decoration: a screen reader should not read out suggestions
+                  nobody can act on, and Tab should not stop on their buttons. */}
+              <div className="relative">
+                <div aria-hidden className="pointer-events-none select-none blur-[3px]">
+                  <NbaPanel rows={nbaRows} onDismiss={handleDismissNba} />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-card/40 p-6">
+                  {/* The message sits on a solid panel of its own. Laid straight
+                      over the blur it was two soft greys on top of each other —
+                      legible in isolation, washed out in place. The card title
+                      above already names the feature, so this says what it will
+                      do rather than repeating it. */}
+                  <div className="flex max-w-[400px] flex-col items-center gap-3 rounded-2xl border border-border bg-card px-6 py-5 text-center shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-primary-action-light">
+                      <SparkleIcon size={20} weight="fill" className="text-primary-action" />
+                    </span>
+                    {/* Written to the IC, not about them: this card is the
+                        first thing they open, and that is how the rest of the
+                        page already talks. Two things only — when it shows up,
+                        and what it decides for them. */}
+                    <p className="type-body-2 leading-relaxed text-muted-foreground">
+                      ทุกเช้า AI จะบอกว่าวันนี้ควรดูแลลูกค้ารายไหนก่อน ด้วยเรื่องอะไร
+                      และเพราะอะไร
+                    </p>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-action">
+                      Coming Soon
+                    </p>
+                  </div>
+                </div>
+              </div>
             </Card>
 
-            <Card variant="default" className="gap-4">
-              <CardHeader
-                title="มุมมองล่าสุดจากบ้าน"
-                link={{ href: "/insights", label: "House View" }}
-              />
-              <HouseViewSpotlight
-                strategy={spotlight.strategy}
-                products={spotlight.products}
-              />
-            </Card>
+            {/* Two halves of "where does the desk stand": what it is holding,
+                and what it has been doing. Neither is a to-do, so they share
+                a row rather than each taking a full-width turn under the card
+                above. Split from `lg`, where the work column is the whole
+                page. */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:gap-5">
+              <Card variant="default" className="gap-4">
+                <CardHeader
+                  title="ภาพรวมสินทรัพย์"
+                  link={{ href: "/client-hub", label: "ดูทั้งหมด" }}
+                />
+                <AssetSummaryPanel clients={clients ?? []} />
+              </Card>
+
+              <Card variant="default" className="gap-4">
+                <CallLogPanel rows={callLog} limit={CALL_LOG_ROW_LIMIT} />
+              </Card>
+            </div>
+
           </div>
 
-          <aside className="min-w-0 flex flex-col gap-4 xl:gap-5 xl:col-start-2 xl:row-start-1 row-start-1">
+          {/* Sticky from `xl`, where the two columns actually sit side by side.
+
+              The work column runs much longer than the rail, so left alone the
+              rail scrolls away and leaves a tall empty gutter beside it.
+
+              `top`, not `bottom`. A sticky box only ever holds in one
+              direction: `bottom` is what keeps a footer or a toolbar on screen
+              as you scroll *up*, and on a sidebar it does nothing on the way
+              down, which is the only direction that matters here. `top` is what
+              holds a column in place while the content beside it keeps going.
+
+              The three rail cards come to less than a viewport between them, so
+              pinning the head keeps the whole rail — calendar included — in
+              view. An earlier attempt capped the height and gave the rail its
+              own scrollbar to guard against the opposite case; that made the
+              page two surfaces scrolling against each other and squashed the
+              cards into one another, and is not worth re-introducing for a
+              rail this size.
+
+              `xl:items-start` on the grid above is what makes this work at all:
+              a grid item stretches to the row height by default, and an item as
+              tall as its own track has nowhere to stick to. */}
+          <aside
+            ref={railRef}
+            style={{ top: railTop }}
+            className="dashboard-rail min-w-0 flex w-full flex-col gap-4 xl:gap-5 xl:col-start-2 xl:row-start-1 row-start-1 xl:sticky"
+          >
+            {/* Three dated things in one column, today's first. Reminders are
+                what the day was planned around; the KYC expiries below are the
+                deadlines it has to survive. The month sits under both. */}
+            <Card variant="default" className="gap-4">
+              <RemindersPanel
+                dayItems={dayReminders}
+                kycItems={todayKyc}
+                clientNames={clientNames}
+                onOpen={openDayItem}
+              />
+            </Card>
+
+            <Card variant="default" className="gap-4">
+              <KycAlertsPanel rows={kycRows} limit={KYC_ROW_LIMIT} />
+            </Card>
+
             <Card variant="default" className="gap-4">
               <MiniCalendar
                 viewDate={viewDate}
                 today={today}
-                dots={monthDots}
-                selectedKey={selectedKey}
-                onSelect={(key) => updateQuery({ day: key })}
+                remindersByDay={monthReminders}
+                clientNames={clientNames}
+                onOpen={openDayItem}
                 onMonthChange={(delta) =>
                   updateQuery({
                     month: monthOffset + delta === 0 ? null : String(monthOffset + delta),
                   })
-                }
-              />
-            </Card>
-
-            <Card variant="default" className="gap-4">
-              <CardHeader
-                title={
-                  selectedKey
-                    ? `Reminders · ${thaiShortDate(dayFromKey(selectedKey))}`
-                    : "Reminders"
-                }
-                count={reminderCount}
-                action={
-                  selectedKey ? (
-                    <button
-                      type="button"
-                      onClick={() => updateQuery({ day: null })}
-                      className="cursor-pointer rounded-md px-2 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    >
-                      ดูทั้งหมด
-                    </button>
-                  ) : undefined
-                }
-              />
-              <RemindersPanel
-                groups={groups}
-                clientNames={clientNames}
-                filtered={Boolean(selectedKey)}
-                variant="sidebar"
-                onOpen={handleOpen}
-                onDone={handleDone}
-                onHide={handleHide}
-                onClearFilter={() => updateQuery({ day: null })}
-                onViewAll={
-                  CALENDAR_ENABLED ? () => router.push("/calendar") : undefined
                 }
               />
             </Card>
@@ -350,15 +494,6 @@ function thaiFullDate(day: Date): string {
   });
 }
 
-/** The same date where it has to share a line — "24 ก.ย. 2569". */
-function thaiShortDate(day: Date): string {
-  return day.toLocaleDateString("th-TH", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 /**
  * Mirrors the shape above, so the page doesn't jump when the data arrives.
  * Bound to `useClientsResource().isLoading`, which is `false` today and starts
@@ -368,7 +503,7 @@ function thaiShortDate(day: Date): string {
 function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-4 xl:gap-5">
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 xl:gap-5">
+      <div className="dashboard-split grid grid-cols-1 gap-4 xl:gap-5">
         <div className="min-w-0 flex flex-col gap-4 xl:gap-5 xl:col-start-1 xl:row-start-1 row-start-2">
           <Skeleton className="h-[76px] rounded-2xl" />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -376,27 +511,46 @@ function DashboardSkeleton() {
               <Skeleton key={i} className="h-[96px] rounded-2xl" />
             ))}
           </div>
+          {/* Next Best Actions */}
           <Card variant="default" className="gap-4">
             <Skeleton className="h-7 w-52" />
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-[168px] rounded-xl" />
             ))}
           </Card>
-          <Card variant="default" className="gap-4">
-            <Skeleton className="h-7 w-44" />
-            <Skeleton className="h-[116px] rounded-2xl" />
-          </Card>
+          {/* ภาพรวมสินทรัพย์ | Call Log */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:gap-5">
+            <Card variant="default" className="gap-4">
+              <Skeleton className="h-7 w-40" />
+              <Skeleton className="h-[116px] w-[116px] mx-auto rounded-full" />
+              <Skeleton className="h-[176px] rounded-2xl" />
+            </Card>
+            <Card variant="default" className="gap-4">
+              <Skeleton className="h-7 w-32" />
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-[84px] rounded-2xl" />
+              ))}
+            </Card>
+          </div>
         </div>
-        <aside className="min-w-0 flex flex-col gap-4 xl:gap-5 xl:col-start-2 xl:row-start-1 row-start-1">
-          <Card variant="default" className="gap-4">
-            <Skeleton className="h-7 w-32" />
-            <Skeleton className="h-[248px] rounded-xl" />
-          </Card>
+        <aside className="dashboard-rail min-w-0 flex w-full flex-col gap-4 xl:gap-5 xl:col-start-2 xl:row-start-1 row-start-1">
+          {/* Reminders */}
           <Card variant="default" className="gap-4">
             <Skeleton className="h-7 w-40" />
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-[74px] rounded-xl" />
             ))}
+          </Card>
+          {/* KYC ใกล้หมดอายุ */}
+          <Card variant="default" className="gap-4">
+            <Skeleton className="h-7 w-44" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-[62px] rounded-xl" />
+            ))}
+          </Card>
+          <Card variant="default" className="gap-4">
+            <Skeleton className="h-7 w-32" />
+            <Skeleton className="h-[248px] rounded-xl" />
           </Card>
         </aside>
       </div>

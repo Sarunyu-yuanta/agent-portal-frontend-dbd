@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   UsersIcon,
   SquaresFourIcon,
@@ -16,17 +16,18 @@ import {
   MegaphoneIcon,
   ChartLineUpIcon,
   GraduationCapIcon,
+  UsersThreeIcon,
 } from "@phosphor-icons/react";
 import { SidebarUserMenu } from "@/components/layout/SidebarUserMenu";
 import { usePrivacy } from "@/contexts/privacy-context";
+import { NOTE_AUTHOR } from "@/app/(dashboard)/notes/note-constants";
 import { CALENDAR_ENABLED, NOTES_ENABLED } from "@/lib/feature-flags";
 import {
   activeSectionForPath,
-  sectionResumeUrl,
+  forgetSection,
   markSectionEntry,
   navVisitSnapshot,
   subscribeNavVisits,
-  urlPathname,
   type NavSectionKey,
 } from "@/lib/nav-memory";
 
@@ -90,6 +91,13 @@ const growthItems: NavItem[] = [
     section: "ic-learning",
     label: "IC Learning",
     icon: GraduationCapIcon,
+    badge: null,
+  },
+  {
+    href: "/yaa-team-head",
+    section: "yaa-team-head",
+    label: "YAA/Team Head",
+    icon: UsersThreeIcon,
     badge: null,
   },
 ];
@@ -156,41 +164,26 @@ function NavSection({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   useSyncExternalStore(subscribeNavVisits, navVisitSnapshot, () => "");
   const activeSection = activeSectionForPath(pathname);
 
   /**
-   * Smart link: re-entering a section from elsewhere resumes where the user left
-   * off (Full Profile + sub-tab, catalog category, insight filter) — matching
-   * what browser-back already does. Clicking the section you're already in is
-   * the deliberate "take me back to the list" gesture, so that keeps `href`.
+   * A sidebar entry is a fixed destination: it always opens the section's
+   * default page, however the user last left it. Nothing is resumed — not the
+   * client they were reading, not the tab, filter or scroll offset — so the
+   * section is forgotten first and the plain `href` does the navigating.
    *
-   * `href` stays the section root either way, so middle-click / open-in-new-tab
-   * and SSR markup behave normally.
+   * Clicking the section you're already in is the same gesture ("take me back
+   * to the list"), so it needs no special case.
    */
   const handleNavigate = (item: NavItem) => (e: React.MouseEvent) => {
     onNavigate?.();
     // Cmd/ctrl/shift-click is "open this href elsewhere" — leave it to the browser.
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-    if (activeSection === item.section) return;
-    const last = sectionResumeUrl(item.section);
-    // A resume target that is the page you're already on (a stale pointer
-    // left behind by a cross-section guest visit) is not a navigation — fall
-    // through to the plain `href` so the click still goes somewhere.
-    if (!last || last === item.href || urlPathname(last) === pathname) {
-      // Still a deliberate section entry even though it lands on `href` — if
-      // that ever is a guest route, it must not read as cross-section either.
-      markSectionEntry(item.href);
-      return;
-    }
-    // Clicking a section explicitly always means "I'm entering this section
-    // now" — even when the resume target is a guest route (e.g. the last
-    // Insights article, reached from Product Catalog) whose URL history looks
-    // identical to a Product Catalog card opening that same guest page.
-    markSectionEntry(urlPathname(last));
-    e.preventDefault();
-    router.push(last);
+    forgetSection(item.section);
+    // Still a deliberate section entry: if `href` ever is a guest route, it
+    // must not read as a cross-section drill-in.
+    markSectionEntry(item.href);
   };
 
   return (
@@ -369,9 +362,9 @@ export function AppSidebar({
           padding here would show up as a dead margin around the highlight. */}
       <div className="shrink-0 border-t border-slate-700/60">
         <SidebarUserMenu
-          name="Relation Manager"
+          name={NOTE_AUTHOR}
           role="Senior RM"
-          initials="RM"
+          initials="JD"
           collapsed={collapsed}
         />
       </div>

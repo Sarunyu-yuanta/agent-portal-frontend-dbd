@@ -1,0 +1,1551 @@
+{
+  "corporateActions": [
+    {
+      "kind": "XW",
+      "symbol": "TRUE",
+      "detail": "Warrant TRUE-W6 goes ex",
+      "id": "ca:202609:XW:TRUE",
+      "date": "2026-09-04",
+      "name": "TRUE CORPORATION PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "04/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "04/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "04/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "05/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XR",
+      "symbol": "EA",
+      "detail": "Rights offering 1:4 at THB 12.00",
+      "id": "ca:202609:XR:EA",
+      "date": "2026-09-08",
+      "name": "ENERGY ABSOLUTE PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "08/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "08/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "08/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "09/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XR",
+      "symbol": "BGRIM",
+      "id": "ca:202609:XR:BGRIM",
+      "date": "2026-09-08",
+      "name": "B.GRIMM POWER PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "08/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "08/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "08/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "09/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "PTT",
+      "detail": "THB 2.50 per share",
+      "clientIds": [
+        "110001",
+        "110003",
+        "110006"
+      ],
+      "id": "ca:202609:XD:PTT",
+      "date": "2026-09-10",
+      "name": "PTT PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "10/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "10/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "2.50 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "2.50 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "05/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "10/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "11/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "SCB",
+      "detail": "THB 3.00 per share",
+      "clientIds": [
+        "110001",
+        "110004"
+      ],
+      "id": "ca:202609:XD:SCB",
+      "date": "2026-09-10",
+      "name": "SCB X PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "10/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "10/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "3.00 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "3.00 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "08/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "10/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "11/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "KBANK",
+      "id": "ca:202609:XD:KBANK",
+      "date": "2026-09-10",
+      "name": "KASIKORNBANK PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "10/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "10/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "1.75 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "1.75 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "08/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "10/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "11/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "AMKR03",
+      "id": "ca:202609:XD:AMKR03",
+      "date": "2026-09-12",
+      "name": "AMKOR TECHNOLOGY INC. (DR)",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "12/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "12/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "0.45 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "0.45 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "03/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "12/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "13/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "AMKR23",
+      "id": "ca:202609:XD:AMKR23",
+      "date": "2026-09-12",
+      "name": "AMKOR TECHNOLOGY INC. (DR)",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "12/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "12/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "0.45 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "0.45 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "03/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "12/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "13/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "MJLF",
+      "id": "ca:202609:XD:MJLF",
+      "date": "2026-09-12",
+      "name": "MAJOR CINEPLEX LIFESTYLE LEASEHOLD PROPERTY FUND",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "12/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "12/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "0.18 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "0.18 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "06/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "12/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "13/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "NETEASE80",
+      "clientIds": [
+        "110002"
+      ],
+      "id": "ca:202609:XD:NETEASE80",
+      "date": "2026-09-12",
+      "name": "NETEASE INC. (DR)",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "12/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "12/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "0.92 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "0.92 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "06/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "12/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "13/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "PINGAN01",
+      "id": "ca:202609:XD:PINGAN01",
+      "date": "2026-09-12",
+      "name": "PING AN INSURANCE (GROUP) COMPANY OF CHINA (DR)",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "12/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "12/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "1.10 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "1.10 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "06/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "12/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "13/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "PINGAN80",
+      "id": "ca:202609:XD:PINGAN80",
+      "date": "2026-09-12",
+      "name": "PING AN INSURANCE (GROUP) COMPANY OF CHINA (DR)",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "12/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "12/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "1.10 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "1.10 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "06/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "12/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "13/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XM",
+      "symbol": "SGC",
+      "detail": "AGM, 10:00 · registration closes 09:30",
+      "id": "ca:202609:XM:SGC",
+      "date": "2026-09-12",
+      "name": "SG CAPITAL PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "12/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "12/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "12/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "13/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XM",
+      "symbol": "SINGER",
+      "detail": "EGM 1/2026",
+      "id": "ca:202609:XM:SINGER",
+      "date": "2026-09-12",
+      "name": "SINGER THAILAND PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "12/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "12/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "12/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "13/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XN",
+      "symbol": "CTARAF",
+      "detail": "Capital return THB 0.35 per unit",
+      "id": "ca:202609:XN:CTARAF",
+      "date": "2026-09-12",
+      "name": "CHATRIUM HOTEL PROPERTY FUND",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "12/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "12/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "12/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "13/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XT",
+      "symbol": "BBL",
+      "detail": "Transferable subscription right",
+      "id": "ca:202609:XT:BBL",
+      "date": "2026-09-16",
+      "name": "BANGKOK BANK PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "16/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "16/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "16/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "17/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XI",
+      "symbol": "SCC241A",
+      "detail": "Coupon 3.25% · semi-annual",
+      "id": "ca:202609:XI:SCC241A",
+      "date": "2026-09-16",
+      "name": "THE SIAM CEMENT PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "16/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "16/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "16/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "17/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XM",
+      "symbol": "AOT",
+      "detail": "AGM, 14:00",
+      "id": "ca:202609:XM:AOT",
+      "date": "2026-09-18",
+      "name": "AIRPORTS OF THAILAND PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "18/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "18/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "18/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "19/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "ADVANC",
+      "detail": "THB 4.75 per share",
+      "clientIds": [
+        "110002",
+        "110005"
+      ],
+      "id": "ca:202609:XD:ADVANC",
+      "date": "2026-09-20",
+      "name": "ADVANCED INFO SERVICE PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "20/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "20/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "4.75 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "4.75 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "12/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "20/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "21/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "INTUCH",
+      "id": "ca:202609:XD:INTUCH",
+      "date": "2026-09-20",
+      "name": "INTOUCH HOLDINGS PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "20/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "20/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "2.20 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "2.20 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "12/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "20/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "21/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XE",
+      "symbol": "CPALL-W1",
+      "detail": "Exercise window opens",
+      "id": "ca:202609:XE:CPALL-W1",
+      "date": "2026-09-20",
+      "name": "CP ALL PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "20/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "20/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "20/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "21/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XA",
+      "symbol": "DELTA",
+      "detail": "All benefits excluded",
+      "id": "ca:202609:XA:DELTA",
+      "date": "2026-09-25",
+      "name": "DELTA ELECTRONICS (THAILAND) PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "25/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "25/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "25/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "26/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "GULF",
+      "id": "ca:202609:XD:GULF",
+      "date": "2026-09-26",
+      "name": "GULF DEVELOPMENT PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "26/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "26/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "0.60 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "0.60 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "18/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "26/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "27/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XD",
+      "symbol": "BDMS",
+      "clientIds": [
+        "110007"
+      ],
+      "id": "ca:202609:XD:BDMS",
+      "date": "2026-09-26",
+      "name": "BANGKOK DUSIT MEDICAL SERVICES PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "26/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "26/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Dividend (per Share)",
+            "value": "0.55 THB"
+          },
+          {
+            "label": "Adjusted DPS",
+            "value": "0.55 THB"
+          }
+        ],
+        [
+          {
+            "label": "Operation Period",
+            "value": "-"
+          },
+          {
+            "label": "Source of Dividend",
+            "value": "RE"
+          }
+        ],
+        [
+          {
+            "label": "Payment Date",
+            "value": "18/10/26"
+          },
+          {
+            "label": "Price before X-Date",
+            "value": "-"
+          },
+          {
+            "label": "Price on X-Date",
+            "value": "-"
+          }
+        ],
+        [
+          {
+            "label": "Dividend Yield",
+            "value": "-"
+          },
+          {
+            "label": "Par",
+            "value": "1.00"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "26/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "27/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XC",
+      "symbol": "PTTGC",
+      "detail": "Conversion event",
+      "id": "ca:202609:XC:PTTGC",
+      "date": "2026-09-27",
+      "name": "PTT GLOBAL CHEMICAL PUBLIC COMPANY LIMITED",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "27/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "27/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "27/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "28/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "XN",
+      "symbol": "LHHOTEL",
+      "detail": "Capital return THB 0.22 per unit",
+      "id": "ca:202609:XN:LHHOTEL",
+      "date": "2026-09-29",
+      "name": "LH HOTEL LEASEHOLD REAL ESTATE INVESTMENT TRUST",
+      "record": [
+        [
+          {
+            "label": "X-Date",
+            "value": "29/09/26"
+          },
+          {
+            "label": "Announce Date",
+            "value": "28/08/26"
+          }
+        ],
+        [
+          {
+            "label": "Board Date",
+            "value": "28/08/26"
+          },
+          {
+            "label": "Record Date",
+            "value": "30/09/26"
+          },
+          {
+            "label": "Book Closing Date",
+            "value": "-"
+          }
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "category": "seminar",
+      "title": "SET Outlook 2027 — Bangkok",
+      "detail": "13:30–16:30 · Grand Hyatt Erawan, Ballroom 2",
+      "facts": [
+        {
+          "label": "Speaker",
+          "value": "Head of Research, Yuanta Securities"
+        },
+        {
+          "label": "Seats held",
+          "value": "12 of 40"
+        }
+      ],
+      "clientIds": [
+        "110001",
+        "110002",
+        "110005"
+      ],
+      "id": "ev:202609:0",
+      "date": "2026-09-03"
+    },
+    {
+      "category": "promotion",
+      "title": "Fee waiver — new Global Bond accounts",
+      "detail": "Front-end fee waived on first THB 5M",
+      "facts": [
+        {
+          "label": "Runs until",
+          "value": "end of next month"
+        }
+      ],
+      "clientIds": [
+        "110003",
+        "110006",
+        "110008"
+      ],
+      "id": "ev:202609:1",
+      "date": "2026-09-09"
+    },
+    {
+      "category": "seminar",
+      "title": "Private Wealth Forum — Q4 allocation",
+      "detail": "09:00–12:00 · Yuanta Tower, 14th floor",
+      "clientIds": [
+        "110004",
+        "110007"
+      ],
+      "id": "ev:202609:2",
+      "date": "2026-09-17"
+    },
+    {
+      "category": "deadline",
+      "title": "Yuanta Global Equity Fund — IPO closes",
+      "detail": "Subscriptions close 15:30",
+      "clientIds": [
+        "110001",
+        "110008"
+      ],
+      "id": "ev:202609:3",
+      "date": "2026-09-22"
+    },
+    {
+      "category": "promotion",
+      "title": "Structured note campaign — KIKO series",
+      "detail": "Indicative coupon 8.5% p.a. · book by month end",
+      "clientIds": [
+        "110002",
+        "110005",
+        "110007"
+      ],
+      "id": "ev:202609:4",
+      "date": "2026-09-24"
+    },
+    {
+      "category": "quarterly-briefing",
+      "title": "Desk briefing — Q4 house view",
+      "detail": "Internal · 08:30, dealing room",
+      "id": "ev:202609:5",
+      "date": "2026-09-28"
+    }
+  ]
+}

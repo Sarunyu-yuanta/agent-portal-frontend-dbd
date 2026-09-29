@@ -57,6 +57,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/compliance": "Compliance & Risk",
   "/insights": "Insights",
   "/ic-learning": "IC Learning",
+  "/yaa-team-head": "YAA/Team Head",
   "/product-catalog": "Product Catalog",
   "/notes": "Notes",
   "/calendar": "Calendar",
@@ -104,13 +105,17 @@ export function usePageChrome(): PageChrome {
     isFullWidth:
       pathname.startsWith("/product-catalog") ||
       pathname.startsWith("/client-hub"),
-    // The same two pages `isFullHeight` covers: each is one full-height surface
-    // rather than a document on a background, which is exactly the shape that
-    // gains nothing from a frame and a heading on a phone.
+    // Notes and Calendar: each is one surface rather than a document on a
+    // background, which is exactly the shape that gains nothing from a frame
+    // and a heading on a phone.
     isMobileFullBleed: pathname === "/notes" || pathname === "/calendar",
-    // Notes and Calendar are both master/detail-style surfaces, not documents —
-    // they own the whole area below the top bar and scroll internally.
-    isFullHeight: pathname === "/notes" || pathname === "/calendar",
+    // Notes is a master/detail surface: it owns the whole area below the top
+    // bar and scrolls internally. Calendar is not on this list: its month grid
+    // is a plain document, so the page itself scrolls. (Its Reminder tab wants
+    // a bounded height and sizes itself — the shell can't know the tab without
+    // `useSearchParams`, which would force a Suspense boundary around every
+    // page.)
+    isFullHeight: pathname === "/notes",
     isWideContent: pathname === "/dashboard",
     // Full Profile puts the breadcrumb inside its own sticky identity bar (and
     // pulls itself up over the layout's padding to do it), so a second one

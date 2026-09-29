@@ -68,9 +68,13 @@ const FALLBACK = {
 
 export function NbaPanel({
   rows,
+  limit = NBA_ROW_LIMIT,
   onDismiss,
 }: {
   rows: NbaRow[];
+  /** How many to draw. The card keeps its shortlist; the sub-page passes the
+   *  whole set. */
+  limit?: number;
   onDismiss: (id: string) => void;
 }) {
   const router = useRouter();
@@ -86,8 +90,11 @@ export function NbaPanel({
   }
 
   return (
-    <div className="flex flex-col gap-2.5">
-      {rows.slice(0, NBA_ROW_LIMIT).map(({ action, displayName, revenueThbM }) => {
+    /* One surface with rules inside it, matching the Call Log and KYC cards.
+       The drafted message keeps its own blue tint, which still reads against
+       the grey — it is the part of the row that has to look machine-written. */
+    <div className="overflow-hidden rounded-2xl bg-[var(--bg-default-secondary)] divide-y divide-black/[0.05]">
+      {rows.slice(0, limit).map(({ action, displayName, revenueThbM }) => {
         const category = CATEGORY[action.action];
         const { Icon, tone, variant } = category ?? FALLBACK;
         const href = `/client/${action.clientId}`;
@@ -104,7 +111,7 @@ export function NbaPanel({
                 router.push(href);
               }
             }}
-            className="group flex flex-col gap-3 rounded-2xl border border-border p-4 cursor-pointer transition-colors hover:border-primary-action/40 hover:bg-[var(--fill-p1-100)]"
+            className="group flex flex-col gap-3 p-4 cursor-pointer transition-colors hover:bg-[var(--fill-p1-100)]"
           >
             <div className="flex items-start gap-3">
               <RowIcon tone={tone}>

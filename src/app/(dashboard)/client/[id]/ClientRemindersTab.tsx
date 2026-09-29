@@ -24,7 +24,7 @@ import {
   REMINDER_BUCKETS,
   type ReminderBucket,
 } from "../../calendar/reminder-buckets";
-import { DONE_BADGE_TONE, SOURCE_BADGE, SourceBadgeIcon } from "../../calendar/source-badge";
+import { itemBadge, SourceBadgeIcon } from "../../calendar/source-badge";
 import { useDayItemModals } from "../../calendar/use-day-item-modals";
 import { formatDayOnly } from "../../notes/note-format";
 import { snippet } from "../../notes/notes-grouping";
@@ -303,7 +303,7 @@ function ReminderCard({ item, onOpen }: { item: DayItem; onOpen: () => void }) {
 
 function ReminderRow({ row, onOpen }: { row: Row; onOpen: () => void }) {
   const { item, day, bucket, daysDiff } = row;
-  const badge = SOURCE_BADGE[item.source];
+  const badge = itemBadge(item);
 
   return (
     <TableRow
@@ -331,9 +331,8 @@ function ReminderRow({ row, onOpen }: { row: Row; onOpen: () => void }) {
             own column, so "note" vs "system" reads as a fact about the row
             rather than something to infer from an icon shape. */}
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 type-caption font-medium ${
-            item.done ? DONE_BADGE_TONE : badge.tone
-          }`}
+          style={badge.style}
+          className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 type-caption font-medium ${badge.className}`}
         >
           {badge.icon}
           {item.source === "note" ? "Note" : "System"}

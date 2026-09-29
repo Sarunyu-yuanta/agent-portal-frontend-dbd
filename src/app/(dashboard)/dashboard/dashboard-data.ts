@@ -27,6 +27,7 @@ import { mockHouseViewStrategies, mockNBAActions } from "@/lib/mock-data";
 import { maskName } from "@/lib/mask-name";
 import type { Client, Note } from "@/types/domain";
 import {
+  addDays,
   addMonths,
   dayFromKey,
   dayKey,
@@ -34,7 +35,12 @@ import {
   dayRelation,
   isSameMonth,
 } from "../calendar/calendar-grid";
-import { groupDayItems, type DayItem } from "../calendar/day-items";
+import {
+  concernsSomeone,
+  groupDayItems,
+  type DayItem,
+  type DayItemSource,
+} from "../calendar/day-items";
 import {
   bucketFor,
   bucketSortsDescending,
@@ -56,7 +62,7 @@ import { zoneForDays } from "../notification-zones";
  * before it passes, and the header bell already merges the two feeds for
  * exactly that reason.
  */
-export type QueueSource = "kyc" | "note" | "dividend";
+export type QueueSource = "kyc" | DayItemSource;
 
 export type QueueItem = {
   /**
@@ -82,11 +88,14 @@ export type QueueItem = {
   href: string | null;
 };
 
-/** Deadlines set by someone else lead; the user's own handwriting follows. */
+/** Deadlines set by someone else lead; the user's own handwriting follows. The
+ *  middle two mirror `SOURCE_RANK` in `day-items` — an exchange fact is a date
+ *  nobody can move, a desk event is one someone could. */
 const SOURCE_WEIGHT: Record<QueueSource, number> = {
   kyc: 0,
-  dividend: 1,
-  note: 2,
+  "corporate-action": 1,
+  event: 2,
+  note: 3,
 };
 
 /**
@@ -151,6 +160,9 @@ export function buildQueue({
       if (!zone) continue;
 
       for (const item of items) {
+        // Market information that lands on nobody in the book stays on the
+        // Calendar — see `concernsSomeone`.
+        if (!concernsSomeone(item)) continue;
         // An alert is an event, not an obligation: once PTT has gone ex-
         // dividend there is no longer anything to do about it, so it drops out
         // rather than sitting under "เลยกำหนด" forever. A reminder is the
@@ -178,13 +190,6 @@ export function buildQueue({
     (a, b) =>
       a.daysLeft - b.daysLeft || SOURCE_WEIGHT[a.source] - SOURCE_WEIGHT[b.source],
   );
-}
-
-/** `today` plus `n` whole days, at local midnight like every other day here. */
-function addDays(today: Date, n: number): Date {
-  const d = new Date(today);
-  d.setDate(d.getDate() + n);
-  return d;
 }
 
 /**
@@ -284,6 +289,7 @@ export function buildDayQueue({
   }
 
   for (const item of groupDayItems(notes, day).get(wanted) ?? []) {
+    if (!concernsSomeone(item)) continue;
     rows.push({
       id: item.id,
       source: item.source,
@@ -301,6 +307,58 @@ export function buildDayQueue({
   return rows.sort((a, b) => SOURCE_WEIGHT[a.source] - SOURCE_WEIGHT[b.source]);
 }
 
+/** A calendar reminder sitting on its day — notes and desk alerts, not KYC.
+ *  KYC has its own tile; this is the list the Client 360 card already draws. */
+export type DatedReminder = {
+  item: DayItem;
+  day: Date;
+  daysUntil: number;
+};
+
+function datedReminders(map: Map<string, DayItem[]>, today: Date, seen: Set<string>): DatedReminder[] {
+  const rows: DatedReminder[] = [];
+  for (const [key, items] of map) {
+    const day = dayFromKey(key);
+    const daysUntil = dayOffset(day, today);
+    for (const item of items) {
+      if (item.done || seen.has(item.id)) continue;
+      seen.add(item.id);
+      rows.push({ item, day, daysUntil });
+    }
+  }
+  return rows;
+}
+
+/**
+ * Open reminders on one calendar day, across every client.
+ *
+ * Anchored on that day so a month the mini calendar can reach still has its
+ * desk alerts, which `groupDayItems` only loads for the month it is given.
+ */
+export function remindersOnDay(notes: Note[], day: Date, today: Date): DatedReminder[] {
+  const key = dayKey(day);
+  const rows = datedReminders(groupDayItems(notes, day), today, new Set());
+  return rows
+    .filter((row) => dayKey(row.day) === key)
+    .sort((a, b) => a.item.title.localeCompare(b.item.title));
+}
+
+/** Open reminders for the month on screen, keyed by calendar day — what the
+ *  mini calendar's dot and its day popover both read. */
+export function remindersByDay(notes: Note[], viewDate: Date, today: Date): Map<string, DatedReminder[]> {
+  const map = new Map<string, DatedReminder[]>();
+  for (const row of datedReminders(groupDayItems(notes, viewDate), today, new Set())) {
+    const key = dayKey(row.day);
+    const list = map.get(key);
+    if (list) list.push(row);
+    else map.set(key, [row]);
+  }
+  for (const list of map.values()) {
+    list.sort((a, b) => a.item.title.localeCompare(b.item.title));
+  }
+  return map;
+}
+
 /**
  * Ids the user has cleared, as stored in their preferences.
  *
@@ -311,9 +369,14 @@ export function buildDayQueue({
  */
 export const HIDDEN_QUEUE_IDS_PREF = "dashboard:hidden-queue";
 
-/** Drops stored ids that no longer match any source this page can raise. */
+/** Drops stored ids that no longer match any source this page can raise.
+ *
+ * The market feeds' own prefixes (`ca:`, `ev:` — see `mock-market-feed`) rather
+ * than a source name: the id is what was written to preferences, and a row
+ * dismissed before the feeds were renamed should simply stop matching rather
+ * than silence something unrelated. */
 export function isQueueId(id: string): boolean {
-  return id.startsWith("kyc:") || id.startsWith("dividend:");
+  return id.startsWith("kyc:") || id.startsWith("ca:") || id.startsWith("ev:");
 }
 
 // ── The month grid's dots ───────────────────────────────────────────────────
@@ -364,6 +427,9 @@ export function buildMonthDots({
     if (!isSameMonth(day, viewDate)) continue;
     for (const item of items) {
       if (item.done) continue;
+      // Same gate as the queue below the grid, so a dot always corresponds to a
+      // row you can actually reach by clicking the day.
+      if (!concernsSomeone(item)) continue;
       bump(day, item.source === "note" ? "note" : "alert");
     }
   }
@@ -446,6 +512,22 @@ export function isNbaId(id: string): boolean {
 
 /** How many actions are shown before the card stops being a shortlist. */
 export const NBA_ROW_LIMIT = 4;
+
+/** How many logged calls the card lists before handing off to its sheet. Six,
+ *  which is what it takes to stand level with the allocation card sharing its
+ *  row — the count in the header and "ดูทั้งหมด" already say there are more. */
+export const CALL_LOG_ROW_LIMIT = 6;
+
+/**
+ * How many KYC expiries the rail card lists before handing off to its sheet.
+ *
+ * Two. The card sits in a rail with two others under it and a month calendar
+ * below that, and four names of five was most of a list pretending to be a
+ * summary. Two is a summary: the rows are ordered by urgency, so the two on
+ * show are always the two that matter most, and the third row says in words
+ * what is behind them.
+ */
+export const KYC_ROW_LIMIT = 2;
 
 // ── House view, and what it points at ───────────────────────────────────────
 

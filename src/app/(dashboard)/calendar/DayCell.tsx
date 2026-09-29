@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { BottomSheet, Popover } from "@sarunyu/system-one";
-import { CoinsIcon } from "@phosphor-icons/react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { DayPopoverContent } from "./DayPopoverContent";
 import { useVisibleRows } from "./use-visible-rows";
-import type { DayItem } from "./day-items";
+import { splitDayItems, type ActionGroup, type DayItem } from "./day-items";
+import type { MarketHoliday } from "./market-feed";
+import {
+  actionKindName,
+  actionPalette,
+  eventCategory,
+  HOLIDAY_PALETTE,
+  HolidayIcon,
+} from "./market-taxonomy";
 import {
   dayLabel,
   dayRelation,
@@ -25,6 +32,14 @@ import {
  * the position doesn't: how much attention the day is still owed. Today is
  * solid and reads first, the days ahead are a light tint, and what's behind you
  * is washed out — present but no longer competing.
+ *
+ * **Notes only.** A corporate action and a desk event are coloured by their own
+ * taxonomy (see `market-taxonomy`), which is a fact about what they are rather
+ * than about when they are, and the two cannot share a hue channel. They keep
+ * the "behind you" half of this idea through {@link PAST_FADE} and give up the
+ * rest — which is the right trade, because an XD's code is the thing a reader
+ * is scanning the month for and its distance from today is already the column
+ * it is standing in.
  */
 const PILL_TONE: Record<DayRelation, string> = {
   past: "bg-[var(--fill-p1-100)] text-[var(--fill-p1-600)] opacity-60",
@@ -47,30 +62,10 @@ const PILL_HOVER: Record<DayRelation, string> = {
   future: "hover:bg-[var(--fill-p1-300)]!",
 };
 
-/**
- * The same three weights in orange, for anything the backend raised rather than
- * the user wrote.
- *
- * A second hue rather than the coin glyph alone: at 11px inside a ~14px pill the
- * glyph is legible when you look for it and invisible when you're scanning a
- * month, which is the only time the grid is doing any work. Colour survives that
- * scan; a glyph doesn't.
- *
- * Still shaded by day relation, so the grid keeps saying two things at once —
- * hue for where a row came from, weight for how much attention the day is still
- * owed. Dropping to one flat orange would have traded one of those away.
- */
-const ALERT_TONE: Record<DayRelation, string> = {
-  past: "bg-[var(--fill-orange-100)] text-[var(--fill-orange-600)] opacity-60",
-  today: "bg-[var(--fill-orange-500)] text-white",
-  future: "bg-[var(--fill-orange-100)] text-[var(--fill-orange-700)]",
-};
-
-const ALERT_HOVER: Record<DayRelation, string> = {
-  past: "hover:opacity-100 hover:bg-[var(--fill-orange-200)]!",
-  today: "hover:bg-[var(--fill-orange-600)]!",
-  future: "hover:bg-[var(--fill-orange-200)]!",
-};
+/** What is left of the relation ramp for a pill whose hue is spoken for. A day
+ *  already gone is still worth drawing — an X-date last week explains a price
+ *  gap — but it has stopped asking for anything. */
+const PAST_FADE = "opacity-55 hover:opacity-100";
 
 /** Done outranks the day: a ticked-off reminder is finished business whether it
  * was due yesterday or next week, so it drops out of the primary ramp entirely
@@ -81,11 +76,22 @@ const DONE_HOVER = "hover:bg-[var(--fill-gray-200)]!";
 /** Sun–Sat. Columns 0–2 open their popover to the right, 3–6 to the left. */
 const COLUMNS_PER_WEEK = 7;
 
+/** Shared pill geometry. Every row in the stack has to report the same height
+ *  to `useVisibleRows`, which measures the first one and divides. */
+const PILL_SHELL =
+  "flex shrink-0 items-center gap-1 overflow-hidden rounded-[3px] px-1 py-0.5 type-caption leading-tight";
+
+/** One line of the stack: a whole group of corporate actions, or a single row. */
+type CellRow =
+  | { type: "group"; key: string; group: ActionGroup }
+  | { type: "item"; key: string; item: DayItem };
+
 export function DayCell({
   day,
   viewMonth,
   today,
   items,
+  holiday,
   clients,
   onOpenNote,
   onOpenAlert,
@@ -97,9 +103,12 @@ export function DayCell({
   /** The month currently being viewed — days outside it render muted. */
   viewMonth: Date;
   today: Date;
-  /** Everything on this day — notes and alerts alike, already sorted by the
-   * caller. See `day-items`. */
+  /** Everything on this day — corporate actions, desk events and the user's own
+   * reminders alike, already sorted by the caller. See `day-items`. */
   items: DayItem[];
+  /** The market closure on this day, if any. A property of the day rather than
+   *  a row in it — see the note on `DayItemSource`. */
+  holiday?: MarketHoliday | null;
   clients: { id: string; name: string }[];
   onOpenNote: (noteId: string) => void;
   /** A row with no note behind it — the caller opens its own read-only panel. */
@@ -120,20 +129,32 @@ export function DayCell({
   // cell — resolved once here rather than per pill.
   const relation = dayRelation(day, today);
   const isToday = relation === "today";
+  const isPast = relation === "past";
   const pillTone = PILL_TONE[relation];
   const pillHover = PILL_HOVER[relation];
-  const alertTone = ALERT_TONE[relation];
-  const alertHover = ALERT_HOVER[relation];
+
+  // Corporate actions collapse into one pill per kind, for the reason
+  // `ActionGroupCard` spells out: the exchange publishes per security, and a
+  // cell with room for three lines cannot spend six of them on the word "XD".
+  const { actionGroups, others } = splitDayItems(items);
+  const cellRows: CellRow[] = [
+    ...actionGroups.map((group) => ({ type: "group" as const, key: `g:${group.kind}`, group })),
+    ...others.map((item) => ({ type: "item" as const, key: item.id, item })),
+  ];
 
   // How many rows the stack can show is a layout question, not a constant — see
   // `useVisibleRows`, which the Company Events grid on a stock shares.
   const { stackRef, rows } = useVisibleRows();
 
+  // The holiday strip is never the thing that gets dropped: it is the one line
+  // that changes how every other line in the cell should be read, so it is paid
+  // for off the top and the rest of the stack competes for what is left.
+  const budget = Math.max(0, rows - (holiday ? 1 : 0));
   // "+N more" occupies a row of its own, so it can only be afforded by giving up
   // a pill. When even one row is too many, everything folds into the counter.
-  const capped = items.length > rows;
-  const visible = capped ? items.slice(0, Math.max(0, rows - 1)) : items;
-  const overflow = items.length - visible.length;
+  const capped = cellRows.length > budget;
+  const visible = capped ? cellRows.slice(0, Math.max(0, budget - 1)) : cellRows;
+  const overflow = cellRows.length - visible.length;
 
   // Open away from the nearer edge of the week: the left half points right, the
   // right half points left. Decided from the column rather than left to Radix's
@@ -167,6 +188,7 @@ export function DayCell({
       items={items}
       clients={clients}
       relation={relation}
+      holiday={holiday}
       variant={isMobile ? "sheet" : "popover"}
       onOpenNote={(noteId) => {
         dismiss();
@@ -182,6 +204,77 @@ export function DayCell({
       }}
     />
   );
+
+  /**
+   * One stack row's contents and fill, before it is wrapped in a button or a
+   * span.
+   *
+   * `onOpen` is what splits the two. A single row names one record and goes
+   * straight to it; a group names a kind and several, so it can only open the
+   * day — which is the cell's own job, and the reason a group pill hands back
+   * `undefined` rather than a target of its own.
+   */
+  const rowContent = (row: CellRow): {
+    body: ReactNode;
+    title: string;
+    /** Absent when the row has no single target of its own. */
+    onOpen?: () => void;
+    className?: string;
+    style?: CSSProperties;
+  } => {
+    if (row.type === "group") {
+      const palette = actionPalette(row.group.kind);
+      const symbols = row.group.items.map((item) => item.symbol);
+      return {
+        // Border, not a second fill: at 14px a left bar in the saturated hue is
+        // the only part of the card's styling that survives the shrink, and it
+        // is what ties a pill here to its card in the day panel.
+        style: {
+          backgroundColor: palette.tint,
+          color: palette.text,
+          borderLeft: `2px solid ${palette.accent}`,
+        },
+        title: `${actionKindName(row.group.kind)} · ${symbols.join(", ")}`,
+        onOpen: undefined,
+        body: (
+          <>
+            <span className="shrink-0 font-semibold">{row.group.kind}</span>
+            <span className="truncate">{symbols.join(", ")}</span>
+            {/* Outside the truncation, so a day with nine XDs still says nine
+                even when the cell can only print the first two symbols. */}
+            {symbols.length > 1 && (
+              <span className="ml-auto shrink-0 font-semibold tabular-nums">
+                {symbols.length}
+              </span>
+            )}
+          </>
+        ),
+      };
+    }
+
+    const { item } = row;
+    if (item.source === "event") {
+      const category = eventCategory(item.kind);
+      return {
+        style: { backgroundColor: category.tint, color: category.text },
+        title: `${category.label} · ${item.title}`,
+        onOpen: () => onOpenAlert(item),
+        body: (
+          <>
+            <span className="flex shrink-0 items-center [&>svg]:size-3">{category.icon}</span>
+            <span className="truncate">{item.title}</span>
+          </>
+        ),
+      };
+    }
+
+    return {
+      className: item.done ? `${DONE_TONE} ${DONE_HOVER}` : `${pillTone} ${pillHover}`,
+      title: item.title,
+      onOpen: item.noteId ? () => onOpenNote(item.noteId!) : () => onOpenAlert(item),
+      body: <span className="truncate">{item.title}</span>,
+    };
+  };
 
   return (
     <>
@@ -228,10 +321,29 @@ export function DayCell({
         onKeyDown={(e) => {
           if (e.key === "Enter") setOpen(true);
         }}
-        className={`flex h-full min-h-0 flex-col gap-1 overflow-hidden p-1.5 text-left transition-colors cursor-pointer hover:bg-[rgba(0,0,0,0.045)]! ${
+        /* Today gets a light step of the primary ramp behind the whole
+           cell, not just the circled number — a filled 24px disc is easy to
+           miss in a grid this dense. Only while today is in the month on
+           screen: paged away it lands in the leading or trailing band, whose
+           whole job is to recede, and a tinted cell there would pull harder
+           than the in-month days around it. The circled number still marks it
+           there.
+
+           The `!` on both hovers is this repo's standing cascade fix — see the
+           note above about `bg-card` outranking an app-level `hover:`. */
+        className={`flex h-full min-h-0 flex-col gap-1 overflow-hidden p-1.5 text-left transition-colors cursor-pointer ${
           columnIndex === COLUMNS_PER_WEEK - 1 ? "" : "border-r border-[rgba(0,0,0,0.12)]"
-        } ${inMonth ? "bg-card" : "bg-[var(--bg-default-secondary)]/60"}`}
+        } ${
+          isToday && inMonth
+            ? "bg-[var(--fill-p1-200)] hover:bg-[var(--fill-p1-300)]!"
+            : `${inMonth ? "bg-card" : "bg-[var(--bg-default-secondary)]/60"} hover:bg-[rgba(0,0,0,0.045)]!`
+        }`}
       >
+        {/* The date itself carries the closure as well as the strip below it.
+            Scanning a month for "which days is the market shut" is a glance at
+            the numbers, not a read of every cell, and a rose date answers it
+            without the reader entering the cell at all. Today still outranks
+            it: there is only ever one of those. */}
         <span
           className={`flex size-6 shrink-0 items-center justify-center rounded-full type-caption font-semibold ${
             isToday
@@ -240,41 +352,61 @@ export function DayCell({
                 ? "text-foreground"
                 : "text-muted-foreground/50"
           }`}
+          style={
+            !isToday && holiday
+              ? { color: HOLIDAY_PALETTE.text, opacity: inMonth ? 1 : 0.5 }
+              : undefined
+          }
         >
           {day.getDate()}
         </span>
         <div ref={stackRef} className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
-          {/* On a pointer device a pill goes straight to its note, and
+          {/* Inert on every device, unlike the pills. There is nothing behind a
+              closure to open — no holders, no record, no note — so it is a
+              label, and the cell around it is what opens the day. */}
+          {holiday && (
+            <span
+              className={PILL_SHELL}
+              style={{ backgroundColor: HOLIDAY_PALETTE.tint, color: HOLIDAY_PALETTE.text }}
+              title={`${holiday.name} · ${holiday.market} closed`}
+            >
+              <HolidayIcon size={11} weight="fill" className="shrink-0" />
+              <span className="truncate">{holiday.name}</span>
+            </span>
+          )}
+
+          {/* On a pointer device a pill goes straight to what it names, and
               `stopPropagation` keeps that click off the cell behind it — landing
               on a day list you'd only have to click through is a wasted step
-              when you already named the note you want.
+              when you already named the thing you want. A group pill is the one
+              exception: it names several, so it opens the day like the cell
+              does.
 
-              On a phone it is only a label. A pill is a ~14px-tall strip inside
-              a ~50px cell, well under any thumb: aiming for the cell and hitting
-              a pill, or the reverse, would be luck, and the two do different
-              things. One target per cell, and the sheet it opens lists the same
-              notes at a size worth tapping.
+              On a phone every pill is only a label. A pill is a ~14px-tall strip
+              inside a ~50px cell, well under any thumb: aiming for the cell and
+              hitting a pill, or the reverse, would be luck, and the two do
+              different things. One target per cell, and the sheet it opens lists
+              the same rows at a size worth tapping. */}
+          {visible.map((row) => {
+            const { body, title, onOpen, className, style } = rowContent(row);
+            // A note's own tone already carries the relation ramp; everything
+            // else spends its hue on taxonomy and only borrows the fade.
+            const isNote = row.type === "item" && row.item.source === "note";
+            const shell = `${PILL_SHELL} ${className ?? ""} ${
+              !isNote && isPast ? PAST_FADE : ""
+            }`;
 
-              An alert carries a glyph: colour here is spoken for by the day
-              relation, and the grid still has to say at a glance that a day
-              holds something the user didn't put there. */}
-          {visible.map((item) => {
-            const isAlert = item.source !== "note";
-            const tone = item.done ? DONE_TONE : isAlert ? alertTone : pillTone;
-            const hover = item.done ? DONE_HOVER : isAlert ? alertHover : pillHover;
-            const glyph = isAlert ? (
-              <CoinsIcon size={11} weight="fill" className="shrink-0" />
-            ) : null;
-            const shell = `flex shrink-0 items-center gap-1 rounded-[3px] px-1 py-0.5 type-caption leading-tight`;
+            if (isMobile || !onOpen) {
+              return (
+                <span key={row.key} className={shell} style={style} title={title}>
+                  {body}
+                </span>
+              );
+            }
 
-            return isMobile ? (
-              <span key={item.id} className={`${shell} ${tone}`} title={item.title}>
-                {glyph}
-                <span className="truncate">{item.title}</span>
-              </span>
-            ) : (
+            return (
               <button
-                key={item.id}
+                key={row.key}
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -285,19 +417,21 @@ export function DayCell({
                   // alone the popover stays up beside the panel that just
                   // opened, which is two answers to one click.
                   setOpen(false);
-                  if (item.noteId) onOpenNote(item.noteId);
-                  else onOpenAlert(item);
+                  onOpen();
                 }}
                 onMouseDown={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
-                title={item.title}
-                /* `shrink-0`: a flex child that compresses would report a smaller
-                   `offsetHeight` to the measurement above, which would then fit
-                   more rows and compress it further. */
-                className={`${shell} text-left cursor-pointer transition-all focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--fill-p1-600)] ${tone} ${hover}`}
+                title={title}
+                style={style}
+                /* `shrink-0` (in `PILL_SHELL`): a flex child that compresses
+                   would report a smaller `offsetHeight` to the measurement
+                   above, which would then fit more rows and compress it
+                   further. */
+                className={`${shell} text-left cursor-pointer transition-all focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--fill-p1-600)] ${
+                  style ? "hover:brightness-95" : ""
+                }`}
               >
-                {glyph}
-                <span className="truncate">{item.title}</span>
+                {body}
               </button>
             );
           })}

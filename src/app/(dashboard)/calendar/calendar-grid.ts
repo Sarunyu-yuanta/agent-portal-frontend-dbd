@@ -31,6 +31,15 @@ export function addMonths(date: Date, delta: number): Date {
   return new Date(date.getFullYear(), date.getMonth() + delta, 1);
 }
 
+/** `date` plus `n` whole days, at local midnight like every other day here.
+ *  Lived privately in `dashboard-data` until the Calendar's Reminder tab needed
+ *  it to place a KYC expiry — a fifth copy is how the two would drift. */
+export function addDays(date: Date, n: number): Date {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
 /**
  * The fixed 6×7 grid a month view shows: the tail of the previous month that
  * fills the first row, every day of `viewDate`'s own month, and enough of the

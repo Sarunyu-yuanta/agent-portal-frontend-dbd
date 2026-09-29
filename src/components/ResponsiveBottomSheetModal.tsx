@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { BottomSheet, useIsMobile } from "@sarunyu/system-one";
 import { XIcon } from "@phosphor-icons/react";
 
@@ -50,7 +51,19 @@ export function ResponsiveBottomSheetModal({
 
   if (!open) return null;
 
-  return (
+  /**
+   * Portalled to `<body>`, not left where it was rendered.
+   *
+   * `position: fixed` escapes scrolling, but not stacking: a sticky, transformed
+   * or filtered ancestor creates a stacking context, and everything inside it —
+   * `z-[60]` included — is ranked only against its siblings. The Dashboard's
+   * right rail is `position: sticky`, so a modal opened from a card in it sat
+   * under the app header's `z-30` no matter how high its own z-index went.
+   *
+   * The mobile branch above has never had the problem: `BottomSheet` is a vaul
+   * drawer and portals itself.
+   */
+  const overlay = (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
       onClick={(e) => {
@@ -87,4 +100,6 @@ export function ResponsiveBottomSheetModal({
       </div>
     </div>
   );
+
+  return typeof document === "undefined" ? overlay : createPortal(overlay, document.body);
 }

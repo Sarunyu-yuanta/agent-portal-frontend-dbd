@@ -1,19 +1,19 @@
 "use client";
 
 /**
- * Session-scoped "where the user left off" memory, keyed by sidebar section.
+ * Session-scoped navigation memory, keyed by sidebar section.
  *
- * A sidebar entry is a section *entry point*, not a fixed destination: coming
- * back to Client 360 from another section should land on the client the user
- * was reading — the same place browser-back goes. Storing the full URL (path +
- * query) is what makes tab / filter / panel state come back with it, since all
- * of those now live in the query string.
+ * A sidebar entry is a fixed destination: leaving a section and coming back
+ * through the sidebar lands on that section's default page, with no tab,
+ * filter, panel or scroll position carried over — see {@link forgetSection}.
+ * What this module *does* remember is the breadcrumb trail and the previous
+ * URL, which serve in-app "back" (up one level), not the sidebar.
  *
  * Session-scoped and cleared on every fresh document load — see
- * {@link ./nav-session} for why refresh counts as "start over".
+ * {@link ./nav-session}.
  */
 
-import { navRead, navWrite } from "./nav-session";
+import { navRead, navRemove, navWrite } from "./nav-session";
 
 export type NavSectionKey =
   | "dashboard"
@@ -23,6 +23,7 @@ export type NavSectionKey =
   | "promotions"
   | "performance"
   | "ic-learning"
+  | "yaa-team-head"
   | "notes"
   | "calendar";
 
@@ -43,6 +44,7 @@ const SECTIONS: NavSection[] = [
   { key: "promotions", root: "/promotions", prefixes: ["/promotions"] },
   { key: "performance", root: "/performance", prefixes: ["/performance"] },
   { key: "ic-learning", root: "/ic-learning", prefixes: ["/ic-learning"] },
+  { key: "yaa-team-head", root: "/yaa-team-head", prefixes: ["/yaa-team-head"] },
   { key: "notes", root: "/notes", prefixes: ["/notes"] },
   { key: "calendar", root: "/calendar", prefixes: ["/calendar"] },
 ];
@@ -58,32 +60,25 @@ export function sectionForPath(pathname: string): NavSectionKey | null {
   return sectionFor(pathname)?.key ?? null;
 }
 
-const storageKey = (key: NavSectionKey) => `nav:last:${key}`;
-
-function lastSectionPath(key: NavSectionKey): string | null {
-  return navRead(storageKey(key));
-}
+/** Session key of the Insights asset-class chip — see `insights/page.tsx`. */
+export const INSIGHTS_FILTER_KEY = "nav:insights-filter";
 
 /**
- * Query params scoped to one *visit* of a page rather than to the section — the
- * Stock tab's `?market=`.
+ * Wipes everything remembered about one section, so the next arrival is a fresh
+ * one: its trail, the scroll offset of its default page, and the one piece of
+ * in-page state that lives in session memory rather than the URL (the Insights
+ * filter chip). Tabs and filters that live in the query string need no wiping —
+ * the sidebar links to the bare section root, which has none.
  *
- * The breadcrumb trail stores whole URLs, so these come back when the user
- * drills into something from the page and presses back, which is the point.
- * Walking into the section again from the sidebar is a fresh arrival, not a
- * return: it resumes the page they left, at that page's defaults.
+ * Called by the sidebar when a section is entered, so that leaving a page and
+ * coming back always shows its default view.
  */
-const VISIT_SCOPED_PARAMS = ["market"];
-
-/** The sidebar's "resume where I left off" target for a section, if it has one. */
-export function sectionResumeUrl(key: NavSectionKey): string | null {
-  const url = lastSectionPath(key);
-  const [pathname, query] = url?.split("?") ?? [];
-  if (!url || !query) return url;
-  const params = new URLSearchParams(query);
-  for (const param of VISIT_SCOPED_PARAMS) params.delete(param);
-  const rest = params.toString();
-  return rest ? `${pathname}?${rest}` : pathname;
+export function forgetSection(key: NavSectionKey) {
+  const section = SECTIONS.find((s) => s.key === key);
+  if (!section) return;
+  navRemove(trailKey(key));
+  navRemove(`nav:scroll:${section.root}`);
+  if (key === "insights") navRemove(INSIGHTS_FILTER_KEY);
 }
 
 // ── Breadcrumb trail ────────────────────────────────────────────────────────
@@ -180,12 +175,8 @@ export function recordVisit(pathname: string, url: string) {
   if (!section) return;
 
   // A cross-section guest page (e.g. an Insight opened from Product Catalog)
-  // isn't really "being in" Insights — recording it as that section's last
-  // visit would make the sidebar's "resume Insights" link point right back
-  // at this very guest page, so clicking it would silently no-op instead of
-  // navigating anywhere.
+  // isn't really "being in" Insights, so it doesn't extend Insights' trail.
   if (!crossSectionReferrer(pathname)) {
-    navWrite(storageKey(section), url);
     navWrite(trailKey(section), JSON.stringify(sectionTrail(pathname, url)));
   }
 

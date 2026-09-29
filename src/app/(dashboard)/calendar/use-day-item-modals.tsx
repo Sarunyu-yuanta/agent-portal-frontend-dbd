@@ -4,12 +4,13 @@ import type { DayItem } from "./day-items";
 import { useNoteEditModal } from "./use-note-edit-modal";
 
 /**
- * Everywhere a reminder gets clicked opens one of the same two things: a note
- * opens `NoteEditModal` for editing, a system-raised alert opens the
- * read-only `AlertOverlay`. Four surfaces (the header bell, a client's
- * Overview and Reminders tabs, the Client Hub's quick view) built this same
- * pair — state, dispatch, and both modals — independently; this is the one
- * definition.
+ * Everywhere a day item gets clicked opens the same two things: a note opens
+ * `NoteEditModal` for editing, anything else goes to `AlertOverlay`, which
+ * picks the read-only surface that row deserves — an exchange record sheet for
+ * a corporate action, the holder panel for a desk event. Four surfaces (the
+ * header bell, a client's Overview and Reminders tabs, the Client Hub's quick
+ * view) built this same pair — state, dispatch, and both modals —
+ * independently; this is the one definition.
  *
  * `pinnedClientId`/`showHolders` carry the same meaning as they do on
  * `NoteEditModal`/`AlertOverlay` themselves: set both from inside a client's

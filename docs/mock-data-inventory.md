@@ -201,7 +201,7 @@ These never made it into `src/data/` — they're inline arrays/objects living in
 
 | # | What | Lives in | Records |
 |---|---|---|---|
-| 4.1 | Calendar dividend alerts — a "notify holders" event for a Thai stock's ex-date/payment, listing which clients hold it | `calendar/mock-alerts.ts` (`dividendAlerts(today)`, type `CalendarAlert = {id, date, title, detail, clientIds}`) | 3 alerts; dates computed relative to whatever `today` is passed in (fixed days-of-month 12/20/26), not stored dates |
+| 4.1 | Calendar market feeds — SET corporate actions (XD/XW/XT/…) against a symbol, the desk's own dated events (seminar, promotion, deadline, …), and the Thai market holiday calendar | `calendar/mock-market-feed.ts` (`marketFeed(anchorMonth)`, `holidaysByDay(viewDate)`); contract types in `calendar/market-feed.ts`; holidays in `src/data/market-holidays.json` | 26 corporate actions + 6 events **per month**, generated into whichever month is being viewed from fixed days-of-month, not stored dates. Holidays are real stored dates — 15 fixed-date entries applied to any year, plus per-year lunar entries for 2026/2027, plus substitution days computed for any that land on a weekend. See 4.1a below |
 | 4.2 | Command Center: automation log, KPI tiles, client intelligence briefings | `command-center/command-center-data.ts` (`automationLog`, `kpiItems`, `clientIntelligenceMap`) | 5 log entries, 4 KPI tiles, 4 client briefings — **⚠️ `clientIntelligenceMap` is keyed `"1"`–`"4"`, not real client ids `110001`+, so it doesn't line up with any client automatically** |
 | 4.3 | Performance page: gap-to-target tiles, AI action steps | `performance/performance-data.ts` (`GAP_ITEMS`, `AI_STEPS`) | 3 gap items, 3 AI steps |
 | 4.4 | House View: CIO stances, investment themes, per-strategy sales playbook | `house-view/house-view-data.ts` (`STANCES`, `THEMES`, `STRATEGY_DETAIL`) | 6 stances, 4 themes, playbooks for 4 strategy ids |
@@ -210,6 +210,24 @@ These never made it into `src/data/` — they're inline arrays/objects living in
 | 4.7 | Compliance page KPI tiles + alert timestamps | `compliance/KpiBar.tsx`, `compliance/AlertCards.tsx` (`ALERT_TIMESTAMPS`) | 4 KPI tiles, 4 timestamp strings |
 | 4.8 | AI Insights page: KPI tiles, AI summary card, model-confidence stats, tab counts | `ai-insights/page.tsx` (inline arrays) | 4 KPI tiles, 4 model-stat rows, 5 tabs |
 | 4.9 | Research: category taxonomy, landing tiles, research report list | `insights/Research.tsx` (`RESEARCH_CATS`, `MOCK_RESEARCH`, `RESEARCH_LANDING_TILES`) | 20 categories, 23 reports, 14 landing tiles — every report links to the same placeholder PDF at `/mock-reports/sample-report.pdf` |
+
+### 4.1a Calendar market feeds — notes for whoever builds the endpoint
+
+Three feeds, and they are deliberately three rather than one; see the header of `calendar/market-feed.ts` for the full reasoning. The short version:
+
+- **`corporateActions`** — `{id, date, kind, symbol, name?, detail?, record?, clientIds?}`. `date` is `YYYY-MM-DD` read as a **local Bangkok calendar day**, not an instant: an X-date is a whole day, and an ISO timestamp drifts it across midnight. `record` is the sheet the action opens into, as **groups of `{label, value}`** — the UI draws a rule between groups and never inside one, so the grouping is the separator's only source. The mock sends the six-group dividend sheet Figma drew (node 24635:107155) for XD and the two-group date sheet for everything else. `name` is the issuer's legal name for the sheet's header.
+- **`events`** — `{id, date, category, title, detail?, facts?, clientIds?}`. The desk's own dated things: seminars, campaigns, subscription deadlines. `facts` is a flat list here — the UI wraps it into one group.
+- **`holidays`** — `{id, date, name, market, substitute?}`. `market` distinguishes a SET closure from a bank one. A holiday is **not** a row on anyone's list: it has nothing to open, so the frontend keys it by day and uses it to tint the cell rather than queueing it behind reminders.
+
+⚠️ **`clientIds` on a corporate action is not rendered as a holder list.** An XD is a fact about a company; the record sheet it opens says nothing about who owns what. The field exists so the desk's *personal* surfaces — the header bell, a client's Reminders tab, the Dashboard queue — can decide whether the action is worth raising at all (`concernsSomeone` in `day-items`, which drops anything naming nobody). Desk **events** do show their people, because "who is this for" is the question you open a seminar to answer.
+
+⚠️ **`kind` and `category` are open-ended strings, not enums.** SET publishes eleven corporate-action codes today and the desk's event types are whatever the backend defines. The frontend resolves a colour, a label and an icon for *anything* that arrives (`calendar/market-taxonomy.tsx`), so adding a code server-side needs no frontend release. Don't constrain them to the values the mock happens to emit — the mock deliberately includes one unknown code (`XC`) and one unknown category (`quarterly-briefing`) to keep that path exercised.
+
+⚠️ **The lunar holiday dates are placeholders.** Thailand's fixed-date holidays in `market-holidays.json` are correct for any year. Makha Bucha, Visakha Bucha, Asalha Bucha and Buddhist Lent follow the lunar calendar and are announced per year — the entries under `byYear` are plausible stand-ins, not an authority. Use SET's own published holiday list.
+
+**Filtering**: the Calendar's toolbar has a dropdown (`calendar/CalendarFilter.tsx`) that switches each layer off — company events, events, holidays, reminders — plus each corporate-action code and event category inside the first two. It stores what is **hidden**, never what is shown, so a code the backend adds later starts visible instead of being silently swallowed; and it offers the union of the taxonomy's known codes and whatever the feed actually sent this month, so a row you can see is always a row you can switch off.
+
+**History**: this replaced `calendar/mock-alerts.ts`, which faked the same thing in prose ("PTT — ex-dividend") rather than in the exchange's taxonomy. Those three dividends are still here as `XD` rows, now with the full record sheet behind them.
 
 ---
 

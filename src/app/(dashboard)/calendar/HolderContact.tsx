@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Avatar } from "@sarunyu/system-one";
+import { Avatar, BottomSheet } from "@sarunyu/system-one";
 import {
   ArrowLeftIcon,
   ChatCircleTextIcon,
@@ -13,6 +14,7 @@ import {
   XIcon,
 } from "@phosphor-icons/react";
 import { getInitial } from "@/lib/client-utils";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { getClientProfile } from "@/data/client-profiles";
 
 /** How long the tick stays after a copy. Long enough to be seen if you glanced
@@ -63,9 +65,13 @@ function CopyField({
       onClick={copy}
       // `aria-live` on the label so a screen reader hears the confirmation; the
       // tick alone says nothing to one.
-      className="group flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors cursor-pointer hover:bg-[var(--bg-default-secondary)]!"
+      // Hover moved off `--bg-default-secondary`: that is the card's own fill
+      // now, so hovering to it would be no change at all.
+      className="group flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors cursor-pointer hover:bg-[var(--fill-p1-100)]!"
     >
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--bg-default-secondary)] text-muted-foreground">
+      {/* White for the same reason — a grey disc on a grey card is a disc you
+          cannot see. */}
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground">
         {icon}
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
@@ -105,7 +111,9 @@ export function HolderContact({
   clientId: string;
   /** Already masked by the caller if privacy mode is on. */
   name: string;
-  onBack: () => void;
+  /** Omit where this pane is the whole panel rather than the second step of a
+   *  sliding track — a back arrow with nothing behind it is a dead control. */
+  onBack?: () => void;
   onClose: () => void;
   variant?: "modal" | "sheet";
 }) {
@@ -117,14 +125,16 @@ export function HolderContact({
       <header
         className={`flex shrink-0 items-center gap-2 px-3 pb-3 ${isSheet ? "pt-2" : "pt-3"}`}
       >
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Back to the alert"
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors cursor-pointer hover:bg-[var(--bg-default-secondary)]! hover:text-foreground"
-        >
-          <ArrowLeftIcon size={16} />
-        </button>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Back to the alert"
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors cursor-pointer hover:bg-[var(--bg-default-secondary)]! hover:text-foreground"
+          >
+            <ArrowLeftIcon size={16} />
+          </button>
+        )}
         <Avatar type="text" initials={getInitial(name)} size="s" />
         <p className="min-w-0 flex-1 truncate type-body-1 font-bold! text-foreground">{name}</p>
         {!isSheet && (
@@ -142,8 +152,10 @@ export function HolderContact({
       {/* Inset in a rounded card rather than running to the panel's edges.
           Full-bleed rows read as a continuation of the panel; boxed, they read
           as one thing — the ways to reach this person — which is what they are.
-          `overflow-hidden` is what rounds the first and last row's hover fill
-          along with the border.
+
+          A soft fill with rules inside it rather than an outline, matching every
+          other list in this app. `overflow-hidden` is what rounds the first and
+          last row's hover along with the card.
 
           `max-h` rather than `flex-1`: this pane sits in a sliding track whose
           height is measured and animated (see `AlertDetail`), and a pane that
@@ -151,7 +163,7 @@ export function HolderContact({
           rows never reach the cap anyway — it is only there so a future source
           with a dozen fields still can't run off the screen. */}
       <div className="max-h-[40vh] overflow-y-auto px-3 pb-1">
-        <div className="flex flex-col divide-y divide-border/60 overflow-hidden rounded-xl border border-border">
+        <div className="flex flex-col divide-y divide-black/[0.05] overflow-hidden rounded-xl bg-[var(--bg-default-secondary)]">
           <CopyField
             icon={<PhoneIcon size={14} weight="fill" />}
             label="Phone"
@@ -202,5 +214,63 @@ export function HolderContact({
         </Link>
       </div>
     </div>
+  );
+}
+
+/**
+ * `HolderContact` as a thing that opens over the page.
+ *
+ * A sheet from the bottom on a phone, a centred card on a desktop — the same
+ * split `AlertOverlay` and `ResponsiveBottomSheetModal` make, and for the same
+ * reason: a floating card is fine where there is room around it and wrong where
+ * there isn't.
+ *
+ * Portalled to `document.body` on desktop because the callers put this inside
+ * containers that create stacking contexts — the Dashboard's `sticky` rail, the
+ * Calendar's scrolling timeline — and a `fixed` descendant cannot climb out of
+ * one. Its own export because two surfaces now open the same panel the same
+ * way, and the second copy is where they would start to differ.
+ */
+export function HolderContactOverlay({
+  clientId,
+  name,
+  onClose,
+}: {
+  clientId: string;
+  /** Already masked by the caller if privacy mode is on. */
+  name: string;
+  onClose: () => void;
+}) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
+  if (isMobile) {
+    return (
+      <BottomSheet
+        open
+        onOpenChange={(next) => {
+          if (!next) onClose();
+        }}
+        showHeader={false}
+        title={name}
+        className="px-0 pb-0"
+        contentClassName="flex min-h-0 flex-col pt-0"
+      >
+        <HolderContact clientId={clientId} name={name} onClose={onClose} variant="sheet" />
+      </BottomSheet>
+    );
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="w-full max-w-[360px] overflow-hidden rounded-xl bg-card shadow-lg">
+        <HolderContact clientId={clientId} name={name} onClose={onClose} />
+      </div>
+    </div>,
+    document.body,
   );
 }

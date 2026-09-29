@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useScrollTopOnChange } from "@/hooks/use-scroll-top";
 import { Button } from "@sarunyu/system-one";
 import { ArrowLeftIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 
@@ -12,14 +13,11 @@ export const CATALOG_DETAIL_WIDTH = {
   wide: "mx-auto w-full max-w-[1280px] px-4 md:px-8 lg:px-20",
 } as const;
 
-export function useCatalogDetailScrollTop(deps: readonly unknown[]) {
-  useEffect(() => {
-    const main = document.querySelector("main");
-    if (main) main.scrollTop = 0;
-    else window.scrollTo(0, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- scroll reset when drill-in identity changes
-  }, deps);
-}
+/** Catalog drill-ins' name for {@link useScrollTopOnChange}. The behaviour is
+ *  not catalog-specific — anything inside this shell needs it, because `<main>`
+ *  owns the scroll — so the implementation moved to `hooks/use-scroll-top` and
+ *  this stays as the name six catalog pages already call it by. */
+export const useCatalogDetailScrollTop = useScrollTopOnChange;
 
 /** Desktop shell used by mutual-fund theme detail; mobile pages supply their own tree. */
 export function CatalogDetailDesktopShell({ children }: { children: ReactNode }) {

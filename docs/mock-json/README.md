@@ -2,7 +2,7 @@
 
 Every mock data domain from [`../mock-data-inventory.md`](../mock-data-inventory.md), as plain JSON files, for reference.
 
-16 of these already exist in the codebase (`src/data/*.json`) and are copied here verbatim. The other 16 don't exist as JSON anywhere in the codebase today — they're hardcoded arrays/objects inside `.ts`/`.tsx` files, extracted here into JSON so everything is in one place. Where a file's content is scaled/synthesized/computed at runtime rather than stored as-is, that's called out below.
+17 of these already exist in the codebase (`src/data/*.json`) and are copied here verbatim. The other 16 don't exist as JSON anywhere in the codebase today — they're hardcoded arrays/objects inside `.ts`/`.tsx` files, extracted here into JSON so everything is in one place. Where a file's content is scaled/synthesized/computed at runtime rather than stored as-is, that's called out below.
 
 ## Already JSON in the codebase (copied verbatim from `src/data/`)
 
@@ -24,6 +24,7 @@ Every mock data domain from [`../mock-data-inventory.md`](../mock-data-inventory
 | `structured-products.json` | 3.3 | `src/data/structured-products.json` — real record count is 17; the frontend clones records to fake `meta.allCount: 328`, don't build to that number |
 | `global-bonds.json` | 3.4 | `src/data/global-bonds.json` — real record count is ~17; the frontend cycles/repeats records to fake `meta.allOverseasBondsCount: 100`, don't build to that number |
 | `fixed-income.json` | 3.5 | `src/data/fixed-income.json` — `companyOrder` lists 8 tickers but only 3 have full `companies` records |
+| `market-holidays.json` | 4.1 | `src/data/market-holidays.json` — Thai market closures. `recurring` is applied to any year, `byYear` holds the lunar days announced per year (⚠️ **the 2026/2027 lunar dates are plausible placeholders, not SET's published list**). Substitution days for holidays landing on a weekend are computed at runtime, not stored |
 
 ## Newly extracted (no JSON existed for these before)
 
@@ -35,7 +36,7 @@ Every mock data domain from [`../mock-data-inventory.md`](../mock-data-inventory
 | `liabilities-template.json` | 2.3 | `src/data/liabilities-details.ts` — **not per-client data**: one template (categories + percentages + sub-items, scaled off `baseTotal`) that gets rescaled at render time to whatever a client's actual total liabilities figure is |
 | `asset-account-details.json` | 2.4 | `src/data/asset-account-details.ts` — `defaultAssetAccounts` is the fallback account list; `assetAccountDetails` is keyed by account number, `assetProductDetails` by asset-class label (both views over largely the same underlying holdings). The app also computes an extra `position` block (avg cost, current price) per holding from `value`/`changeAmount`/`quantity` — omitted here since it's derived, not stored |
 | `product-sub-data.json` | 2.5 | `src/data/product-sub-data.ts` — keyed by asset-class label; `"เงินสด"` (cash) intentionally has no sub-products |
-| `calendar-dividend-alerts.json` | 4.1 | `src/app/(dashboard)/calendar/mock-alerts.ts` — dates aren't stored; the app computes them as a fixed day-of-month within whichever month is "today" when the calendar renders. `dayOfMonth` here is that fixed value |
+| `calendar-market-feed.json` | 4.1 | `src/app/(dashboard)/calendar/mock-market-feed.ts` — **one month's output, not the stored data**. The app generates corporate actions and events into whichever month is being viewed, from fixed days-of-month; this file is what `marketFeed()` returns for September 2026. `kind` and `category` are open-ended strings — `XC` and `quarterly-briefing` in here are deliberately codes the frontend doesn't know, to prove the fallback path |
 | `command-center.json` | 4.2 | `src/app/(dashboard)/command-center/command-center-data.ts` — **`clientIntelligenceMap` is keyed `"1"`–`"4"`, not real client ids** (`110001`+); it doesn't correspond to any client automatically today |
 | `performance-page-extras.json` | 4.3 | `src/app/(dashboard)/performance/performance-data.ts` |
 | `house-view-extras.json` | 4.4 | `src/app/(dashboard)/house-view/house-view-data.ts` — `strategyDetail` is keyed by strategy id (`s1`–`s4`), matching the `id` field in `house-view-strategies.json` |

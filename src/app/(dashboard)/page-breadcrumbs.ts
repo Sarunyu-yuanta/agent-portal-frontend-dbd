@@ -60,6 +60,7 @@ const SECTION_ROOT: Record<NavSectionKey, { path: string; label: string }> = {
   // differ from the sidebar's own label, but not from each other.
   performance: { path: "/performance", label: "Performance" },
   "ic-learning": { path: "/ic-learning", label: "IC Learning" },
+  "yaa-team-head": { path: "/yaa-team-head", label: "YAA/Team Head" },
   notes: { path: "/notes", label: "Notes" },
   calendar: { path: "/calendar", label: "Calendar" },
 };
@@ -257,11 +258,27 @@ const truncate = (label: string, max: number) =>
 // ── Labels ──────────────────────────────────────────────────────────────────
 
 /** Name for one rung, or `null` when the path isn't a page worth showing. */
+/**
+ * Dashboard sub-pages, which have no id to look up and no generated title —
+ * just a fixed name one rung under the section root.
+ *
+ * `sectionForPath` already claims `/dashboard/*` for the dashboard section, so
+ * naming the leaf here is the whole of what a breadcrumb needs: the rung above
+ * comes from `SECTION_ROOT.dashboard`.
+ */
+const DASHBOARD_SUBPAGE_LABEL: Record<string, string> = {
+  "/dashboard/call-log": "Call Log",
+  "/dashboard/next-best-actions": "Next Best Actions",
+};
+
 function labelFor(pathname: string, ctx: BreadcrumbContext): string | null {
   const section = sectionForPath(pathname);
   if (section && pathname === SECTION_ROOT[section].path) {
     return SECTION_ROOT[section].label;
   }
+
+  const dashboardSubpage = DASHBOARD_SUBPAGE_LABEL[pathname];
+  if (dashboardSubpage) return dashboardSubpage;
 
   const client = /^\/client\/([^/]+)/.exec(pathname);
   if (client) {

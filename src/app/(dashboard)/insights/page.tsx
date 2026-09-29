@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { TabGroup } from "@sarunyu/system-one";
 import { setQueryState, withQuery } from "@/lib/query-state";
 import { navRead, navWrite } from "@/lib/nav-session";
+import { INSIGHTS_FILTER_KEY } from "@/lib/nav-memory";
 import { useInsightStrategies } from "@/hooks/use-catalog";
 import { FadeIn } from "@/components/ui/fade-in";
 import { StrategyPlaybooksSkeleton, AIRecommendCardSkeleton } from "./InsightsSkeletons";
@@ -54,7 +55,7 @@ export default function InsightsPage() {
  * column filter is remembered for good. The trade-off they accepted is that a
  * shared link can't carry a filter.
  */
-const FILTER_KEY = "nav:insights-filter";
+const FILTER_KEY = INSIGHTS_FILTER_KEY;
 
 function InsightsPageInner() {
   const searchParams = useSearchParams();

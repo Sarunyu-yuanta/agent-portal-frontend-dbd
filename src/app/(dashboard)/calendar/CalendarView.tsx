@@ -6,6 +6,7 @@ import { CalendarDotIcon, CaretLeftIcon, CaretRightIcon, PlusIcon } from "@phosp
 import { useNotes } from "@/contexts/notes-context";
 import { useToasts } from "@/hooks/use-toasts";
 import type { Note } from "@/types/domain";
+import { CalendarLegend } from "./CalendarLegend";
 import { DayCell } from "./DayCell";
 import { MonthPicker } from "./MonthPicker";
 import {
@@ -18,7 +19,16 @@ import {
   WEEKDAY_LABELS,
 } from "./calendar-grid";
 import { AlertOverlay, type AlertTarget } from "./AlertOverlay";
-import { groupDayItems } from "./day-items";
+import {
+  CalendarFilterMenu,
+  holidaysVisible,
+  itemVisible,
+  SHOW_EVERYTHING,
+  type CalendarFilterState,
+} from "./CalendarFilter";
+import { groupDayItems, type DayItem } from "./day-items";
+import { ACTION_KINDS } from "./market-taxonomy";
+import { holidaysByDay } from "./mock-market-feed";
 import { NoteDetailPane } from "../notes/NoteDetailPane";
 import { NOTE_AUTHOR } from "../notes/note-constants";
 import { reminderAtFromDate } from "../notes/note-format";
@@ -142,13 +152,75 @@ export function CalendarView({
   const [alertTarget, setAlertTarget] = useState<AlertTarget | null>(null);
 
   // `todayKey` rather than the `Date`: a fresh object every render would make
-  // this memo useless, and only the day the mock alerts hang off actually
-  // matters here.
+  // these memos useless, and only the calendar day actually matters here.
   const todayKey = todayDateKey();
+
+  /**
+   * Anchored to the month on screen, not to today.
+   *
+   * The market feeds are asked for one month at a time (see `mock-market-feed`),
+   * so anchoring them to today meant paging to October showed an empty grid
+   * while the mini calendar on the Dashboard — which already anchors to its own
+   * view date — showed dots for the same month. One of the two was lying and it
+   * was this one.
+   *
+   * `viewDate` is held in state, so it is a stable object between pages and safe
+   * as a dependency. The `?? new Date(todayKey)` only covers the first render,
+   * before hydration has picked a month.
+   */
   const itemsByDay = useMemo(
-    () => groupDayItems(notes, new Date(todayKey)),
-    [notes, todayKey],
+    () => groupDayItems(notes, viewDate ?? new Date(todayKey)),
+    [notes, viewDate, todayKey],
   );
+
+  /** Real dates, not generated ones — so unlike the feeds above this is keyed
+   *  across the year boundaries a six-week grid can straddle. */
+  const holidayByDay = useMemo(
+    () => holidaysByDay(viewDate ?? new Date(todayKey)),
+    [viewDate, todayKey],
+  );
+
+  const [filter, setFilter] = useState<CalendarFilterState>(SHOW_EVERYTHING);
+
+  /**
+   * What the filter menu offers: everything the taxonomy knows, plus anything
+   * this month's feed actually sent that it doesn't.
+   *
+   * The second half is the part that matters. A code the backend adds next
+   * quarter renders on the grid whether or not the frontend has heard of it
+   * (see `market-taxonomy`) — and a row you can see but cannot switch off is a
+   * filter that lies about being complete.
+   */
+  const { kinds, categories } = useMemo(() => {
+    const kindSet = new Set(ACTION_KINDS.map((entry) => entry.kind));
+    const categorySet = new Set<string>();
+    for (const items of itemsByDay.values()) {
+      for (const item of items) {
+        if (item.source === "corporate-action") kindSet.add(item.kind);
+        if (item.source === "event") categorySet.add(item.kind);
+      }
+    }
+    return { kinds: [...kindSet], categories: [...categorySet] };
+  }, [itemsByDay]);
+
+  /**
+   * The filter applied, before anything reaches a cell.
+   *
+   * Here rather than inside `DayCell` because a cell counts its own overflow: a
+   * hidden row filtered at render time would still be included in "+N more",
+   * and the day you opened to find it would come up empty.
+   */
+  const visibleByDay = useMemo(() => {
+    if (filter === SHOW_EVERYTHING) return itemsByDay;
+    const out = new Map<string, DayItem[]>();
+    for (const [key, items] of itemsByDay) {
+      const kept = items.filter((item) => itemVisible(item, filter));
+      if (kept.length > 0) out.set(key, kept);
+    }
+    return out;
+  }, [itemsByDay, filter]);
+
+  const showHolidays = holidaysVisible(filter);
 
   if (!viewDate) {
     return <p className="type-body-2 text-muted-foreground text-center py-10">Loading calendar…</p>;
@@ -184,7 +256,7 @@ export function CalendarView({
           and page title for this route (`isMobileFullBleed` in `page-chrome`),
           so a border pressed against the screen edge would read as a rendering
           fault rather than a card. */}
-      <div className="flex h-full min-h-0 flex-col rounded-xl border border-border bg-card overflow-hidden max-xl:rounded-none! max-xl:border-0!">
+      <div className="flex shrink-0 flex-col rounded-xl border border-border bg-card overflow-hidden max-xl:rounded-none! max-xl:border-0!">
         {/* Navigation left, action right — the toolbar arrangement Outlook and
             Google Calendar both use. Today / ‹ / › sit together because they are
             one control (move the view) and the month label reads as their
@@ -243,6 +315,17 @@ export function CalendarView({
             </div>
           </div>
 
+          {/* The filter sits with the action rather than with the navigation:
+              Today / ‹ › / the month are one control (move the view), and this
+              is a second one (change what the view contains). Left of "New
+              reminder" because the primary action stays furthest right. */}
+          <CalendarFilterMenu
+            state={filter}
+            kinds={kinds}
+            categories={categories}
+            onChange={setFilter}
+          />
+
           {/* Two buttons rather than one with a hidden label. Hiding the label
               left the "+" visibly off-centre: `Button` trims the padding on
               whichever side has an icon (6px left against 8px right at `sm`),
@@ -289,14 +372,18 @@ export function CalendarView({
             own `border` already draws those edges, and stacking a grid line on
             top of it reads as a double-thick rule on three sides. Same reason
             `DayCell` drops its `border-r` in the last column. */}
-        {/* `overflow-hidden` + `basis-0` weeks, not a scroller: the month has to
-            fit the card whatever the viewport is, so the six rows split the
-            leftover height evenly and each cell clips its own overflow.
-            `basis-0` matters — with the default `auto` basis a row's content
-            (pill stack) would set its height and rows would come out uneven. */}
-        <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
+        {/* A fixed row height, not six rows splitting the viewport.
+            The card used to be `h-full` inside a 100vh shell, which made the
+            month's height a function of the window — the same grid showed three
+            pills on a laptop and one on a short one, and there was nowhere under
+            it to put a legend. The six rows are 112px each now, about what that
+            split came to on a full-height desktop, and the page scrolls if that
+            plus the legend runs past the fold.
+            Each cell still clips its own overflow and counts its own "+N more",
+            so a busy day cannot stretch its row and leave the grid uneven. */}
+        <div className="flex flex-col">
           {weeksOf(days).map((week, i) => (
-            <div key={i} className="grid min-h-0 flex-1 basis-0 grid-cols-7 border-b border-[rgba(0,0,0,0.12)] last:border-b-0">
+            <div key={i} className="grid h-28 grid-cols-7 border-b border-[rgba(0,0,0,0.12)] last:border-b-0">
               {week.map((day, dayIndex) => (
                 <DayCell
                   key={day.toISOString()}
@@ -305,7 +392,8 @@ export function CalendarView({
                   rowIndex={i}
                   viewMonth={viewDate}
                   today={today}
-                  items={itemsByDay.get(dayKey(day)) ?? []}
+                  items={visibleByDay.get(dayKey(day)) ?? []}
+                  holiday={(showHolidays && holidayByDay.get(dayKey(day))) || null}
                   clients={clients}
                   onOpenNote={openNoteModal}
                   onOpenAlert={(item) => setAlertTarget({ item, day })}
@@ -315,6 +403,13 @@ export function CalendarView({
             </div>
           ))}
         </div>
+
+        {/* Inside the card, under the rule the last week already draws: the key
+            belongs to the grid, not to the page around it. */}
+        <CalendarLegend
+          itemsByDay={visibleByDay}
+          hasHolidays={showHolidays && holidayByDay.size > 0}
+        />
       </div>
 
       {/* Create modal — new reminder */}

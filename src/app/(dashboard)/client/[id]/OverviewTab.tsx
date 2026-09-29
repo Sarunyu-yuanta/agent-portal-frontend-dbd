@@ -3,18 +3,13 @@
 import { useMemo, useState } from "react";
 import { Card, Button } from "@sarunyu/system-one";
 import { ResponsiveBottomSheetModal } from "@/components/ResponsiveBottomSheetModal";
-import {
-  CalendarCheckIcon,
-  CalendarBlankIcon,
-  BellIcon,
-} from "@phosphor-icons/react";
+import { ReminderPreviewRow, RemindersPreviewEmpty } from "../../calendar/reminder-preview";
 import { useClients } from "@/hooks/use-api";
 import { useNotes } from "@/contexts/notes-context";
 import { REMINDERS_ENABLED } from "@/lib/feature-flags";
 import { dayFromKey, dayOffset, todayDateKey } from "../../calendar/calendar-grid";
 import { groupDayItems, type DayItem } from "../../calendar/day-items";
 import { useDayItemModals } from "../../calendar/use-day-item-modals";
-import { formatDayOnly, TAG_CHIP_TONE } from "../../notes/note-format";
 import { CurrentAllocationSection, TopHoldingsSection } from "./ClientSections";
 import type { SortDir, HoldingsSortKey } from "./client-detail-data";
 import type { ClientDetail } from "@/types/domain";
@@ -176,60 +171,21 @@ export function OverviewTab({
               )}
             </div>
             {upcomingReminders.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-4 text-center">
-                <CalendarCheckIcon size={32} className="text-muted-foreground/40" weight="duotone" />
-                <p className="type-body-2 text-muted-foreground">No reminders yet</p>
-                <p className="type-caption text-muted-foreground/60">Set one from a note on the Notes tab.</p>
-              </div>
+              <RemindersPreviewEmpty />
             ) : (
               <div className="flex flex-col gap-2">
-                {upcomingReminders.map(({ item, day, daysUntil }) => {
+                {upcomingReminders.map(({ item, day, daysUntil }) => (
                   // Only two states ever reach this card: everything overdue
                   // or done was already filtered out above, so "today" is the
                   // one date that needs to say more than just the date.
-                  const dueToday = daysUntil === 0;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => openReminder(item, day)}
-                      className="flex items-center gap-3 rounded-xl bg-[var(--bg-default-secondary)] p-3 text-left transition-colors cursor-pointer hover:bg-[var(--fill-gray-200)]!"
-                    >
-                      {/* The bell carries the urgency colour on its own — a
-                          second colour on a text tag beside it would say the
-                          same thing twice, so the tag's label prints in plain
-                          muted text below instead. */}
-                      <span
-                        className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
-                          TAG_CHIP_TONE[dueToday ? "yellow" : "green"]
-                        }`}
-                      >
-                        <BellIcon size={16} weight="fill" />
-                      </span>
-                      <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-                        <p className="type-body-2 font-semibold text-foreground truncate">
-                          {item.title}
-                        </p>
-                        {/* "Reminder" (the plain-scheduled case) is the one
-                            status word that says nothing past "there's a date
-                            here" — a small calendar glyph carries that without
-                            spending a word on it. Due today still prints,
-                            since that's actual news about the date rather
-                            than a label for it. */}
-                        {dueToday ? (
-                          <p className="type-caption text-muted-foreground/70">
-                            Due today · {formatDayOnly(day.toISOString())}
-                          </p>
-                        ) : (
-                          <p className="flex items-center gap-1 type-caption text-muted-foreground/70">
-                            <CalendarBlankIcon size={12} />
-                            {formatDayOnly(day.toISOString())}
-                          </p>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
+                  <ReminderPreviewRow
+                    key={item.id}
+                    title={item.title}
+                    dayIso={day.toISOString()}
+                    dueToday={daysUntil === 0}
+                    onClick={() => openReminder(item, day)}
+                  />
+                ))}
               </div>
             )}
           </div>

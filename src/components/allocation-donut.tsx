@@ -102,9 +102,18 @@ export function AllocationDonut({
  * percentage is the number an RM is reading, so it gets the tile's own line at
  * subtitle size with the asset name above it in muted small caps.
  */
-export function AllocationTiles({ slices }: { slices: AllocationDonutSlice[] }) {
+export function AllocationTiles({
+  slices,
+  /** Column classes for the grid. Two by default, which is what a legend beside
+   *  a donut has room for; a caller that gives the tiles a whole row can widen
+   *  it. Only the column count is meant to be passed here. */
+  columnsClassName = "grid-cols-2",
+}: {
+  slices: AllocationDonutSlice[];
+  columnsClassName?: string;
+}) {
   return (
-    <div className="grid grid-cols-2 gap-2 flex-1 min-w-0">
+    <div className={`grid gap-2 flex-1 min-w-0 ${columnsClassName}`}>
       {slices.map((s, i) => (
         <div key={s.label} className="flex flex-col gap-1 rounded-xl p-3 bg-[var(--bg-default-secondary)]">
           <div className="flex items-center gap-1.5">

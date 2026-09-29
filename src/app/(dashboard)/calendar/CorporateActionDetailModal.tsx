@@ -2,40 +2,62 @@
 
 import { useEffect } from "react";
 import { Button } from "@sarunyu/system-one";
-import type { CorporateActionKind, CorporateCalendarMarker } from "./stock-company-data";
+import type { MarketFact } from "./market-feed";
+import { actionKindName, actionPalette } from "./market-taxonomy";
 
 /**
  * The sheet's own tag palette (Figma node 24635:107155).
  *
  * XD is the one kind the design draws, and its green is a shade brighter than
- * the same action's pill in the grid — a tag on white at 14px carries a lighter
- * fill than a 9px chip on a calendar cell. The other two kinds have no sheet of
- * their own drawn yet, so they take their grid tints rather than a guess at what
- * the brighter version would be.
+ * the same action's pill in a calendar grid — a tag on white at 14px carries a
+ * lighter fill than a 9px chip on a day cell. Every other code falls through to
+ * the shared resolver and takes its grid tint, which is both what the two kinds
+ * beside XD were already doing and the only answer available for a code the
+ * exchange adds tomorrow.
  */
-const TAG_STYLE: Record<CorporateActionKind, { bg: string; text: string }> = {
+const TAG_OVERRIDES: Record<string, { bg: string; text: string }> = {
   XD: { bg: "#effce1", text: "#47a240" },
-  XT: { bg: "#fee6c9", text: "#8d3a01" },
-  XW: { bg: "#ccecf7", text: "#006182" },
 };
 
+function tagStyle(kind: string): { bg: string; text: string } {
+  const override = TAG_OVERRIDES[kind];
+  if (override) return override;
+  const palette = actionPalette(kind);
+  return { bg: palette.tint, text: palette.text };
+}
+
 /**
- * A corporate action's full record — what a pill in the grid, or a card in a
- * day's panel, opens into.
+ * A corporate action's full record — what a pill in a month grid, or a chip in
+ * a day's panel, opens into.
  *
- * Rows arrive already grouped (see `CorporateCalendarMarker.detail`); a rule is
- * drawn between groups and never inside one, which is the whole of the
- * separator logic Figma shows.
+ * Lives beside the Calendar rather than in the stock page that first drew it,
+ * because both month grids reach it now: the Company Events tab on a stock and
+ * the Calendar page itself. Its props are a record rather than that page's own
+ * `CorporateCalendarMarker` for the same reason — two callers holding different
+ * shapes, one dialog, and the dialog only ever needed four things.
+ *
+ * **No holders, deliberately.** A corporate action is a fact about a company.
+ * The desk knows which clients hold the symbol (the feed carries them, see
+ * `market-feed`) and uses it to decide whether to raise the action at all, but
+ * a list of people has no place on the exchange's record of an event — the
+ * question this sheet answers is "what exactly is happening to this security",
+ * and every row in it is about the security.
  */
 export function CorporateActionDetailModal({
-  marker,
+  kind,
   symbol,
   companyName,
+  rows,
   onClose,
 }: {
-  marker: CorporateCalendarMarker;
+  /** SET code — "XD", "XW", … Open-ended; see `market-taxonomy`. */
+  kind: string;
   symbol: string;
+  /** The issuer's legal name, printed beside the symbol. */
   companyName: string;
+  /** Already grouped by the feed: a rule is drawn between groups and never
+   *  inside one, which is the whole of the separator logic Figma shows. */
+  rows: MarketFact[][];
   onClose: () => void;
 }) {
   // Escape closes, as it does for every other dismissible layer in the app.
@@ -49,7 +71,7 @@ export function CorporateActionDetailModal({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  const tag = TAG_STYLE[marker.kind];
+  const tag = tagStyle(kind);
 
   return (
     <div
@@ -59,7 +81,7 @@ export function CorporateActionDetailModal({
       }}
       role="dialog"
       aria-modal="true"
-      aria-label={`${marker.kind} detail for ${symbol}`}
+      aria-label={`${actionKindName(kind)} detail for ${symbol}`}
     >
       {/* Figma fixes the panel at 704px and lets it hug its content. `max-h` and
           the scrolling card below are this implementation's own: fourteen rows
@@ -71,8 +93,9 @@ export function CorporateActionDetailModal({
             <span
               className="rounded px-2 py-0.5 text-sm font-semibold leading-[1.5]"
               style={{ backgroundColor: tag.bg, color: tag.text }}
+              title={actionKindName(kind)}
             >
-              {marker.kind}
+              {kind}
             </span>
             {/* One line, not a stack: the symbol is the reader's anchor and the
                 legal name only confirms it, so they belong on the same baseline.
@@ -84,7 +107,7 @@ export function CorporateActionDetailModal({
           </div>
 
           <div className="flex flex-col gap-3 rounded-2xl bg-[#f9f9f9] p-4">
-            {marker.detail.map((group, groupIndex) => (
+            {rows.map((group, groupIndex) => (
               <div key={groupIndex} className="flex flex-col gap-3">
                 {/* The rule leads each group but the first, so it never trails
                     the last row with nothing under it. */}

@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import type { Note } from "@/types/domain";
 import { dayFromKey, dayOffset, relativeDayLabel, todayDateKey } from "./calendar-grid";
-import { groupDayItems, type DayItem } from "./day-items";
-import { SOURCE_BADGE } from "./source-badge";
+import { concernsSomeone, groupDayItems, type DayItem } from "./day-items";
+import { itemBadge } from "./source-badge";
 import {
   isDue,
   zoneForDays,
@@ -10,8 +10,9 @@ import {
 } from "../notification-zones";
 
 /**
- * The header bell's reminder rows and click targets — every client's reminders
- * and every dividend alert, tagged with the zone each one falls in. Lifted out
+ * The header bell's reminder rows and click targets — every client's reminders,
+ * plus the corporate actions and desk events that land on somebody in the book,
+ * tagged with the zone each one falls in. Lifted out
  * of the app-shell layout: this is a self-contained "day items in, notification
  * rows out" computation with no dependency on page chrome.
  *
@@ -31,10 +32,10 @@ export function useNotificationFeed(notes: Note[], clients: { id: string; name: 
 
   return useMemo(() => {
     const today = new Date(todayKey);
-    // No `clientId` — every client's reminders and every dividend alert, not
-    // one client's. This is the same map `ClientRemindersTab` builds, just
-    // unfiltered, because the bell is the one surface that isn't already
-    // standing on a client's own page.
+    // No `clientId` — every client's rows, not one client's. The same map
+    // `ClientRemindersTab` builds, just unfiltered, because the bell is the one
+    // surface that isn't already standing on a client's own page. What it does
+    // still drop is anything naming nobody at all; see `concernsSomeone`.
     const dayMap = groupDayItems(notes, today);
     const rows: ZonedNotification[] = [];
     // `onItemClick` only gets back the `NotificationItem` it was handed, and
@@ -50,9 +51,14 @@ export function useNotificationFeed(notes: Note[], clients: { id: string; name: 
       if (!zone) continue; // more than 15 days out — hasn't rung yet
       for (const item of items) {
         if (item.done) continue;
+        // The bell is a personal queue, not a market feed — see
+        // `concernsSomeone`. Without this it would ring for every corporate
+        // action the exchange publishes in the next fortnight.
+        if (!concernsSomeone(item)) continue;
         const names = item.clientIds
           .map((id) => clients.find((c) => c.id === id)?.name ?? id)
           .join(", ");
+        const badge = itemBadge(item);
         rows.push({
           zone,
           daysLeft: daysDiff,
@@ -67,19 +73,18 @@ export function useNotificationFeed(notes: Note[], clients: { id: string; name: 
             // second, contradictory date.
             time: relativeDayLabel(daysDiff),
             unread: isDue(zone),
-            // Same note-vs-system badge every other reminder surface in the
-            // app uses — colour and circle both, not just the glyph — so a
-            // row reads as "someone's own note" vs "the system raised this"
-            // before the title is even read.
+            // The same badge every other reminder surface in the app uses —
+            // colour and circle both, not just the glyph — so a row reads as
+            // the user's own note, an exchange fact or a desk event before the
+            // title is even read.
             icon: (
               <span
                 role="img"
-                aria-label={item.source === "note" ? "Note" : "System"}
-                className={`flex size-6 shrink-0 items-center justify-center rounded-full ${
-                  SOURCE_BADGE[item.source].tone
-                }`}
+                aria-label={badge.label}
+                style={badge.style}
+                className={`flex size-6 shrink-0 items-center justify-center rounded-full ${badge.className}`}
               >
-                {SOURCE_BADGE[item.source].icon}
+                {badge.icon}
               </span>
             ),
           },

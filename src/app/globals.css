@@ -326,4 +326,19 @@ body > .bg-popover.overflow-clip.p-\[8px\] {
   pointer-events: auto;
 }
 
+/* Dashboard right rail. Kept outside every @layer, with !important, because a
+   later `.grid-cols-1` / `.min-w-0` in the generated stylesheet otherwise
+   wins over the responsive column width and the rail stays at its content
+   minimum. */
+@media (min-width: 80rem) {
+  .dashboard-split {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 3fr) !important;
+  }
+  .dashboard-rail {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
+
 

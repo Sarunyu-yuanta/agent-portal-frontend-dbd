@@ -11,8 +11,13 @@ import {
 } from "@phosphor-icons/react";
 
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { CorporateActionDetailModal } from "./CorporateActionDetailModal";
+import { CorporateActionDetailModal } from "../../calendar/CorporateActionDetailModal";
 import { MonthPicker } from "../../calendar/MonthPicker";
+import {
+  ACTION_KINDS,
+  actionKindName,
+  actionPalette,
+} from "../../calendar/market-taxonomy";
 import { useVisibleRows } from "../../calendar/use-visible-rows";
 import {
   addMonths,
@@ -34,33 +39,22 @@ import {
   type CorporateCalendarMarker,
 } from "./stock-company-data";
 
-/** One fill per kind, used by every surface that names an action — the grid
- *  pill, the day list's badge and the legend's swatch. Figma gave the legend a
- *  saturated hue of its own (XT #eb6101, XW #00a2d9), which meant the swatch
- *  that was supposed to decode the grid was the one colour not in it. */
-const MARKER_STYLE: Record<CorporateActionKind, { bar: string; text: string }> = {
-  XT: { bar: "#fee6c9", text: "#8d3a01" },
-  XW: { bar: "#ccecf7", text: "#006182" },
-  XD: { bar: "#daebdd", text: "#3b7448" },
-};
-
-/** The gear dropdown's checklist (Figma node 27745:78796) offers the whole SET
- *  corporate-action taxonomy, not just the three the mock feed emits today.
- *  Kept verbatim so the control is already right when the feed sends the rest;
- *  unchecking a kind with no markers is simply a no-op. */
-const ACTION_FILTER_KINDS = [
-  "XP",
-  "XR",
-  "XD",
-  "XW",
-  "XT",
-  "XM",
-  "XI",
-  "XN",
-  "XA",
-  "XB",
-  "XE",
-] as const;
+/**
+ * Fills come from `calendar/market-taxonomy`, which the Calendar page's grid
+ * reads too.
+ *
+ * This file used to hold its own three-entry table. Two problems with that, and
+ * the shared resolver fixes both: the same XD was a different green on the two
+ * month grids the moment either was touched, and a code outside the table —
+ * which is every code the exchange publishes but this mock doesn't — resolved
+ * to `undefined` and rendered unstyled. The three hexes that were here are now
+ * the overrides in that file, so nothing on this screen has moved.
+ *
+ * The gear dropdown's checklist (Figma node 27745:78796) offers the whole SET
+ * taxonomy rather than just the kinds the feed emits today, which is now the
+ * same list the resolver sorts by.
+ */
+const ACTION_FILTER_KINDS = ACTION_KINDS.map((entry) => entry.kind);
 
 /** Sun–Sat. Columns 0–2 open their panel to the right, 3–6 to the left. */
 const COLUMNS_PER_WEEK = 7;
@@ -77,15 +71,15 @@ function ActionBadge({
   kind: CorporateActionKind;
   size?: "small" | "default";
 }) {
-  const style = MARKER_STYLE[kind];
+  const palette = actionPalette(kind);
   return (
     <span
       role="img"
-      aria-label={kind}
+      aria-label={actionKindName(kind)}
       className={`flex shrink-0 self-center items-center justify-center rounded-full text-[11px] font-semibold leading-none ${
         size === "small" ? "size-7" : "size-8"
       }`}
-      style={{ backgroundColor: style.bar, color: style.text }}
+      style={{ backgroundColor: palette.tint, color: palette.text }}
     >
       {kind}
     </span>
@@ -117,11 +111,11 @@ function CalendarMarker({
   /** Absent on a phone, where the pill is only a label — see `CompanyDayCell`. */
   onOpen?: () => void;
 }) {
-  const style = MARKER_STYLE[marker.kind];
+  const palette = actionPalette(marker.kind);
   const shell = `flex w-full shrink-0 items-center overflow-hidden rounded-[3px] px-1 py-0.5 type-caption leading-tight ${
     marker.muted ? "opacity-40" : ""
   }`;
-  const fill = { backgroundColor: style.bar, color: style.text };
+  const fill = { backgroundColor: palette.tint, color: palette.text };
 
   if (!onOpen) {
     return (
@@ -168,7 +162,7 @@ function CalendarLegend() {
               of a colour rather than a gap in the tag. */}
           <span
             className="size-3.5 shrink-0 rounded-[3px] border border-black/10"
-            style={{ backgroundColor: MARKER_STYLE[kind].bar }}
+            style={{ backgroundColor: actionPalette(kind).tint }}
             aria-hidden
           />
           <span className="type-caption text-[rgba(0,0,0,0.85)]">{kind}</span>
@@ -379,9 +373,23 @@ function CompanyDayCell({
           onKeyDown={(e) => {
             if (e.key === "Enter") setOpen(true);
           }}
-          className={`flex h-full min-h-0 flex-col gap-1 overflow-hidden p-1.5 text-left transition-colors cursor-pointer hover:bg-[rgba(0,0,0,0.045)]! ${
+          /* Today gets a light step of the primary ramp behind the whole
+             cell, not just the circled number — a filled 24px disc is easy to
+             miss in a grid this dense. Only while today is in the month on
+             screen: paged away it lands in the leading or trailing band, whose
+             whole job is to recede, and a tinted cell there would pull harder
+             than the in-month days around it. The circled number still marks it
+             there.
+
+             The `!` on both hovers is this repo's standing cascade fix — see the
+             note above about `bg-card` outranking an app-level `hover:`. */
+          className={`flex h-full min-h-0 flex-col gap-1 overflow-hidden p-1.5 text-left transition-colors cursor-pointer ${
             columnIndex === COLUMNS_PER_WEEK - 1 ? "" : "border-r border-[rgba(0,0,0,0.12)]"
-          } ${inMonth ? "bg-card" : "bg-[var(--bg-default-secondary)]/60"}`}
+          } ${
+            isToday && inMonth
+              ? "bg-[var(--fill-p1-200)] hover:bg-[var(--fill-p1-300)]!"
+              : `${inMonth ? "bg-card" : "bg-[var(--bg-default-secondary)]/60"} hover:bg-[rgba(0,0,0,0.045)]!`
+          }`}
         >
           <span
             className={`flex size-6 shrink-0 items-center justify-center rounded-full type-caption font-semibold ${
@@ -604,9 +612,10 @@ function CompanyEventsSection({
 
       {detailMarker && (
         <CorporateActionDetailModal
-          marker={detailMarker}
+          kind={detailMarker.kind}
           symbol={symbol}
           companyName={companyName}
+          rows={detailMarker.detail}
           onClose={() => setDetailMarker(null)}
         />
       )}

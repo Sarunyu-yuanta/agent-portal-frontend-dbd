@@ -1,0 +1,34 @@
+{
+  "recurring": [
+    { "month": 1, "day": 1, "name": "New Year's Day", "market": "SET" },
+    { "month": 4, "day": 6, "name": "Chakri Memorial Day", "market": "SET" },
+    { "month": 4, "day": 13, "name": "Songkran Festival", "market": "SET" },
+    { "month": 4, "day": 14, "name": "Songkran Festival", "market": "SET" },
+    { "month": 4, "day": 15, "name": "Songkran Festival", "market": "SET" },
+    { "month": 5, "day": 1, "name": "National Labour Day", "market": "SET" },
+    { "month": 5, "day": 4, "name": "Coronation Day", "market": "SET" },
+    { "month": 6, "day": 3, "name": "HM Queen Suthida's Birthday", "market": "SET" },
+    { "month": 7, "day": 28, "name": "HM King Vajiralongkorn's Birthday", "market": "SET" },
+    { "month": 8, "day": 12, "name": "HM Queen Sirikit The Queen Mother's Birthday", "market": "SET" },
+    { "month": 10, "day": 13, "name": "HM King Bhumibol Adulyadej Memorial Day", "market": "SET" },
+    { "month": 10, "day": 23, "name": "Chulalongkorn Day", "market": "SET" },
+    { "month": 12, "day": 5, "name": "HM King Bhumibol Adulyadej's Birthday", "market": "SET" },
+    { "month": 12, "day": 10, "name": "Constitution Day", "market": "SET" },
+    { "month": 12, "day": 31, "name": "New Year's Eve", "market": "SET" }
+  ],
+  "byYear": {
+    "2026": [
+      { "month": 3, "day": 3, "name": "Makha Bucha Day", "market": "SET" },
+      { "month": 5, "day": 31, "name": "Visakha Bucha Day", "market": "SET" },
+      { "month": 7, "day": 29, "name": "Asalha Bucha Day", "market": "SET" },
+      { "month": 7, "day": 30, "name": "Buddhist Lent Day", "market": "SET" },
+      { "month": 12, "day": 30, "name": "Special Bank Holiday", "market": "BANK" }
+    ],
+    "2027": [
+      { "month": 2, "day": 21, "name": "Makha Bucha Day", "market": "SET" },
+      { "month": 5, "day": 20, "name": "Visakha Bucha Day", "market": "SET" },
+      { "month": 7, "day": 18, "name": "Asalha Bucha Day", "market": "SET" },
+      { "month": 7, "day": 19, "name": "Buddhist Lent Day", "market": "SET" }
+    ]
+  }
+}

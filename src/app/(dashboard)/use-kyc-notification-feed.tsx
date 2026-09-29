@@ -40,11 +40,31 @@ export function lastCheckpointCrossed(daysLeft: number): number | null {
 }
 
 /** How this expiry reads in a line of its own — the checkpoint says how close
- *  it is, which is what picks the colour. */
-function checkpointTone(daysLeft: number): string {
+ *  it is, which is what picks the colour.
+ *
+ *  Exported because the Dashboard's KYC card paints the same countdown. Two
+ *  surfaces deriving one ramp separately is how they start disagreeing, and an
+ *  expiry that is red in the bell and orange on the page is worse than either. */
+export function kycCheckpointTone(daysLeft: number): string {
   if (daysLeft <= 0) return "bg-[var(--fill-red-100)] text-[var(--fill-red-600)]";
   if (daysLeft <= 7) return "bg-[var(--fill-orange-100)] text-[var(--fill-orange-600)]";
   return "bg-[var(--fill-yellow-100)] text-[var(--fill-yellow-600)]";
+}
+
+/**
+ * The same ramp as text alone, for a countdown written into a sentence rather
+ * than set in a filled pill.
+ *
+ * Its own function rather than the tone above with the fill stripped off: the
+ * two are genuinely different treatments of one idea, which is the split
+ * `note-format` already makes between `TAG_CHIP_TONE` and `REMINDER_TONE`.
+ * The thresholds live in one place either way — change them here and change
+ * them there, or the two will disagree.
+ */
+export function kycCheckpointTextTone(daysLeft: number): string {
+  if (daysLeft <= 0) return "text-[var(--fill-red-600)]";
+  if (daysLeft <= 7) return "text-[var(--fill-orange-600)]";
+  return "text-[var(--fill-yellow-600)]";
 }
 
 /**
@@ -120,7 +140,7 @@ export function useKycNotificationFeed(clients: Client[]) {
             <span
               role="img"
               aria-label="KYC"
-              className={`flex size-6 shrink-0 items-center justify-center rounded-full ${checkpointTone(
+              className={`flex size-6 shrink-0 items-center justify-center rounded-full ${kycCheckpointTone(
                 expiry.daysLeft,
               )}`}
             >

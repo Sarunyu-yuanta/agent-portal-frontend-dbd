@@ -10,12 +10,7 @@ import {
 import { ListIcon } from "@phosphor-icons/react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { NotificationBell } from "@/components/layout/NotificationBell";
-import {
-  isDue,
-  ZONE_LABEL_TH,
-  ZONE_ORDER,
-  type NotificationZone,
-} from "./notification-zones";
+import { daysAgoLabelTh } from "./notification-zones";
 import { FadeIn } from "@/components/ui/fade-in";
 import { NavStateMemory } from "@/components/layout/NavStateMemory";
 import { Sheet, SheetContent, SheetOverlay } from "@/components/ui/sheet";
@@ -23,7 +18,6 @@ import { HeaderSlotProvider, useHeaderSlot } from "./header-slot-context";
 import { PrivacyProvider } from "@/contexts/privacy-context";
 import { NotesProvider, useNotes } from "@/contexts/notes-context";
 import {
-  CALENDAR_ENABLED,
   KYC_ALERTS_ENABLED,
   NOTES_ENABLED,
   REMINDERS_ENABLED,
@@ -91,34 +85,23 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
    * hook calls themselves on a flag isn't allowed; the flags pick what reaches
    * the bell. What they produce is now on a shared axis (`notification-zones`),
    * so a KYC expiring today and a reminder due today land in the same group
-   * instead of under two headings in two languages, one of them below "Next 2
-   * weeks".
+   * instead of under two headings in two languages.
    *
-   * Split three ways, one per screen the bell can show. Today is the screen it
-   * opens on; overdue and upcoming each sit behind a counted row, so neither a
-   * backlog nor a queue can push today's work below the fold.
+   * Only what is already due reaches the bell, and it is dated by day rather
+   * than sorted into zones: "วันนี้", then "เมื่อวาน", "2 วันก่อน" and so on
+   * down the panel, newest first. Nothing still ahead is listed — the bell
+   * says what needs doing now, and the Calendar is where the future lives.
    */
-  const { todayGroups, overdueGroups, upcomingGroups } = useMemo(() => {
+  const notificationGroups = useMemo(() => {
     const rows = [
       ...(REMINDERS_ENABLED ? notificationRows : []),
       ...(KYC_ALERTS_ENABLED ? kycNotificationRows : []),
-    ];
-    const build = (zones: NotificationZone[]) =>
-      zones
-        .map((zone) => ({
-          label: ZONE_LABEL_TH[zone],
-          items: rows
-            .filter((r) => r.zone === zone)
-            // Within a zone the closest deadline leads.
-            .sort((a, b) => a.daysLeft - b.daysLeft)
-            .map((r) => r.item),
-        }))
-        .filter((g) => g.items.length > 0);
-    return {
-      todayGroups: build(["today"]),
-      overdueGroups: build(["overdue"]),
-      upcomingGroups: build(ZONE_ORDER.filter((z) => !isDue(z))),
-    };
+    ].filter((r) => r.daysLeft <= 0);
+    const days = [...new Set(rows.map((r) => r.daysLeft))].sort((a, b) => b - a);
+    return days.map((daysLeft) => ({
+      label: daysAgoLabelTh(-daysLeft),
+      items: rows.filter((r) => r.daysLeft === daysLeft).map((r) => r.item),
+    }));
   }, [notificationRows, kycNotificationRows]);
 
   const handleNotificationClick = (notifItem: NotificationItem) => {
@@ -207,20 +190,11 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                   today, reminders alongside them once that flag flips. It only
                   disappears if every feed is off, rather than sitting there
                   permanently empty. */}
-              {(todayGroups.length > 0 ||
-                overdueGroups.length > 0 ||
-                upcomingGroups.length > 0) && (
+              {notificationGroups.length > 0 && (
                 <NotificationBell
-                  todayGroups={todayGroups}
-                  overdueGroups={overdueGroups}
-                  upcomingGroups={upcomingGroups}
+                  groups={notificationGroups}
                   emptyText="ไม่มีการแจ้งเตือน"
                   onItemClick={handleNotificationClick}
-                  // Only offered while the Calendar is in phase — otherwise the
-                  // link would lead to a route that redirects straight back.
-                  onOpenCalendar={
-                    CALENDAR_ENABLED ? () => router.push("/calendar") : undefined
-                  }
                 />
               )}
 

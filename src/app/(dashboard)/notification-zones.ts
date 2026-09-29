@@ -73,3 +73,16 @@ export type ZonedNotification = {
   daysLeft: number;
   item: NotificationItem;
 };
+
+/**
+ * The heading over a day's rows in the bell: the day itself, counted back from
+ * today. Thai reads these as words for the first two and a count after that —
+ * "วันนี้", "เมื่อวาน", "2 วันก่อน" — the way a chat list dates its messages.
+ *
+ * `daysAgo` is `-daysLeft`, so 0 is today and 1 is yesterday.
+ */
+export function daysAgoLabelTh(daysAgo: number): string {
+  if (daysAgo <= 0) return "วันนี้";
+  if (daysAgo === 1) return "เมื่อวาน";
+  return `${daysAgo} วันก่อน`;
+}
