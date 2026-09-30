@@ -3,8 +3,14 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { Button, useIsMobile } from "@sarunyu/system-one";
-import { ArrowLeftIcon, FunnelSimpleIcon, InfoIcon } from "@phosphor-icons/react";
-import { MutualFundListCard, MutualFundListCardMobile, TagFilterChip } from "./MutualFundCard";
+import {
+  ArrowLeftIcon,
+  FunnelSimpleIcon,
+} from "@phosphor-icons/react";
+import {
+  MutualFundListCard,
+  MutualFundListCardMobile,
+} from "./MutualFundCard";
 import {
   MutualFundFilterBottomSheet,
   MutualFundFilterModal,
@@ -15,53 +21,12 @@ import {
 } from "./MutualFundFilterPanel";
 import { MutualFundLegendBottomSheet, MutualFundLegendModal } from "./MutualFundLegendSheet";
 import { MF_ASSETS } from "./mutual-fund-assets";
+import { MutualFundTagLegend } from "./mutual-fund-ui";
 import {
   MUTUAL_FUND_PERFORMANCE_PERIODS,
   type MutualFundPerformancePeriod,
   type MutualFund,
 } from "./mutual-fund-data";
-
-function MutualFundTagLegend({
-  viewActive,
-  highlightActive,
-  onToggleView,
-  onToggleHighlight,
-  onShowLegend,
-}: {
-  viewActive: boolean;
-  highlightActive: boolean;
-  onToggleView: () => void;
-  onToggleHighlight: () => void;
-  onShowLegend: () => void;
-}) {
-  return (
-    <div className="flex w-full items-center justify-between gap-2 px-3">
-      <div className="flex items-center gap-2">
-        <TagFilterChip
-          icon={MF_ASSETS.performersTagView}
-          label="View"
-          active={viewActive}
-          onClick={onToggleView}
-        />
-        <TagFilterChip
-          icon={MF_ASSETS.performersTagHighlight}
-          label="Highlight"
-          active={highlightActive}
-          onClick={onToggleHighlight}
-        />
-      </div>
-      <Button
-        variant="plain"
-        size="xs"
-        onClick={onShowLegend}
-        leftIcon={<InfoIcon size={16} />}
-        className="shrink-0 !px-0"
-      >
-        ดูคำอธิบาย
-      </Button>
-    </div>
-  );
-}
 
 function PeriodTabs({
   active,

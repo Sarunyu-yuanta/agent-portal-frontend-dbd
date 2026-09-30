@@ -7,6 +7,7 @@ import { ArrowDownLeftIcon, ArrowUpRightIcon, PhoneIcon } from "@phosphor-icons/
 import { EmptyState } from "@/components/ui/empty-state";
 import { ResponsiveBottomSheetModal } from "@/components/ResponsiveBottomSheetModal";
 import Link from "next/link";
+import { ContactFields } from "../calendar/HolderContact";
 import { relativeCallDate } from "@/data/call-log-data";
 import { CardCount, CARD_LINK_CLASS } from "./CardHeader";
 import type { CallLogRow } from "./call-log-feed";
@@ -139,6 +140,21 @@ export function CallDetailModal({
 
         <div className="rounded-xl bg-[var(--bg-default-secondary)] p-4">
           <p className="type-body-2 leading-relaxed text-foreground">{row.entry.summary}</p>
+        </div>
+
+        {/* The same contact block a KYC row opens, under the summary rather than
+            behind a second tap. What a record of a call leaves you wanting is a
+            way to make the next one, and this record already knows whose call it
+            was — so the number belongs on it, not one step further on.
+
+            Captioned because the summary above it wears the same soft fill:
+            unlabelled, two grey boxes in a column read as one continuing block
+            rather than the call and the client. */}
+        <div className="flex flex-col gap-2">
+          <p className="type-caption font-semibold text-muted-foreground">
+            ช่องทางติดต่อ
+          </p>
+          <ContactFields clientId={row.clientId} />
         </div>
       </div>
 

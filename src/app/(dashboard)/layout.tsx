@@ -55,7 +55,6 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     isFullWidth,
     isMobileFullBleed,
     isFullHeight,
-    isWideContent,
     ownsMobileBreadcrumb,
     contentTopIsWhite,
   } = usePageChrome();
@@ -240,7 +239,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             <FadeIn
               key={pathname}
               className={`${
-                isFullWidth || isWideContent
+                isFullWidth
                   ? "w-full min-h-full"
                   : "max-w-[1280px] mx-auto"
               } flex flex-col gap-3 xl:gap-6 ${isFullHeight ? "w-full flex-1 min-h-0" : ""}`}

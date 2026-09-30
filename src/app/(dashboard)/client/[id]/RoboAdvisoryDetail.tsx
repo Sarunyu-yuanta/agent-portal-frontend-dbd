@@ -17,7 +17,12 @@ import {
   type AdvisoryClientState,
 } from "./AdvisoryClientBar";
 import { advisoryCta, planSuitability } from "./portfolio-advisory-client";
-import { AdvisoryCtaButton, PlanSuitabilityBadge } from "./portfolio-advisory-ui";
+import {
+  AdvisoryCtaButton,
+  PLAN_CARD_SHADOW,
+  PlanSuitabilityBadge,
+  SECTION_SHADOW,
+} from "./portfolio-advisory-ui";
 import { ROBO_ASSETS } from "./robo-advisory-assets";
 import { ROBO_ADVISORY_PLANS, type RoboAdvisoryPlan } from "./robo-advisory-plan-data";
 import {
@@ -29,10 +34,6 @@ import { RoboAdvisoryFilterModal } from "./RoboAdvisoryFilterModal";
 import { RoboAdvisoryPlanDetailModal } from "./RoboAdvisoryPlanDetailModal";
 import { RoboRiskLevel } from "./RoboRiskLevel";
 
-const PLAN_CARD_SHADOW =
-  "0px 0px 1px rgba(102, 102, 102, 0.16), 0px 4px 4px rgba(102, 102, 102, 0.12)";
-const SECTION_SHADOW =
-  "0px 1px 2px 0px rgba(0, 0, 0, 0.1), 0px 1px 3px 1px rgba(0, 0, 0, 0.05)";
 
 /** Hidden pending sign-off on the filter behavior — flip to true to re-enable. */
 const SHOW_ROBO_FILTER_BUTTON = false;

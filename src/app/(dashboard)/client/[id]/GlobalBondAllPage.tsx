@@ -24,8 +24,7 @@ import {
 } from "./GlobalBondAllFilterPanel";
 import { useOverseasBonds } from "@/hooks/use-catalog";
 import { GlobalBondAllPageSkeleton } from "./ProductDetailSkeletons";
-
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+import { PAGE_SIZE_OPTIONS } from "./fixed-income-shared";
 
 const THAI_MONTH_ABBR: Record<string, string> = {
   January: "ม.ค.",

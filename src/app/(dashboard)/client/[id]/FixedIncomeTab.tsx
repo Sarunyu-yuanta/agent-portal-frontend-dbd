@@ -25,6 +25,7 @@ import {
 import {
   BORDER_COLOR,
   HEADER_TEXT_CLS,
+  PAGE_SIZE_OPTIONS,
   SCROLLABLE_TABLE_BODY_CLS,
   TABLE_CARD_STYLE,
   headerBorderStyle,
@@ -52,8 +53,6 @@ function OfferTypeTag({ offerType }: { offerType: string }) {
     </div>
   );
 }
-
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 const TAB_SHADOW =
   "0px 4px 6px -1px rgba(0,0,0,0.1),0px 2px 4px -2px rgba(0,0,0,0.1)";

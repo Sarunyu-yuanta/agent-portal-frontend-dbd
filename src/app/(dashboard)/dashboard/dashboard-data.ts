@@ -99,7 +99,9 @@ const SOURCE_WEIGHT: Record<QueueSource, number> = {
 };
 
 /**
- * Everything due inside the bell's 15-day horizon, as one ordered list.
+ * Everything due soon, as one ordered list: reminders and desk alerts inside
+ * the bell's 15-day horizon, KYC expiries inside their own 30-day checkpoint
+ * window (see the gate below for why the two differ).
  *
  * @param isPrivate masks the client names a KYC row is titled with. Applied
  * here rather than at render because only this function knows which strings in
@@ -121,13 +123,18 @@ export function buildQueue({
   for (const client of clients) {
     const expiry = kycExpiry(client.id);
     if (!expiry || expiry.daysLeft === null) continue;
-    // Two gates, exactly as the bell applies them: the checkpoint decides
-    // whether this expiry has started ringing at all, the zone decides whether
-    // it is close enough to show. See `use-kyc-notification-feed`.
+    // One gate where the bell applies two. The bell adds `zoneForDays` on top
+    // of the checkpoint because a notification panel has to stop somewhere a
+    // reader would still call "soon"; the rail card doesn't, because it lists
+    // everything inside a fortnight and folds the rest into its own last row —
+    // so an expiry three weeks out is the thing that row exists to carry, not
+    // noise to drop before it gets there.
+    //
+    // `lastCheckpointCrossed` is itself the 30-day window, its first checkpoint
+    // being 30 — the same window Client 360's "KYC ครบกำหนด" card uses, so the
+    // two surfaces now agree on which clients are due.
     const checkpoint = lastCheckpointCrossed(expiry.daysLeft);
     if (checkpoint === null) continue;
-    const zone = zoneForDays(expiry.daysLeft);
-    if (!zone) continue;
 
     rows.push({
       id: `kyc:${client.id}:d${checkpoint}`,
@@ -241,10 +248,11 @@ export function groupQueueByBucket(items: QueueItem[], today: Date): QueueGroup[
  * Everything on one particular day, with no horizon applied.
  *
  * Separate from {@link buildQueue} rather than a filter over it, because the
- * calendar can reach days the queue deliberately cannot. The queue stops at 15
- * days — the bell's horizon, and about as far ahead as a morning list is worth
- * reading — but a month grid shows the whole month, and a day the user has
- * pointed at should answer rather than come back empty.
+ * calendar can reach days the queue deliberately cannot. The queue stops at the
+ * bell's 15 days for reminders and alerts, and at the KYC checkpoint window's
+ * 30 for expiries — about as far ahead as a morning list is worth reading. A
+ * month grid shows the whole month either way, and a day the user has pointed
+ * at should answer rather than come back empty.
  *
  * Nothing is dropped here for being in the past either. Asking for a specific
  * past day is a deliberate act; the default list's rule that a lapsed alert is
@@ -519,15 +527,21 @@ export const NBA_ROW_LIMIT = 4;
 export const CALL_LOG_ROW_LIMIT = 6;
 
 /**
- * How many KYC expiries the rail card lists before handing off to its sheet.
+ * How far ahead the rail card lists KYC expiries by name before handing the
+ * rest to its sheet. A fortnight.
  *
- * Two. The card sits in a rail with two others under it and a month calendar
- * below that, and four names of five was most of a list pretending to be a
- * summary. Two is a summary: the rows are ordered by urgency, so the two on
- * show are always the two that matter most, and the third row says in words
- * what is behind them.
+ * It used to cut at a count — two rows, whatever their dates. A count is the
+ * wrong axis for a deadline list: it hid a name due tomorrow because two others
+ * happened to be authored above it, and it showed the third name on a quiet
+ * week when nothing needed doing for a month. What decides whether a row is
+ * worth a name is how long is left, not how many share the card.
+ *
+ * Two weeks because that is the horizon an RM can still act inside — time to
+ * reach the client, send the forms and have them come back. Past it the row is
+ * a diary entry rather than this week's work, which is exactly the job of the
+ * card's last row: it counts them and names the nearest date.
  */
-export const KYC_ROW_LIMIT = 2;
+export const KYC_INLINE_DAYS = 14;
 
 // ── House view, and what it points at ───────────────────────────────────────
 

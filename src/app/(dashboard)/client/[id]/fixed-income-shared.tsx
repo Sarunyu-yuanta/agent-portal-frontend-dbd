@@ -7,6 +7,17 @@ import type { FixedIncomeStatus } from "./fixed-income-data";
 export const BORDER_COLOR = "rgba(0,0,0,0.1)";
 export const HEADER_TEXT_CLS = "text-sm leading-5 text-[#6a7282]";
 
+/**
+ * The "rows per page" choices every paginated catalog table offers.
+ *
+ * Shared rather than per table: the Fixed Income, Global Bond and Thai
+ * Structured tables each declared the same four numbers, which is three places
+ * to edit and two to forget. Despite this module's name the Thai Structured
+ * table already imports from here — it is the catalog's table module in
+ * practice, whatever the filename says.
+ */
+export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
 /** Card/table drop-shadow used across GlobalBond tables. */
 export const TABLE_SHADOW =
   "0px 0px 2px rgba(102,102,102,0.16), 0px 4px 8px rgba(102,102,102,0.12)";

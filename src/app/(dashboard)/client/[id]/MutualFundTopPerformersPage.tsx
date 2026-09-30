@@ -3,22 +3,26 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Button, Toggle } from "@sarunyu/system-one";
-import { ArrowLeftIcon, InfoIcon } from "@phosphor-icons/react";
-import { MutualFundListCard, TagFilterChip } from "./MutualFundCard";
+import {
+  ArrowLeftIcon,
+} from "@phosphor-icons/react";
+import {
+  MutualFundListCard,
+} from "./MutualFundCard";
 import { MutualFundGroupHeroGraphic } from "./MutualFundGroupHero";
 import { MutualFundTopPerformersMobile } from "./MutualFundTopPerformersMobile";
 import { MutualFundLegendModal } from "./MutualFundLegendSheet";
 import { MF_ASSETS } from "./mutual-fund-assets";
+import { MutualFundTagLegend } from "./mutual-fund-ui";
 import {
   getMobileGroupGridFunds,
   MOBILE_FUND_GROUPS,
   MOBILE_PERFORMANCE_PERIODS,
+  TOP_PERFORMERS_HERO_SUBTITLE,
   TOP_PERFORMERS_LIST_UPDATED_AT,
   type MobileFundGroupId,
   type MobilePerformancePeriod,
 } from "./mutual-fund-data";
-
-const HERO_SUBTITLE = "คัดสรรกองทุนเด่น เพื่อคุณโดยเฉพาะ";
 
 function CategoryTabs({
   activeId,
@@ -48,48 +52,6 @@ function CategoryTabs({
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function MutualFundTagLegend({
-  viewActive,
-  highlightActive,
-  onToggleView,
-  onToggleHighlight,
-  onShowLegend,
-}: {
-  viewActive: boolean;
-  highlightActive: boolean;
-  onToggleView: () => void;
-  onToggleHighlight: () => void;
-  onShowLegend: () => void;
-}) {
-  return (
-    <div className="flex w-full items-center justify-between gap-2 px-3">
-      <div className="flex items-center gap-2">
-        <TagFilterChip
-          icon={MF_ASSETS.performersTagView}
-          label="View"
-          active={viewActive}
-          onClick={onToggleView}
-        />
-        <TagFilterChip
-          icon={MF_ASSETS.performersTagHighlight}
-          label="Highlight"
-          active={highlightActive}
-          onClick={onToggleHighlight}
-        />
-      </div>
-      <Button
-        variant="plain"
-        size="xs"
-        onClick={onShowLegend}
-        leftIcon={<InfoIcon size={16} />}
-        className="shrink-0 !px-0"
-      >
-        ดูคำอธิบาย
-      </Button>
     </div>
   );
 }
@@ -197,7 +159,7 @@ export function MutualFundTopPerformersPage({
         <div className="relative mx-auto flex h-[126px] w-full max-w-[996px] shrink-0 items-center gap-1.5 overflow-visible px-4 pb-2.5 pt-2.5 md:px-8 lg:px-0">
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <p className="text-xl font-bold leading-[30px] text-[#074ea4]">{heroTitle}</p>
-            <p className="text-sm font-normal leading-5 text-[#4a5565]">{HERO_SUBTITLE}</p>
+            <p className="text-sm font-normal leading-5 text-[#4a5565]">{TOP_PERFORMERS_HERO_SUBTITLE}</p>
             <p className="text-[9px] font-normal leading-[14px] text-[#6a7282]">
               ข้อมูล ณ วันที่ {TOP_PERFORMERS_LIST_UPDATED_AT}
             </p>

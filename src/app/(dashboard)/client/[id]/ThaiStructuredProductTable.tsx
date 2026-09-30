@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Pagination } from "@sarunyu/system-one";
 import {
   HEADER_TEXT_CLS,
+  PAGE_SIZE_OPTIONS,
   SCROLLABLE_TABLE_BODY_CLS,
   TABLE_CARD_STYLE,
   cellBorderStyle,
@@ -13,7 +14,6 @@ import {
 import { THAI_STRUCTURED_PRODUCTS } from "./thai-structured-data";
 import type { ThaiStructuredProduct } from "./thai-structured-data";
 
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 const MIN_WIDTH = "min-w-[1290px]";
 
 /** Sticky first column — paints over scrolled content and reveals an edge

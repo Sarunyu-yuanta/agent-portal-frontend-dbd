@@ -1,15 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button } from "@sarunyu/system-one";
-import { InfoIcon } from "@phosphor-icons/react";
+
 import { CatalogDetailThemeHero, CatalogTabbedDetailView } from "./CatalogTabbedDetailView";
 import { useCatalogDetailScrollTop } from "./ProductCatalogTabbedDetailLayout";
-import { MutualFundListCard, TagFilterChip } from "./MutualFundCard";
+import {
+  MutualFundListCard,
+} from "./MutualFundCard";
 import { THEME_HERO_COLOR, THEME_ICON_COMPONENTS, ThemeHeroGraphic } from "./MutualFundThemesSection";
 import { MutualFundThemeDetailMobile } from "./MutualFundThemeDetailMobile";
 import { MutualFundLegendModal } from "./MutualFundLegendSheet";
-import { MF_ASSETS } from "./mutual-fund-assets";
+
+import { MutualFundTagLegend } from "./mutual-fund-ui";
 import {
   MUTUAL_FUND_THEME_IDS,
   MOBILE_PERFORMANCE_PERIODS,
@@ -34,48 +36,6 @@ function MutualFundThemeHero({ themeId }: { themeId: MutualFundThemeId }) {
       meta={`ข้อมูล ณ วันที่ ${TOP_PERFORMERS_LIST_UPDATED_AT}`}
       trailing={<ThemeHeroGraphic themeId={themeId} scale={1.15} />}
     />
-  );
-}
-
-function MutualFundTagLegend({
-  viewActive,
-  highlightActive,
-  onToggleView,
-  onToggleHighlight,
-  onShowLegend,
-}: {
-  viewActive: boolean;
-  highlightActive: boolean;
-  onToggleView: () => void;
-  onToggleHighlight: () => void;
-  onShowLegend: () => void;
-}) {
-  return (
-    <div className="flex w-full items-center justify-between gap-2 px-3">
-      <div className="flex items-center gap-2">
-        <TagFilterChip
-          icon={MF_ASSETS.performersTagView}
-          label="View"
-          active={viewActive}
-          onClick={onToggleView}
-        />
-        <TagFilterChip
-          icon={MF_ASSETS.performersTagHighlight}
-          label="Highlight"
-          active={highlightActive}
-          onClick={onToggleHighlight}
-        />
-      </div>
-      <Button
-        variant="plain"
-        size="xs"
-        onClick={onShowLegend}
-        leftIcon={<InfoIcon size={16} />}
-        className="shrink-0 !px-0"
-      >
-        ดูคำอธิบาย
-      </Button>
-    </div>
   );
 }
 

@@ -39,10 +39,12 @@ const useIsoLayoutEffect =
  */
 export function KycAlertsPanel({
   rows,
-  limit,
+  inlineDays,
 }: {
   rows: QueueItem[];
-  limit: number;
+  /** Expiries this many days out or nearer get a row of their own; the rest are
+   *  counted by {@link MoreRow}. See `KYC_INLINE_DAYS`. */
+  inlineDays: number;
 }) {
   const [allOpen, setAllOpen] = useState(false);
   /** The client whose contact card is open. A row opens the person, not the
@@ -130,7 +132,15 @@ export function KycAlertsPanel({
     );
   }
 
-  const visible = rows.slice(0, limit);
+  /**
+   * The fortnight cut. A partition rather than a search, because `buildQueue`
+   * has already ordered these by urgency: everything before the cut is inside
+   * the window in the order it should be read, and the first row past it is the
+   * nearest of the ones `MoreRow` speaks for.
+   */
+  const cut = rows.findIndex((row) => row.daysLeft > inlineDays);
+  const visible = cut === -1 ? rows : rows.slice(0, cut);
+  const hidden = cut === -1 ? [] : rows.slice(cut);
 
   return (
     <div className="flex flex-col gap-4">
@@ -142,8 +152,12 @@ export function KycAlertsPanel({
         {visible.map((row) => (
           <KycRow key={row.id} row={row} onOpen={() => openContact(row)} />
         ))}
-        {rows.length > limit && (
-          <MoreRow rows={rows.slice(limit)} onOpen={() => setAllOpen(true)} />
+        {hidden.length > 0 && (
+          <MoreRow
+            rows={hidden}
+            sole={visible.length === 0}
+            onOpen={() => setAllOpen(true)}
+          />
         )}
       </div>
 
@@ -279,18 +293,22 @@ function countdownLabel(daysLeft: number): string {
 }
 
 /**
- * The last row, when the list is cut short: what is behind the cut, said in
- * words rather than left to the count in the heading.
+ * The last row, when something is past the fortnight: what is behind the cut,
+ * said in words rather than left to the count in the heading.
  *
  * A row rather than a link, and in the list rather than under it, because this
- * is where the reader arrives — they read down two names, reach the bottom, and
+ * is where the reader arrives — they read down the names, reach the bottom, and
  * the question they have at that moment is "is that all?". The heading's count
  * answers it too, but from four inches away and before they had the question.
  *
  * It carries the nearest hidden deadline because that is what decides whether
  * to open it now. The rows are ordered by urgency, so the first one cut is the
- * most pressing of them, and if that one is a fortnight out then nothing behind
- * this row needs today.
+ * most pressing of them — and by construction it is more than two weeks out,
+ * which is the row's whole claim: nothing behind here needs today.
+ *
+ * `sole` is the quiet-month case, where every expiry in the book is past the
+ * fortnight and this row is the only one in the list. "ดูอีก" presupposes names
+ * above it to be *more* than, so with none it says "ดูทั้ง N รายการ" instead.
  *
  * One line, and no icon square. It had one, carrying the count — and a tinted
  * rounded square at the head of a row is precisely what a person's row wears
@@ -305,7 +323,15 @@ function countdownLabel(daysLeft: number): string {
  * today's data the two on show are ten days over and due today, and the first
  * one cut is due *tomorrow*. Urgency does not stop at the fold.
  */
-function MoreRow({ rows, onOpen }: { rows: QueueItem[]; onOpen: () => void }) {
+function MoreRow({
+  rows,
+  sole,
+  onOpen,
+}: {
+  rows: QueueItem[];
+  sole: boolean;
+  onOpen: () => void;
+}) {
   const next = rows[0];
   return (
     <button
@@ -314,7 +340,9 @@ function MoreRow({ rows, onOpen }: { rows: QueueItem[]; onOpen: () => void }) {
       className="flex w-full cursor-pointer items-center gap-2 p-3 text-left transition-colors hover:bg-[var(--fill-p1-100)]"
     >
       <p className="min-w-0 flex-1 truncate text-[13px] text-foreground">
-        <span className="font-bold">ดูอีก {rows.length} รายการ</span>
+        <span className="font-bold">
+          {sole ? "ดูทั้ง" : "ดูอีก"} {rows.length} รายการ
+        </span>
         <span className="text-muted-foreground"> · ใกล้สุด </span>
         <span
           className={`font-semibold ${kycCheckpointTextTone(next.daysLeft)}`}

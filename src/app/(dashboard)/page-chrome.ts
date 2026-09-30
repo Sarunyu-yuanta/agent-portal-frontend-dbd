@@ -33,11 +33,6 @@ export type PageChrome = {
   isMobileFullBleed: boolean;
   /** Page fills the viewport below the top bar and scrolls inside itself. */
   isFullHeight: boolean;
-  /**
-   * Uses the full content width (no `max-w-[1280px]`) while keeping the
-   * standard page padding — for layouts that carry their own right rail.
-   */
-  isWideContent: boolean;
   /** Page renders its own mobile breadcrumb; the layout must not add another. */
   ownsMobileBreadcrumb: boolean;
   /** Page content starts on white rather than `main`'s gray-50. */
@@ -116,7 +111,6 @@ export function usePageChrome(): PageChrome {
     // `useSearchParams`, which would force a Suspense boundary around every
     // page.)
     isFullHeight: pathname === "/notes",
-    isWideContent: pathname === "/dashboard",
     // Full Profile puts the breadcrumb inside its own sticky identity bar (and
     // pulls itself up over the layout's padding to do it), so a second one
     // above would overlap.

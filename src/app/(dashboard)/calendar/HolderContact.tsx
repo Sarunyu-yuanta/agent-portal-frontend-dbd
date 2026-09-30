@@ -92,6 +92,50 @@ function CopyField({
 }
 
 /**
+ * The ways to reach one person, as a boxed list of copyable rows.
+ *
+ * Inset in a rounded card rather than running to its container's edges.
+ * Full-bleed rows read as a continuation of the panel; boxed, they read as one
+ * thing — the ways to reach this person — which is what they are.
+ *
+ * A soft fill with rules inside it rather than an outline, matching every other
+ * list in this app. `overflow-hidden` is what rounds the first and last row's
+ * hover along with the card.
+ *
+ * Its own export because the Call Log's record carries this block too: after
+ * reading what was said on a call, the next thing wanted is a way to ring back.
+ * One definition rather than two, so the contact rows a KYC row opens and the
+ * ones under a call summary cannot drift apart.
+ */
+export function ContactFields({ clientId }: { clientId: string }) {
+  const profile = getClientProfile(clientId);
+
+  return (
+    <div className="flex flex-col divide-y divide-black/[0.05] overflow-hidden rounded-xl bg-[var(--bg-default-secondary)]">
+      <CopyField
+        icon={<PhoneIcon size={14} weight="fill" />}
+        label="Phone"
+        value={profile.phone}
+      />
+      <CopyField
+        icon={<EnvelopeSimpleIcon size={14} weight="fill" />}
+        label="Email"
+        value={profile.email}
+      />
+      {/* Optional on the profile type, so it only appears for a client who has
+          one rather than showing an empty row. */}
+      {profile.lineId && (
+        <CopyField
+          icon={<ChatCircleTextIcon size={14} weight="fill" />}
+          label="LINE ID"
+          value={profile.lineId}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
  * A holder's contact details, shown in place of the alert rather than instead of
  * the page.
  *
@@ -118,7 +162,6 @@ export function HolderContact({
   variant?: "modal" | "sheet";
 }) {
   const isSheet = variant === "sheet";
-  const profile = getClientProfile(clientId);
 
   return (
     <div className="flex w-full flex-col">
@@ -149,41 +192,13 @@ export function HolderContact({
         )}
       </header>
 
-      {/* Inset in a rounded card rather than running to the panel's edges.
-          Full-bleed rows read as a continuation of the panel; boxed, they read
-          as one thing — the ways to reach this person — which is what they are.
-
-          A soft fill with rules inside it rather than an outline, matching every
-          other list in this app. `overflow-hidden` is what rounds the first and
-          last row's hover along with the card.
-
-          `max-h` rather than `flex-1`: this pane sits in a sliding track whose
+      {/* `max-h` rather than `flex-1`: this pane sits in a sliding track whose
           height is measured and animated (see `AlertDetail`), and a pane that
           stretches to fill has no height of its own to measure. Three contact
           rows never reach the cap anyway — it is only there so a future source
           with a dozen fields still can't run off the screen. */}
       <div className="max-h-[40vh] overflow-y-auto px-3 pb-1">
-        <div className="flex flex-col divide-y divide-black/[0.05] overflow-hidden rounded-xl bg-[var(--bg-default-secondary)]">
-          <CopyField
-            icon={<PhoneIcon size={14} weight="fill" />}
-            label="Phone"
-            value={profile.phone}
-          />
-          <CopyField
-            icon={<EnvelopeSimpleIcon size={14} weight="fill" />}
-            label="Email"
-            value={profile.email}
-          />
-          {/* Optional on the profile type, so it only appears for a client who
-              has one rather than showing an empty row. */}
-          {profile.lineId && (
-            <CopyField
-              icon={<ChatCircleTextIcon size={14} weight="fill" />}
-              label="LINE ID"
-              value={profile.lineId}
-            />
-          )}
-        </div>
+        <ContactFields clientId={clientId} />
       </div>
 
       {/* No rule above the button any more — the card below the header already

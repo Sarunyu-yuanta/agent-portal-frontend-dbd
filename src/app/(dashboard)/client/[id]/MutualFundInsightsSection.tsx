@@ -13,6 +13,7 @@ import {
   mutualFundInsightsHref,
   type MutualFundInsight,
 } from "./mutual-fund-data";
+import { CARD_SHADOW } from "./stock-ui";
 import { useDragScroll } from "./use-drag-scroll";
 
 function getInsightActiveIndex(container: HTMLElement, count: number): number {
@@ -40,8 +41,11 @@ function scrollInsightToIndex(container: HTMLElement, index: number) {
   container.scrollTo({ left: card.offsetLeft, behavior: "smooth" });
 }
 
-const INSIGHT_CARD_SHADOW =
-  "shadow-[0px_0px_2px_0px_rgba(102,102,102,0.16),0px_4px_8px_0px_rgba(102,102,102,0.12)]";
+/** The catalog's card elevation, from the one place it is authored. Its own
+ *  copy of the same string lived here until it was noticed — and `stock-ui`'s
+ *  token already documents itself as matching `MutualFundCard`'s, so this side
+ *  was never meant to differ. */
+const INSIGHT_CARD_SHADOW = CARD_SHADOW;
 
 const INSIGHT_LIST_CARD_INTERACTIVE =
   "cursor-pointer no-underline text-inherit transition-[box-shadow,background-color,border-color] hover:border-[#0a6ee7]/25 hover:bg-[#f9fafb] hover:shadow-[0px_0px_4px_0px_rgba(102,102,102,0.18),0px_6px_12px_0px_rgba(102,102,102,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6ee7] focus-visible:ring-offset-2";

@@ -17,16 +17,17 @@ import {
   type AdvisoryClientState,
 } from "./AdvisoryClientBar";
 import { advisoryCta, planSuitability } from "./portfolio-advisory-client";
-import { AdvisoryCtaButton, PlanSuitabilityBadge } from "./portfolio-advisory-ui";
+import {
+  AdvisoryCtaButton,
+  PLAN_CARD_SHADOW,
+  PlanSuitabilityBadge,
+  SECTION_SHADOW,
+} from "./portfolio-advisory-ui";
 import { DEFINIT_PLANS, type DefinitPlan } from "./definit-plan-data";
 import { DefinitPlanDetailModal } from "./RoboAdvisoryPlanDetailModal";
 import { ROBO_ASSETS } from "./robo-advisory-assets";
 import { RoboRiskLevel } from "./RoboRiskLevel";
 
-const PLAN_CARD_SHADOW =
-  "0px 0px 1px rgba(102, 102, 102, 0.16), 0px 4px 4px rgba(102, 102, 102, 0.12)";
-const SECTION_SHADOW =
-  "0px 1px 2px 0px rgba(0, 0, 0, 0.1), 0px 1px 3px 1px rgba(0, 0, 0, 0.05)";
 
 const DEFINIT_PROVIDER = "Definit x Yuanta";
 /** Figma 34315:85739 — DSS has 3 list items; DGS reserves empty 3rd row height. */

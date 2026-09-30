@@ -211,6 +211,10 @@ export const TOP_PERFORMERS_LIST_UPDATED_AT = "2 ส.ค 69";
 /** Figma 39889:667557 — total catalog count (mock). */
 export const TOP_PERFORMERS_DISPLAY_COUNT = 160;
 
+/** The performers hero's one line of copy. Shared by the desktop page and the
+ *  mobile one, which each held their own identical `HERO_SUBTITLE`. */
+export const TOP_PERFORMERS_HERO_SUBTITLE = "คัดสรรกองทุนเด่น เพื่อคุณโดยเฉพาะ";
+
 export const MUTUAL_FUND_PERFORMANCE_PERIODS = [
   "1M",
   "3M",

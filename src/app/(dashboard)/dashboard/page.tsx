@@ -36,7 +36,7 @@ import {
   HIDDEN_NBA_IDS_PREF,
   HIDDEN_QUEUE_IDS_PREF,
   CALL_LOG_ROW_LIMIT,
-  KYC_ROW_LIMIT,
+  KYC_INLINE_DAYS,
 } from "./dashboard-data";
 
 /**
@@ -92,20 +92,28 @@ const DASHBOARD_RAIL_CSS = `
  * then has its last card parked below the fold for good — you can never reach
  * the calendar.
  *
- * The offset is `viewport − rail`, which parks the rail's bottom edge on the
- * scrollport's: negative when the rail is the taller of the two, letting it
- * scroll along until its last card lands, and positive when it is shorter,
- * which pins it that much further down the column. Either way the two columns
- * end on the same line.
+ * Everything below is in one coordinate space: the offsets Blink resolves a
+ * sticky `top` against are insets from the scroll container's *content* box, not
+ * from the visible edge under the top bar — the Calendar's own sticky tab strip
+ * had to learn the same thing, and pays for it with `xl:-top-6`. So `0` is where
+ * the rail already stands in normal flow, and `contentHeight − rail` is where
+ * its last card lands on the line the work column ends on.
  *
- * It used to clamp to a 24px gap, which pinned a short rail near the top
- * instead — fine while the rail was the longer column, wrong once the KYC card
- * dropped from four rows to two and it became the shorter one, leaving forty
- * pixels of nothing under the calendar while the left column ran on.
+ * `contentHeight − rail` is the right offset only while the rail is the taller
+ * of the two — negative, so the rail scrolls along until that card arrives.
  *
- * Nothing is subtracted for a gap under it: the scrollport's own bottom padding
- * is the space, and it is the same space the left column ends in. Subtracting
- * more is what put the right column's floor above the left's.
+ * Positive is where it goes wrong. A sticky box holds itself *down* to its `top`
+ * as much as up, so a rail shorter than the content area gets pushed that far
+ * down the column, opening a gutter above the Reminders card on exactly the
+ * screens with the most room to show it — tall and wide, nothing scrolled yet.
+ * The two columns did end on the same line that way, but a rail whose head is
+ * level with the greeting is worth more than that symmetry: the top of this
+ * column is today's business, and it should be the first thing beside the
+ * greeting.
+ *
+ * Hence the clamp at `0`. It is what makes the short-rail case a pin rather than
+ * a shift, and the two cases meet continuously — at the height where the rail
+ * exactly fills the content area, both terms are `0`.
  *
  * It has to be measured because CSS has no term for "this element's own
  * height" inside `top` — `100%` there resolves against the containing block.
@@ -127,14 +135,16 @@ function useStickyRailTop() {
       // height and pin the rail that much too late.
       const main = rail.closest("main");
       const port = main?.clientHeight ?? window.innerHeight;
-      // A sticky offset inside a scroll container is measured from its *content*
-      // box, so the container's own bottom padding sits below everything this
-      // calculation can see. Without subtracting it the rail pins with its last
-      // card flush against the bottom edge, and the only breathing room that
-      // ever appears is the page's own padding once the left column has run out
-      // too — which is exactly the gap that was missing.
-      const padBottom = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0;
-      setRailTop(port - padBottom - rail.offsetHeight);
+      // `clientHeight` is the padding box, so both paddings come off it to get
+      // the content box the offsets are insets from. Taking off only the bottom
+      // one — as this did while it was bottom-aligning — leaves the rail's last
+      // card flush against the viewport's edge instead of on the line the left
+      // column's own bottom padding starts.
+      const style = main ? getComputedStyle(main) : null;
+      const padY = style
+        ? (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0)
+        : 0;
+      setRailTop(Math.min(0, port - padY - rail.offsetHeight));
     };
 
     // No call here: `ResizeObserver` fires once on `observe`, which does the
@@ -457,7 +467,7 @@ function DashboardPageInner() {
             </Card>
 
             <Card variant="default" className="gap-4">
-              <KycAlertsPanel rows={kycRows} limit={KYC_ROW_LIMIT} />
+              <KycAlertsPanel rows={kycRows} inlineDays={KYC_INLINE_DAYS} />
             </Card>
 
             <Card variant="default" className="gap-4">

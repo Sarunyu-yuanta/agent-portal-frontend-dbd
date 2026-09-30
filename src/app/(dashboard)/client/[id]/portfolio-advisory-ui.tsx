@@ -4,6 +4,24 @@ import { Button, Tag } from "@sarunyu/system-one";
 import { ArrowSquareOutIcon, CheckCircleIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import type { AdvisoryAccountStatus, AdvisoryCta, PlanSuitability } from "./portfolio-advisory-client";
 
+/**
+ * The two elevations a Portfolio Advisory detail page uses: one for a plan card
+ * in the list, one for the sections around it.
+ *
+ * Authored once here rather than per page. `RoboAdvisoryDetail` and
+ * `DefinitDetail` are the same page shape pointed at two products, and each
+ * carried its own byte-identical copy of both values — which is how one of them
+ * ends up restyled alone.
+ *
+ * CSS values rather than Tailwind classes because both pages apply them through
+ * `style={{ boxShadow }}`; the catalog's class-based token is `stock-ui`'s
+ * `CARD_SHADOW`, and the two are not interchangeable.
+ */
+export const PLAN_CARD_SHADOW =
+  "0px 0px 1px rgba(102, 102, 102, 0.16), 0px 4px 4px rgba(102, 102, 102, 0.12)";
+export const SECTION_SHADOW =
+  "0px 1px 2px 0px rgba(0, 0, 0, 0.1), 0px 1px 3px 1px rgba(0, 0, 0, 0.05)";
+
 /** Whether the client already holds an account with this service. */
 export function AdvisoryAccountTag({ status }: { status: AdvisoryAccountStatus }) {
   const open = status === "open";
