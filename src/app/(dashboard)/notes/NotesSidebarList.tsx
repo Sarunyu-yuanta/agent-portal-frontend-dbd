@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button, SearchInput } from "@sarunyu/system-one";
 import { BellIcon, NotePencilIcon, XIcon } from "@phosphor-icons/react";
 import { ClientAvatarStack } from "@/components/ui/client-avatar-stack";
@@ -10,6 +10,7 @@ import { LOCAL_ID_PREFIX } from "@/contexts/notes-context";
 import { useClientNames } from "@/hooks/use-client-names";
 import { groupNotesByDate, snippet } from "./notes-grouping";
 import { formatListStamp } from "./note-format";
+import { useIsoLayoutEffect } from "@/hooks/use-iso-layout-effect";
 
 type Filter = "all" | "clients" | "reminders";
 
@@ -46,10 +47,6 @@ const DISCARD_EXIT_MS = 200;
  * frames, so it costs nothing visually.
  */
 export const DISCARD_REMOVE_MS = DISCARD_EXIT_MS + 80;
-
-/** `useLayoutEffect` warns when React renders on the server, and there is no
- * layout to read there anyway. */
-const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 /**
  * Slides rows to their new places instead of letting them jump.

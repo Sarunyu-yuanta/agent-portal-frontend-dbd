@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   CaretRightIcon,
   IdentificationCardIcon,
@@ -15,10 +15,7 @@ import {
 } from "../use-kyc-notification-feed";
 import { CardCount, RowIcon } from "./CardHeader";
 import { groupQueueByBucket, type QueueItem } from "./dashboard-data";
-
-/** Measuring before paint, but `useLayoutEffect` warns during SSR. */
-const useIsoLayoutEffect =
-  typeof window === "undefined" ? useEffect : useLayoutEffect;
+import { useIsoLayoutEffect } from "@/hooks/use-iso-layout-effect";
 
 /**
  * Whose KYC is about to lapse.

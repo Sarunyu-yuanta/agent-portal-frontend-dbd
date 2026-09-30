@@ -1,14 +1,14 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card } from "@sarunyu/system-one";
-import { SparkleIcon } from "@phosphor-icons/react";
-import { useClientsResource, useNBAActions } from "@/hooks/use-api";
+import { useClientsResource } from "@/hooks/use-api";
 import { useNotes } from "@/contexts/notes-context";
 import { usePrivacy } from "@/contexts/privacy-context";
 import { useStoredIds } from "@/hooks/use-stored-ids";
 import { useScrollTopOnChange } from "@/hooks/use-scroll-top";
+import { useStickyRailTop } from "@/hooks/use-sticky-rail";
 import { NOTE_AUTHOR } from "../notes/note-constants";
 import { getClientTotals } from "../client-hub/client-hub-data";
 import { formatAumThb } from "@/lib/client-utils";
@@ -21,23 +21,24 @@ import { CardHeader } from "./CardHeader";
 import { StatTiles, type StatTile } from "./StatTiles";
 import { MiniCalendar } from "./MiniCalendar";
 import { RemindersPanel } from "./RemindersPanel";
-import { NbaPanel } from "./NbaPanel";
+import {
+  NBA_MESSAGE_BOOK,
+  NbaComingSoonCard,
+} from "./NbaComingSoonCard";
 import { CallLogPanel } from "./CallLogPanel";
 import { KycAlertsPanel } from "./KycAlertsPanel";
 import { AssetSummaryPanel } from "./AssetSummaryPanel";
 import { buildCallLog } from "./call-log-feed";
 import {
-  buildNbaRows,
   buildQueue,
-  isNbaId,
   isQueueId,
   remindersByDay,
   remindersOnDay,
-  HIDDEN_NBA_IDS_PREF,
   HIDDEN_QUEUE_IDS_PREF,
   CALL_LOG_ROW_LIMIT,
   KYC_INLINE_DAYS,
 } from "./dashboard-data";
+import { useNbaRows } from "./use-nba-rows";
 
 /**
  * The page an IC opens first.
@@ -83,88 +84,9 @@ const DASHBOARD_RAIL_CSS = `
 }
 `;
 
-/**
- * Where the sticky rail should pin.
- *
- * A sticky box holds in one direction only, and `top` is the one that keeps a
- * column in place while the content beside it scrolls on. But a fixed `top: 24`
- * pins the rail the instant you scroll, and a rail taller than the viewport
- * then has its last card parked below the fold for good — you can never reach
- * the calendar.
- *
- * Everything below is in one coordinate space: the offsets Blink resolves a
- * sticky `top` against are insets from the scroll container's *content* box, not
- * from the visible edge under the top bar — the Calendar's own sticky tab strip
- * had to learn the same thing, and pays for it with `xl:-top-6`. So `0` is where
- * the rail already stands in normal flow, and `contentHeight − rail` is where
- * its last card lands on the line the work column ends on.
- *
- * `contentHeight − rail` is the right offset only while the rail is the taller
- * of the two — negative, so the rail scrolls along until that card arrives.
- *
- * Positive is where it goes wrong. A sticky box holds itself *down* to its `top`
- * as much as up, so a rail shorter than the content area gets pushed that far
- * down the column, opening a gutter above the Reminders card on exactly the
- * screens with the most room to show it — tall and wide, nothing scrolled yet.
- * The two columns did end on the same line that way, but a rail whose head is
- * level with the greeting is worth more than that symmetry: the top of this
- * column is today's business, and it should be the first thing beside the
- * greeting.
- *
- * Hence the clamp at `0`. It is what makes the short-rail case a pin rather than
- * a shift, and the two cases meet continuously — at the height where the rail
- * exactly fills the content area, both terms are `0`.
- *
- * It has to be measured because CSS has no term for "this element's own
- * height" inside `top` — `100%` there resolves against the containing block.
- *
- * `null` until the first measurement, so the attribute is simply absent rather
- * than briefly wrong; the rail is in normal flow for that one frame.
- */
-function useStickyRailTop() {
-  const railRef = useRef<HTMLElement>(null);
-  const [railTop, setRailTop] = useState<number | undefined>(undefined);
-
-  useEffect(() => {
-    const rail = railRef.current;
-    if (!rail) return;
-
-    const measure = () => {
-      // The scrollport is `<main>`, not the window — the app header sits above
-      // it and never scrolls, so `innerHeight` would overstate the room by its
-      // height and pin the rail that much too late.
-      const main = rail.closest("main");
-      const port = main?.clientHeight ?? window.innerHeight;
-      // `clientHeight` is the padding box, so both paddings come off it to get
-      // the content box the offsets are insets from. Taking off only the bottom
-      // one — as this did while it was bottom-aligning — leaves the rail's last
-      // card flush against the viewport's edge instead of on the line the left
-      // column's own bottom padding starts.
-      const style = main ? getComputedStyle(main) : null;
-      const padY = style
-        ? (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0)
-        : 0;
-      setRailTop(Math.min(0, port - padY - rail.offsetHeight));
-    };
-
-    // No call here: `ResizeObserver` fires once on `observe`, which does the
-    // first measurement without setting state from inside the effect body.
-    const observer = new ResizeObserver(measure);
-    observer.observe(rail);
-    window.addEventListener("resize", measure);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
-
-  return { railRef, railTop };
-}
-
 function DashboardPageInner() {
   const searchParams = useSearchParams();
   const { data: clients, isLoading } = useClientsResource();
-  const nbaActions = useNBAActions();
   const { notes } = useNotes();
   const { isPrivate } = usePrivacy();
 
@@ -178,11 +100,7 @@ function DashboardPageInner() {
     HIDDEN_QUEUE_IDS_PREF,
     isQueueId,
   );
-  /** Dismissed Next Best Actions. Its own key — see `HIDDEN_NBA_IDS_PREF`. */
-  const [dismissedNba, setDismissedNba] = useStoredIds<string>(
-    HIDDEN_NBA_IDS_PREF,
-    isNbaId,
-  );
+  const { rows: nbaRows, dismiss: dismissNba } = useNbaRows();
 
   // The modals a queue row opens — the same pair the bell and a client's
   // Reminders tab open, from the one definition. No `pinnedClientId`: this page
@@ -215,12 +133,6 @@ function DashboardPageInner() {
   const monthReminders = useMemo(
     () => remindersByDay(notes, viewDate, today),
     [notes, viewDate, today],
-  );
-
-  const nbaRows = useMemo(
-    () =>
-      buildNbaRows(nbaActions, isPrivate).filter((row) => !dismissedNba.has(row.action.id)),
-    [nbaActions, isPrivate, dismissedNba],
   );
 
   /** The same array the KYC tile counts, filtered by source — so the count and
@@ -262,11 +174,6 @@ function DashboardPageInner() {
     (updates: Record<string, string | null>) =>
       setQueryState(withQuery(PATH, searchParams, updates), "replace"),
     [searchParams],
-  );
-
-  const handleDismissNba = useCallback(
-    (id: string) => setDismissedNba(new Set([...dismissedNba, id])),
-    [dismissedNba, setDismissedNba],
   );
 
   const { totalAum } = useMemo(
@@ -361,50 +268,11 @@ function DashboardPageInner() {
             {/* The one card on this page that asks for something gets the row
                 to itself — its rows carry two lines plus a drafted message, and
                 sharing the width cost the draft more than a neighbour gained. */}
-            <Card variant="default" className="gap-4">
-              {/* No count while the card is held behind the blur — a number
-                  promises rows you can read, and these are a preview of a
-                  shape, not four things waiting to be done. */}
-              <CardHeader title="AI Next Best Actions" />
-              {/* Held behind a blur rather than replaced by a placeholder: the
-                  rows are real enough to show the shape of the thing — a client,
-                  a reason, a drafted message — and a reader who can see that
-                  shape understands the promise in a way an empty card never
-                  conveys. Legible as layout, unreadable as content, which is the
-                  honest position for something that is not live yet.
-
-                  `aria-hidden` and `pointer-events-none` because it is now
-                  decoration: a screen reader should not read out suggestions
-                  nobody can act on, and Tab should not stop on their buttons. */}
-              <div className="relative">
-                <div aria-hidden className="pointer-events-none select-none blur-[3px]">
-                  <NbaPanel rows={nbaRows} onDismiss={handleDismissNba} />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-card/40 p-6">
-                  {/* The message sits on a solid panel of its own. Laid straight
-                      over the blur it was two soft greys on top of each other —
-                      legible in isolation, washed out in place. The card title
-                      above already names the feature, so this says what it will
-                      do rather than repeating it. */}
-                  <div className="flex max-w-[400px] flex-col items-center gap-3 rounded-2xl border border-border bg-card px-6 py-5 text-center shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-primary-action-light">
-                      <SparkleIcon size={20} weight="fill" className="text-primary-action" />
-                    </span>
-                    {/* Written to the IC, not about them: this card is the
-                        first thing they open, and that is how the rest of the
-                        page already talks. Two things only — when it shows up,
-                        and what it decides for them. */}
-                    <p className="type-body-2 leading-relaxed text-muted-foreground">
-                      ทุกเช้า AI จะบอกว่าวันนี้ควรดูแลลูกค้ารายไหนก่อน ด้วยเรื่องอะไร
-                      และเพราะอะไร
-                    </p>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-action">
-                      Coming Soon
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <NbaComingSoonCard
+              rows={nbaRows}
+              message={NBA_MESSAGE_BOOK}
+              onDismiss={dismissNba}
+            />
 
             {/* Two halves of "where does the desk stand": what it is holding,
                 and what it has been doing. Neither is a to-do, so they share

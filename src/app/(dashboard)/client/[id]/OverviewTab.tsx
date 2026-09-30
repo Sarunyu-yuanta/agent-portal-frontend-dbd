@@ -5,6 +5,12 @@ import { Card, Button } from "@sarunyu/system-one";
 import { ResponsiveBottomSheetModal } from "@/components/ResponsiveBottomSheetModal";
 import { ReminderPreviewRow, RemindersPreviewEmpty } from "../../calendar/reminder-preview";
 import { useClients } from "@/hooks/use-api";
+import { useStickyRailTop } from "@/hooks/use-sticky-rail";
+import {
+  NBA_MESSAGE_CLIENT,
+  NbaComingSoonCard,
+} from "../../dashboard/NbaComingSoonCard";
+import { useNbaRows } from "../../dashboard/use-nba-rows";
 import { useNotes } from "@/contexts/notes-context";
 import { REMINDERS_ENABLED } from "@/lib/feature-flags";
 import { dayFromKey, dayOffset, todayDateKey } from "../../calendar/calendar-grid";
@@ -67,6 +73,10 @@ export function OverviewTab({
 }) {
   const clients = useClients();
   const { notes } = useNotes();
+  /** This client's slice of the Dashboard's list — same ranking, same
+   *  dismissals. `dismiss` is unused: the card below is behind a blur and
+   *  cannot be clicked, so there is nothing to write back. */
+  const { rows: clientNbaRows } = useNbaRows(clientId);
 
   // `assetSummary.allocationSlices` only exists in the mock data for one
   // client — everyone else has it as `undefined`, and the old `?? []`
@@ -115,6 +125,19 @@ export function OverviewTab({
   // the Calendar both use. No holder list: this whole page is one client, so
   // the panel would be listing the person whose profile you are standing in
   // — see `AlertDetail`.
+  /**
+   * Same treatment as the Dashboard's rail: the work column runs much longer
+   * than this one, so left alone it scrolls away and leaves a tall empty
+   * gutter. The hook clamps to the rail's own laid-out top, which on this page
+   * is below the sticky identity bar — so it pins there rather than sliding
+   * behind it, without either side having to know the other exists.
+   *
+   * `lg:items-start` on the row below is what makes this work at all: a flex
+   * item stretches to the row's height by default, and an item as tall as its
+   * own track has nowhere to stick to.
+   */
+  const { railRef, railTop } = useStickyRailTop<HTMLDivElement>();
+
   const { open: openReminder, modals: reminderModals } = useDayItemModals({
     clients,
     pinnedClientId: clientId,
@@ -127,6 +150,12 @@ export function OverviewTab({
 
       {/* ── Left column (main) ── */}
       <div className="flex-[3] min-w-0 flex flex-col gap-6">
+
+        {/* What to do about this client, before what they hold. The Dashboard
+            answers "which client first"; standing on one profile that question
+            is already settled, so the card leads with the move rather than the
+            balances the identity bar above has just given. */}
+        <NbaComingSoonCard rows={clientNbaRows} message={NBA_MESSAGE_CLIENT} />
 
         {/* Current Allocation */}
         <Card variant="default">
@@ -155,7 +184,11 @@ export function OverviewTab({
       </div>{/* end left column */}
 
       {/* ── Right column (sidebar) ── */}
-      <div className="flex-[2] min-w-0 flex flex-col gap-5">
+      <div
+        ref={railRef}
+        style={{ top: railTop }}
+        className="flex-[2] min-w-0 flex flex-col gap-5 lg:sticky"
+      >
 
         {/* Reminders — out of the current delivery phase (see
             `lib/feature-flags`). Hiding the card rather than letting it render

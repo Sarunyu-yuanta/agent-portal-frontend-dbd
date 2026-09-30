@@ -1,14 +1,10 @@
 "use client";
 
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { addDays, dayKey, WEEKDAY_LABELS } from "./calendar-grid";
 import type { ReminderDay } from "./CalendarRemindersTab";
-
-/** `useLayoutEffect` warns when React renders on the server, and there is no
- *  layout to measure there anyway. Same shim three other files here use. */
-const useIsoLayoutEffect =
-  typeof window === "undefined" ? useEffect : useLayoutEffect;
+import { useIsoLayoutEffect } from "@/hooks/use-iso-layout-effect";
 
 /** One cell's width. Fixed rather than content-sized so the strip keeps a
  *  rhythm — a two-digit day and a one-digit day must not shift the row.
@@ -61,6 +57,8 @@ export function ReminderDayStrip({
   days,
   today,
   activeKey,
+  centreKey,
+  centreNonce,
   onSelect,
 }: {
   /** The groups the timeline drew — what decides the span, and which cells are
@@ -69,6 +67,14 @@ export function ReminderDayStrip({
   today: Date;
   /** The day currently at the top of the timeline, from the parent's scrollspy. */
   activeKey: string | null;
+  /** The day an explicit jump is heading for — see {@link centreNonce}. */
+  centreKey: string;
+  /**
+   * Bumped by the parent whenever it sends the reader somewhere deliberately,
+   * rather than the reader having scrolled there. The strip cannot tell the two
+   * apart on its own: both arrive as `activeKey` changes.
+   */
+  centreNonce: number;
   onSelect: (key: string) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -106,28 +112,42 @@ export function ReminderDayStrip({
     scrollRef.current?.scrollBy({ left: direction * PAGE, behavior: "smooth" });
 
   /**
+   * A deliberate jump is owed a centring, and is armed here until it arrives.
+   *
+   * It cannot be done when the button is pressed: that scrolls the timeline
+   * *smoothly*, so the scrollspy walks `activeKey` through every day in
+   * between, and centring the destination up front only for those steps to drag
+   * the strip back off it again is how the day ended up at the edge. The flag
+   * waits for the destination to actually become active.
+   */
+  const owedCentre = useRef(true);
+  useEffect(() => {
+    owedCentre.current = true;
+  }, [centreNonce]);
+
+  /**
    * Keep the marked day on screen.
    *
    * Runs on every change of `activeKey`, not once: the parent's scrollspy moves
    * it as the list scrolls, and a strip that stayed put would be pointing at a
    * day nobody can see.
    *
-   * Centred the first time and `nearest` after. On entry today is the 58th of
-   * eighty-eight cells, and `nearest` would park it hard against the right edge
-   * with the next two months off-screen — the one moment the reader most wants
-   * to see what is coming. Every move after that is a few days at a time, where
-   * centring would drag the whole strip under them on every scroll.
+   * `nearest` for those, because they come a few days at a time and centring
+   * would drag the whole strip under the reader on every scroll. `center` only
+   * on arriving where a jump was aiming — on entry today is the 58th of
+   * eighty-eight cells, and `nearest` parks it hard against an edge with two
+   * months off-screen, which is the one moment the reader most wants to see
+   * what is coming. Pressing "ไปยังวันปัจจุบัน" from far away wants the same
+   * treatment for the same reason, and used to get `nearest` because the strip
+   * had no way to tell that press apart from a scroll.
    */
-  const centred = useRef(false);
   useIsoLayoutEffect(() => {
     const el = activeRef.current;
     if (!el) return;
-    el.scrollIntoView({
-      block: "nearest",
-      inline: centred.current ? "nearest" : "center",
-    });
-    centred.current = true;
-  }, [activeKey]);
+    const centre = owedCentre.current && activeKey === centreKey;
+    el.scrollIntoView({ block: "nearest", inline: centre ? "center" : "nearest" });
+    if (centre) owedCentre.current = false;
+  }, [activeKey, centreKey]);
 
   return (
     <div className="relative shrink-0 border-b border-border">

@@ -1,7 +1,7 @@
 "use client";
 
 import { Avatar } from "@sarunyu/system-one";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { CaretRightIcon, LightningIcon, XIcon } from "@phosphor-icons/react";
 import { usePrivacy } from "@/contexts/privacy-context";
 import { getInitial } from "@/lib/client-utils";
@@ -10,10 +10,7 @@ import { dayLabel, weekdayLabel } from "./calendar-grid";
 import type { DayItem } from "./day-items";
 import { HolderContact } from "./HolderContact";
 import { itemBadge } from "./source-badge";
-
-/** `useLayoutEffect` warns when React renders on the server, and there is no
- * layout to read there anyway. */
-const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+import { useIsoLayoutEffect } from "@/hooks/use-iso-layout-effect";
 
 /**
  * What a desk event opens into.

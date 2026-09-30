@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -16,11 +16,7 @@ import { groupDayItems, type DayItem } from "./day-items";
 import { HolderContactOverlay } from "./HolderContact";
 import { ReminderDayStrip } from "./ReminderDayStrip";
 import { ReminderPreviewRow } from "./reminder-preview";
-
-/** `useLayoutEffect` warns when React renders on the server, and there is no
- *  layout to measure there anyway. Same shim the Notes sidebar and the KYC
- *  panel use. */
-const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+import { useIsoLayoutEffect } from "@/hooks/use-iso-layout-effect";
 
 /** How far either side of today this tab reaches — the same three months the
  *  mini calendar can point at. Notes ignore it (see `buildAllReminders`); it
@@ -349,6 +345,18 @@ export function CalendarRemindersTab({
   );
 
   /**
+   * Bumped every time the reader is *sent* to today rather than scrolling
+   * there, so the strip above can centre the day instead of nudging it just
+   * into view. A nonce rather than a boolean: two presses in a row are two
+   * jumps, and a flag that was already `true` would only arm the first.
+   */
+  const [jumpNonce, setJumpNonce] = useState(0);
+  const jumpToToday = useCallback(() => {
+    scrollToDay(todayKey, "smooth");
+    setJumpNonce((n) => n + 1);
+  }, [scrollToDay, todayKey]);
+
+  /**
    * Park on today, once, before the first paint.
    *
    * Keyed on `days` rather than `[]` because the notes context can arrive after
@@ -434,102 +442,109 @@ export function CalendarRemindersTab({
         days={days}
         today={today}
         activeKey={activeKey}
+        centreKey={todayKey}
+        centreNonce={jumpNonce}
         onSelect={(key) => scrollToDay(key, "smooth")}
       />
 
-      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
-        {days.map((d) => {
-          const isToday = d.daysUntil === 0;
-          return (
-            <div
-              key={d.key}
-              ref={(el) => {
-                const map = dayRefs.current;
-                if (el) map.set(d.key, el);
-                else map.delete(d.key);
-              }}
-              // A band across the full width, heading included, rather than a
-              // tinted card: the highlight is the day, and the date is part of
-              // the day. `-mx-4` cancels the scroller's own padding so the
-              // colour reaches both edges, `px-4` puts the content back where
-              // every other day's is, so nothing shifts as you scroll past it.
-              className={`flex flex-col gap-2 ${
-                isToday ? "-mx-4 bg-[var(--fill-p1-100)] px-4 py-3" : ""
-              }`}
-            >
-              <ReminderDayHeading day={d.day} daysUntil={d.daysUntil} />
-              {/* White on the band, where every other day is grey on white.
-                  The grey would all but vanish against the tint, and the point
-                  of a card is that the rows sit on something. */}
+      {/* Its own positioning context. The button is placed against the list
+          it scrolls; anchored to the outer box instead, `top-3` measured from
+          the top of the day strip and put the button on top of the dates. */}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
+          {days.map((d) => {
+            const isToday = d.daysUntil === 0;
+            return (
               <div
-                className={`flex flex-col divide-y divide-black/[0.05] overflow-hidden rounded-xl ${
-                  isToday ? "bg-card" : "bg-[var(--bg-default-secondary)]"
+                key={d.key}
+                ref={(el) => {
+                  const map = dayRefs.current;
+                  if (el) map.set(d.key, el);
+                  else map.delete(d.key);
+                }}
+                // A band across the full width, heading included, rather than a
+                // tinted card: the highlight is the day, and the date is part of
+                // the day. `-mx-4` cancels the scroller's own padding so the
+                // colour reaches both edges, `px-4` puts the content back where
+                // every other day's is, so nothing shifts as you scroll past it.
+                className={`flex flex-col gap-2 ${
+                  isToday ? "-mx-4 bg-[var(--fill-p1-100)] px-4 py-3" : ""
                 }`}
               >
-                {d.items.length === 0 ? (
-                  <p className="type-caption p-3 text-muted-foreground">ไม่มีรายการวันนี้</p>
-                ) : (
-                  d.items.map((row) => (
-                    <ReminderPreviewRow
-                      key={row.id}
-                      title={row.title}
-                      meta={row.meta}
-                      dayIso={row.day.toISOString()}
-                      dueToday={isToday}
-                      onClick={() =>
-                        row.source === "day"
-                          ? onOpen(row.item, row.day)
-                          : setContact({ clientId: row.clientId, name: row.title })
-                      }
-                      // A card, not a bell: nobody set an alarm on a KYC
-                      // record, it expires on its own. Tinted off the same ramp
-                      // the header bell and the Dashboard card use for the same
-                      // countdown, so one deadline is one colour everywhere.
-                      icon={
-                        row.source === "kyc" ? (
-                          <IdentificationCardIcon size={18} weight="duotone" />
-                        ) : undefined
-                      }
-                      iconToneClassName={row.source === "kyc" ? row.tone : undefined}
-                      flush
-                      // The heading above says which day. Repeating it on every
-                      // row under it is the noise the heading removed.
-                      showDate={false}
-                      // One step past the band rather than back toward it: at
-                      // `p1-100` the hover would land on exactly the band's own
-                      // colour and the card would vanish under the cursor. Grey
-                      // is out for the same reason it is out of the band —
-                      // a different family on a tinted surface.
-                      hoverClassName={
-                        isToday
-                          ? "hover:bg-[var(--fill-p1-200)]!"
-                          : "hover:bg-[var(--fill-gray-200)]!"
-                      }
-                    />
-                  ))
-                )}
+                <ReminderDayHeading day={d.day} daysUntil={d.daysUntil} />
+                {/* White on the band, where every other day is grey on white.
+                    The grey would all but vanish against the tint, and the point
+                    of a card is that the rows sit on something. */}
+                <div
+                  className={`flex flex-col divide-y divide-black/[0.05] overflow-hidden rounded-xl ${
+                    isToday ? "bg-card" : "bg-[var(--bg-default-secondary)]"
+                  }`}
+                >
+                  {d.items.length === 0 ? (
+                    <p className="type-caption p-3 text-muted-foreground">ไม่มีรายการวันนี้</p>
+                  ) : (
+                    d.items.map((row) => (
+                      <ReminderPreviewRow
+                        key={row.id}
+                        title={row.title}
+                        meta={row.meta}
+                        dayIso={row.day.toISOString()}
+                        dueToday={isToday}
+                        onClick={() =>
+                          row.source === "day"
+                            ? onOpen(row.item, row.day)
+                            : setContact({ clientId: row.clientId, name: row.title })
+                        }
+                        // A card, not a bell: nobody set an alarm on a KYC
+                        // record, it expires on its own. Tinted off the same ramp
+                        // the header bell and the Dashboard card use for the same
+                        // countdown, so one deadline is one colour everywhere.
+                        icon={
+                          row.source === "kyc" ? (
+                            <IdentificationCardIcon size={18} weight="duotone" />
+                          ) : undefined
+                        }
+                        iconToneClassName={row.source === "kyc" ? row.tone : undefined}
+                        flush
+                        // The heading above says which day. Repeating it on every
+                        // row under it is the noise the heading removed.
+                        showDate={false}
+                        // One step past the band rather than back toward it: at
+                        // `p1-100` the hover would land on exactly the band's own
+                        // colour and the card would vanish under the cursor. Grey
+                        // is out for the same reason it is out of the band —
+                        // a different family on a tinted surface.
+                        hoverClassName={
+                          isToday
+                            ? "hover:bg-[var(--fill-p1-200)]!"
+                            : "hover:bg-[var(--fill-gray-200)]!"
+                        }
+                      />
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      {jump && (
-        <button
-          type="button"
-          onClick={() => scrollToDay(todayKey, "smooth")}
-          className={`absolute left-1/2 z-10 -translate-x-1/2 ${
-            jump === "up" ? "top-3" : "bottom-3"
-          } inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-primary-action px-3 py-1.5 text-[12px] font-semibold text-on-primary-action shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-primary-action-hover`}
-        >
-          {jump === "up" ? (
-            <ArrowUpIcon size={14} weight="bold" />
-          ) : (
-            <ArrowDownIcon size={14} weight="bold" />
-          )}
-          ไปยังวันปัจจุบัน
-        </button>
-      )}
+        {jump && (
+          <button
+            type="button"
+            onClick={jumpToToday}
+            className={`absolute left-1/2 z-10 -translate-x-1/2 ${
+              jump === "up" ? "top-3" : "bottom-3"
+            } inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-primary-action px-3 py-1.5 text-[12px] font-semibold text-on-primary-action shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-primary-action-hover`}
+          >
+            {jump === "up" ? (
+              <ArrowUpIcon size={14} weight="bold" />
+            ) : (
+              <ArrowDownIcon size={14} weight="bold" />
+            )}
+            ไปยังวันปัจจุบัน
+          </button>
+        )}
+      </div>
 
       {contact && (
         <HolderContactOverlay
