@@ -27,6 +27,7 @@ function sectionRoot(pathname: string): string {
     return category ? catalogListHref(category) : catalogListUrl();
   }
   if (pathname.startsWith("/insights/")) return "/insights";
+  if (pathname.startsWith("/promotions/")) return "/promotions";
   if (pathname.startsWith("/client/")) return "/client-hub";
   return "/";
 }

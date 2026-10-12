@@ -1,0 +1,535 @@
+[
+  {
+    "id": "cmp-fcn-autocall",
+    "type": "promotion",
+    "title": "FCN Autocall ซีรีส์พิเศษ — คูปอง 8.5% ต่อปี",
+    "summary": "ชุดอ้างอิงหุ้นเทคโนโลยีสหรัฐฯ จองซื้อขั้นต่ำ 1 ล้านบาท ภายในรอบนี้เท่านั้น",
+    "cover": "/campaigns/fcn-autocall.svg",
+    "featured": true,
+    "products": ["fcn"],
+    "segments": ["uhnw", "aggressive"],
+    "startOffset": -10,
+    "endOffset": 5,
+    "conditions": [
+      "ลูกค้าต้องมีสถานะ UHNW และผ่านแบบประเมินความเสี่ยงระดับ Aggressive",
+      "จองซื้อขั้นต่ำ 1,000,000 บาท ต่อหนึ่งรายการ",
+      "ต้องมีแบบฟอร์ม Wealth Declare และ Acknowledge ครบถ้วนก่อนวันปิดจอง"
+    ],
+    "terms": [
+      "คูปอง 8.5% ต่อปี จ่ายรายไตรมาส โดยคำนวณตามจำนวนวันที่ถือครองจริง",
+      "Autocall ที่ระดับ 100% ของราคาอ้างอิง ณ วันสังเกตการณ์แต่ละไตรมาส",
+      "Knock-In Barrier ที่ระดับ 65% ของราคาอ้างอิง ณ วันเริ่มต้นสัญญา",
+      "สิทธิ์นี้สงวนเฉพาะรายการที่จองซื้อผ่านผู้แนะนำการลงทุนของ Yuanta ภายในระยะเวลาที่กำหนด"
+    ],
+    "disclaimer": "การลงทุนมีความเสี่ยง ผู้ลงทุนควรทำความเข้าใจลักษณะสินค้า เงื่อนไขผลตอบแทน และความเสี่ยงก่อนตัดสินใจลงทุน ผลตอบแทนในอดีตมิได้เป็นสิ่งยืนยันถึงผลตอบแทนในอนาคต",
+    "materials": [
+      {
+        "id": "mat-fcn-line",
+        "type": "line-image",
+        "label": "ภาพสำหรับส่ง LINE (1040×1040)",
+        "url": "/campaigns/fcn-autocall.svg",
+        "version": "v2.1",
+        "approved": true
+      },
+      {
+        "id": "mat-fcn-pdf",
+        "type": "pdf",
+        "label": "เอกสารสรุปเงื่อนไข (Term Sheet)",
+        "url": "/mock-reports/sample-report.pdf",
+        "version": "v2.1",
+        "approved": true
+      },
+      {
+        "id": "mat-fcn-script",
+        "type": "script",
+        "label": "สคริปต์สนทนาสำหรับโทรหาลูกค้า",
+        "url": "สวัสดีครับคุณ{ชื่อลูกค้า} ผม{ชื่อ IC} จากยวนต้าครับ ตอนนี้เรามี FCN ซีรีส์พิเศษอ้างอิงหุ้นเทคโนโลยีสหรัฐฯ คูปอง 8.5% ต่อปี จ่ายรายไตรมาส Knock-In ที่ 65% ซึ่งตรงกับระดับความเสี่ยงที่คุณรับได้ครับ รอบจองซื้อปิดวันที่ {วันปิดจอง} หากสนใจผมขออนุญาตส่งเอกสารสรุปเงื่อนไขให้พิจารณาก่อนได้ไหมครับ",
+        "version": "v1.3",
+        "approved": true
+      },
+      {
+        "id": "mat-fcn-deck",
+        "type": "pdf",
+        "label": "สไลด์นำเสนอฉบับเต็ม",
+        "url": "/mock-reports/sample-report.pdf",
+        "version": "v3.0-draft",
+        "approved": false,
+        "pendingReason": "อยู่ระหว่างรอ Compliance อนุมัติเวอร์ชัน 3.0"
+      }
+    ],
+    "clients": [
+      { "clientId": "110001", "status": "redeemed" },
+      { "clientId": "110004", "status": "interested" },
+      { "clientId": "110007", "status": "sent" },
+      {
+        "clientId": "110002",
+        "eligible": false,
+        "ineligibleReason": "ระดับความเสี่ยง Moderate ไม่ตรงกับเงื่อนไขของสินค้า"
+      }
+    ]
+  },
+  {
+    "id": "cmp-fund-nofee",
+    "type": "promotion",
+    "title": "ยกเว้นค่าธรรมเนียมขายกองทุน Global Equity",
+    "summary": "ยกเว้น Front-end Fee สำหรับกองทุนหุ้นต่างประเทศ 12 กองที่คัดเลือก ตลอดแคมเปญ",
+    "cover": "/campaigns/fund-nofee.svg",
+    "featured": true,
+    "products": ["mutual-fund", "global"],
+    "segments": ["hnw", "moderate", "idle-cash"],
+    "startOffset": -20,
+    "endOffset": 26,
+    "conditions": [
+      "ซื้อกองทุนในรายการที่กำหนด มูลค่าตั้งแต่ 500,000 บาทขึ้นไปต่อรายการ",
+      "เฉพาะคำสั่งซื้อที่ทำรายการผ่านผู้แนะนำการลงทุนของ Yuanta",
+      "ไม่สามารถใช้ร่วมกับรายการส่งเสริมการขายอื่นในช่วงเวลาเดียวกัน"
+    ],
+    "terms": [
+      "ยกเว้นค่าธรรมเนียมการขาย (Front-end Fee) เต็มจำนวนสำหรับรายการที่เข้าเงื่อนไข",
+      "ค่าธรรมเนียมการจัดการและค่าใช้จ่ายอื่นของกองทุนยังคงเป็นไปตามหนังสือชี้ชวน",
+      "บริษัทขอสงวนสิทธิ์ในการเปลี่ยนแปลงรายชื่อกองทุนที่เข้าร่วมโดยจะแจ้งให้ทราบล่วงหน้า"
+    ],
+    "disclaimer": "ผู้ลงทุนควรศึกษาข้อมูลในหนังสือชี้ชวนก่อนตัดสินใจลงทุน กองทุนนี้ลงทุนในต่างประเทศและมีความเสี่ยงด้านอัตราแลกเปลี่ยน",
+    "materials": [
+      {
+        "id": "mat-fund-line",
+        "type": "line-image",
+        "label": "ภาพสำหรับส่ง LINE (1040×1040)",
+        "url": "/campaigns/fund-nofee.svg",
+        "version": "v1.4",
+        "approved": true
+      },
+      {
+        "id": "mat-fund-pdf",
+        "type": "pdf",
+        "label": "รายชื่อกองทุนที่เข้าร่วมแคมเปญ",
+        "url": "/mock-reports/sample-report.pdf",
+        "version": "v1.4",
+        "approved": true
+      },
+      {
+        "id": "mat-fund-script",
+        "type": "script",
+        "label": "สคริปต์สนทนาสำหรับโทรหาลูกค้า",
+        "url": "สวัสดีครับคุณ{ชื่อลูกค้า} ช่วงนี้ยวนต้ายกเว้นค่าธรรมเนียมขายกองทุนหุ้นต่างประเทศ 12 กองที่เราคัดมาแล้วครับ จากพอร์ตของคุณตอนนี้มีเงินสดคงค้างอยู่พอสมควร ผมเลยคิดว่าจังหวะนี้น่าจะเหมาะทยอยสะสม ผมขอส่งรายชื่อกองทุนให้ดูก่อนได้ไหมครับ",
+        "version": "v1.1",
+        "approved": true
+      }
+    ],
+    "clients": [
+      { "clientId": "110002", "status": "sent" },
+      { "clientId": "110005", "status": "interested" },
+      { "clientId": "110008", "status": "not-sent" }
+    ]
+  },
+  {
+    "id": "evt-global-outlook",
+    "type": "event",
+    "title": "Yuanta Global Outlook 2027 — สัมมนาใหญ่ประจำปี",
+    "summary": "มุมมองการลงทุนปี 2027 จากทีมกลยุทธ์ พร้อมช่วงถาม-ตอบกับนักวิเคราะห์",
+    "cover": "/campaigns/global-outlook.svg",
+    "featured": true,
+    "products": ["stock", "mutual-fund", "global"],
+    "segments": ["uhnw", "hnw"],
+    "startOffset": -14,
+    "endOffset": 9,
+    "eventOffset": 12,
+    "format": "onsite",
+    "venue": "ห้องแกรนด์บอลรูม โรงแรมแกรนด์ ไฮแอท เอราวัณ กรุงเทพฯ",
+    "seatsTotal": 120,
+    "seatsLeftSeed": 18,
+    "agenda": [
+      { "time": "13:00 - 13:30", "title": "ลงทะเบียนและรับของที่ระลึก" },
+      {
+        "time": "13:30 - 14:30",
+        "title": "เศรษฐกิจโลกปี 2027: จุดเปลี่ยนของวัฏจักรดอกเบี้ย",
+        "speaker": "ดร. ณัฐวุฒิ ภักดีวงศ์"
+      },
+      {
+        "time": "14:30 - 15:30",
+        "title": "กลยุทธ์จัดพอร์ตรับความผันผวน",
+        "speaker": "คุณพิมพ์ชนก อารีย์กุล"
+      },
+      { "time": "15:30 - 16:00", "title": "ช่วงถาม-ตอบกับทีมนักวิเคราะห์" }
+    ],
+    "speakers": [
+      { "name": "ดร. ณัฐวุฒิ ภักดีวงศ์", "title": "Head of Investment Strategy, Yuanta Securities" },
+      { "name": "คุณพิมพ์ชนก อารีย์กุล", "title": "Senior Portfolio Strategist" }
+    ],
+    "conditions": [
+      "สงวนสิทธิ์สำหรับลูกค้าระดับ HNW ขึ้นไป ที่มีพอร์ตกับ Yuanta",
+      "ลงทะเบียนล่วงหน้าผ่านผู้แนะนำการลงทุน จำกัด 2 ที่นั่งต่อหนึ่งบัญชี",
+      "ที่นั่งจะได้รับการยืนยันตามลำดับการลงทะเบียน"
+    ],
+    "terms": [
+      "กรุณาแสดงอีเมลยืนยันการลงทะเบียน ณ จุดลงทะเบียนหน้างาน",
+      "หากไม่สามารถเข้าร่วมได้ กรุณาแจ้งล่วงหน้าอย่างน้อย 2 วันทำการเพื่อเปิดที่นั่งให้ลูกค้าท่านอื่น",
+      "บริษัทขอสงวนสิทธิ์ในการเปลี่ยนแปลงกำหนดการโดยจะแจ้งให้ทราบล่วงหน้า"
+    ],
+    "disclaimer": "เนื้อหาในงานสัมมนาจัดทำขึ้นเพื่อให้ข้อมูลประกอบการตัดสินใจเท่านั้น มิได้เป็นการชี้นำหรือเสนอแนะให้ซื้อขายหลักทรัพย์ใด",
+    "materials": [
+      {
+        "id": "mat-outlook-line",
+        "type": "line-image",
+        "label": "การ์ดเชิญสำหรับส่ง LINE",
+        "url": "/campaigns/global-outlook.svg",
+        "version": "v1.2",
+        "approved": true
+      },
+      {
+        "id": "mat-outlook-pdf",
+        "type": "pdf",
+        "label": "กำหนดการฉบับเต็ม",
+        "url": "/mock-reports/sample-report.pdf",
+        "version": "v1.2",
+        "approved": true
+      },
+      {
+        "id": "mat-outlook-script",
+        "type": "script",
+        "label": "สคริปต์ชวนลูกค้าเข้าร่วมงาน",
+        "url": "สวัสดีครับคุณ{ชื่อลูกค้า} ปีนี้ยวนต้าจัดสัมมนาใหญ่ Global Outlook 2027 ที่โรงแรมแกรนด์ ไฮแอท เอราวัณครับ มีทีมกลยุทธ์มาเล่ามุมมองปีหน้าและเปิดถาม-ตอบด้วย ที่นั่งจำกัดและตอนนี้เหลือไม่มากแล้ว ผมสำรองที่นั่งไว้ให้คุณเลยไหมครับ",
+        "version": "v1.0",
+        "approved": true
+      }
+    ],
+    "clients": [
+      { "clientId": "110001", "rsvp": "confirmed" },
+      { "clientId": "110004", "rsvp": "registered" },
+      { "clientId": "110007", "rsvp": "confirmed" },
+      { "clientId": "110002", "status": "sent" },
+      { "clientId": "110005", "status": "not-sent" }
+    ]
+  },
+  {
+    "id": "evt-fund-webinar",
+    "type": "event",
+    "title": "Fund Talk Live: เจาะกองทุน AI & Semiconductor",
+    "summary": "สัมมนาออนไลน์ 1 ชั่วโมง ร่วมกับ บลจ. ชั้นนำ เจาะลึกกองทุนธีมเทคโนโลยี",
+    "cover": "/campaigns/fund-webinar.svg",
+    "featured": false,
+    "products": ["mutual-fund"],
+    "segments": ["hnw", "moderate", "aggressive"],
+    "startOffset": -5,
+    "endOffset": 2,
+    "eventOffset": 3,
+    "format": "online",
+    "venue": "Zoom Webinar",
+    "joinUrl": "https://zoom.example.com/j/yuanta-fundtalk",
+    "seatsTotal": 500,
+    "seatsLeftSeed": 213,
+    "agenda": [
+      { "time": "19:00 - 19:10", "title": "เปิดงานและแนะนำวิทยากร" },
+      {
+        "time": "19:10 - 19:50",
+        "title": "ธีม AI & Semiconductor: ยังไปต่อได้อีกไกลแค่ไหน",
+        "speaker": "คุณวรวิทย์ เจริญสุข"
+      },
+      { "time": "19:50 - 20:00", "title": "ถาม-ตอบผ่านช่องแชท" }
+    ],
+    "speakers": [
+      { "name": "คุณวรวิทย์ เจริญสุข", "title": "Fund Manager, พันธมิตร บลจ." }
+    ],
+    "conditions": [
+      "เปิดให้ลูกค้าทุกระดับที่มีบัญชีกองทุนกับ Yuanta เข้าร่วม",
+      "ลงทะเบียนล่วงหน้าเพื่อรับลิงก์เข้าร่วมทางอีเมล"
+    ],
+    "terms": [
+      "ลิงก์เข้าร่วมเป็นสิทธิ์เฉพาะบุคคล ไม่ควรส่งต่อให้ผู้อื่น",
+      "มีการบันทึกวิดีโอและส่งให้ผู้ลงทะเบียนภายหลังงาน"
+    ],
+    "disclaimer": "เนื้อหาในงานสัมมนาจัดทำขึ้นเพื่อให้ข้อมูลเท่านั้น ผู้ลงทุนควรศึกษาข้อมูลในหนังสือชี้ชวนก่อนตัดสินใจลงทุน",
+    "materials": [
+      {
+        "id": "mat-webinar-line",
+        "type": "line-image",
+        "label": "การ์ดเชิญสำหรับส่ง LINE",
+        "url": "/campaigns/fund-webinar.svg",
+        "version": "v1.0",
+        "approved": true
+      },
+      {
+        "id": "mat-webinar-script",
+        "type": "script",
+        "label": "ข้อความเชิญสำหรับส่ง LINE",
+        "url": "สวัสดีครับคุณ{ชื่อลูกค้า} วันที่ {วันจัดงาน} ยวนต้าจัด Fund Talk Live ออนไลน์ เจาะกองทุนธีม AI และ Semiconductor ร่วมกับผู้จัดการกองทุนโดยตรงครับ ใช้เวลาประมาณ 1 ชั่วโมง ดูผ่าน Zoom ที่บ้านได้เลย ผมลงทะเบียนให้คุณไว้ไหมครับ",
+        "version": "v1.0",
+        "approved": true
+      }
+    ],
+    "clients": [
+      { "clientId": "110005", "rsvp": "registered" },
+      { "clientId": "110008", "status": "sent" },
+      { "clientId": "110002", "status": "interested" }
+    ]
+  },
+  {
+    "id": "cmp-bond-primary",
+    "type": "promotion",
+    "title": "หุ้นกู้ออกใหม่ — ผลตอบแทน 4.25% อายุ 3 ปี",
+    "summary": "เปิดจองรอบผู้ลงทุนรายใหญ่ อันดับความน่าเชื่อถือ A- เริ่มจองซื้อเร็ว ๆ นี้",
+    "cover": "/campaigns/bond-primary.svg",
+    "featured": false,
+    "products": ["bond"],
+    "segments": ["hnw", "conservative", "moderate", "idle-cash"],
+    "startOffset": 6,
+    "endOffset": 40,
+    "conditions": [
+      "เปิดจองสำหรับผู้ลงทุนรายใหญ่ (High Net Worth) ตามนิยามของสำนักงาน ก.ล.ต.",
+      "จองซื้อขั้นต่ำ 100,000 บาท และทวีคูณของ 100,000 บาท"
+    ],
+    "terms": [
+      "อัตราดอกเบี้ย 4.25% ต่อปี จ่ายดอกเบี้ยทุก 6 เดือน",
+      "อายุตราสาร 3 ปี ไม่มีสิทธิ์ไถ่ถอนก่อนกำหนด",
+      "การจัดสรรเป็นไปตามดุลพินิจของผู้จัดจำหน่าย"
+    ],
+    "disclaimer": "ผู้ลงทุนควรศึกษาข้อมูลในหนังสือชี้ชวนและพิจารณาความเสี่ยงด้านเครดิตของผู้ออกตราสารก่อนตัดสินใจลงทุน",
+    "materials": [
+      {
+        "id": "mat-bond-pdf",
+        "type": "pdf",
+        "label": "สรุปเงื่อนไขหุ้นกู้",
+        "url": "/mock-reports/sample-report.pdf",
+        "version": "v0.9-draft",
+        "approved": false,
+        "pendingReason": "รอ Filing มีผลใช้บังคับ จึงจะเผยแพร่ได้"
+      }
+    ],
+    "clients": [
+      { "clientId": "110003", "status": "not-sent" },
+      { "clientId": "110005", "status": "not-sent" },
+      { "clientId": "110006", "status": "not-sent" }
+    ]
+  },
+  {
+    "id": "evt-elite-dinner",
+    "type": "event",
+    "title": "Elite Investor Dinner Talk — เฉพาะลูกค้า UHNW",
+    "summary": "วงสนทนาขนาดเล็กกับผู้บริหารกองทุน พร้อมอาหารค่ำ จำกัด 40 ที่นั่ง",
+    "cover": "/campaigns/elite-dinner.svg",
+    "featured": false,
+    "products": ["global", "fcn"],
+    "segments": ["uhnw"],
+    "startOffset": -8,
+    "endOffset": 4,
+    "eventOffset": 6,
+    "format": "onsite",
+    "venue": "ห้องอาหาร Mezzaluna ชั้น 65 โรงแรมเลอบัว สเตททาวเวอร์",
+    "seatsTotal": 40,
+    "seatsLeftSeed": 0,
+    "agenda": [
+      { "time": "18:00 - 18:30", "title": "Welcome Cocktail" },
+      {
+        "time": "18:30 - 20:00",
+        "title": "วงสนทนา: การจัดพอร์ตข้ามวัฏจักรสำหรับความมั่งคั่งระยะยาว",
+        "speaker": "ดร. ณัฐวุฒิ ภักดีวงศ์"
+      },
+      { "time": "20:00 - 21:00", "title": "อาหารค่ำและสานสัมพันธ์" }
+    ],
+    "speakers": [
+      { "name": "ดร. ณัฐวุฒิ ภักดีวงศ์", "title": "Head of Investment Strategy, Yuanta Securities" }
+    ],
+    "conditions": [
+      "สงวนสิทธิ์เฉพาะลูกค้าระดับ UHNW ที่ได้รับเชิญ จำกัด 1 ที่นั่งต่อหนึ่งบัญชี"
+    ],
+    "terms": [
+      "การเข้าร่วมเป็นไปตามคำเชิญเฉพาะบุคคล ไม่สามารถโอนสิทธิ์ให้ผู้อื่นได้",
+      "กรุณาแจ้งข้อจำกัดด้านอาหารล่วงหน้าอย่างน้อย 3 วันทำการ"
+    ],
+    "disclaimer": "เนื้อหาในงานจัดทำขึ้นเพื่อให้ข้อมูลเท่านั้น มิได้เป็นการชี้นำหรือเสนอแนะให้ซื้อขายหลักทรัพย์ใด",
+    "materials": [
+      {
+        "id": "mat-dinner-line",
+        "type": "line-image",
+        "label": "การ์ดเชิญสำหรับส่ง LINE",
+        "url": "/campaigns/elite-dinner.svg",
+        "version": "v1.1",
+        "approved": true
+      }
+    ],
+    "clients": [
+      { "clientId": "110001", "rsvp": "confirmed" },
+      { "clientId": "110007", "rsvp": "confirmed" },
+      { "clientId": "110004", "status": "sent" }
+    ]
+  },
+  {
+    "id": "cmp-stock-fee",
+    "type": "promotion",
+    "title": "ลดค่าคอมมิชชันหุ้นไทย 50% สำหรับบัญชี Cash Balance",
+    "summary": "แคมเปญเปิดบัญชีใหม่ไตรมาส 3 — ปิดรับแล้ว",
+    "cover": "/campaigns/stock-fee.svg",
+    "featured": false,
+    "products": ["stock"],
+    "segments": ["hnw", "aggressive", "moderate"],
+    "startOffset": -45,
+    "endOffset": -3,
+    "conditions": [
+      "เฉพาะบัญชี Cash Balance ที่เปิดใหม่ภายในระยะเวลาแคมเปญ",
+      "มูลค่าการซื้อขายสะสมตั้งแต่ 5,000,000 บาทขึ้นไปภายใน 90 วัน"
+    ],
+    "terms": [
+      "ส่วนลดค่าคอมมิชชัน 50% มีผล 6 เดือนนับจากวันเปิดบัญชี",
+      "ไม่รวมค่าธรรมเนียมตลาดหลักทรัพย์และภาษีมูลค่าเพิ่ม"
+    ],
+    "disclaimer": "การลงทุนมีความเสี่ยง ผู้ลงทุนควรศึกษาข้อมูลก่อนตัดสินใจลงทุน",
+    "materials": [
+      {
+        "id": "mat-stockfee-line",
+        "type": "line-image",
+        "label": "ภาพสำหรับส่ง LINE (1040×1040)",
+        "url": "/campaigns/stock-fee.svg",
+        "version": "v1.0",
+        "approved": true
+      }
+    ],
+    "clients": [
+      { "clientId": "110002", "status": "redeemed" },
+      { "clientId": "110008", "status": "sent" }
+    ]
+  },
+  {
+    "id": "evt-tax-planning",
+    "type": "event",
+    "title": "Workshop วางแผนภาษีปลายปีด้วยกองทุนลดหย่อน",
+    "summary": "เวิร์กช็อปออนไลน์ที่จัดไปแล้ว — บันทึกการเข้าร่วมและติดตามผลได้ที่นี่",
+    "cover": "/campaigns/tax-planning.svg",
+    "featured": false,
+    "products": ["mutual-fund"],
+    "segments": ["hnw", "moderate", "conservative"],
+    "startOffset": -30,
+    "endOffset": -12,
+    "eventOffset": -8,
+    "format": "online",
+    "venue": "Microsoft Teams Live",
+    "joinUrl": "https://teams.example.com/l/yuanta-taxplanning",
+    "seatsTotal": 200,
+    "seatsLeftSeed": 46,
+    "agenda": [
+      { "time": "19:00 - 19:40", "title": "สิทธิลดหย่อนภาษีปี 2569 ที่ต้องรู้", "speaker": "คุณอรทัย วงศ์สถิตย์" },
+      { "time": "19:40 - 20:15", "title": "เลือกกองทุน Thai ESG และ RMF ให้เหมาะกับพอร์ต" },
+      { "time": "20:15 - 20:30", "title": "ถาม-ตอบ" }
+    ],
+    "speakers": [
+      { "name": "คุณอรทัย วงศ์สถิตย์", "title": "Wealth Planning Specialist, Yuanta Securities" }
+    ],
+    "conditions": ["เปิดให้ลูกค้าทุกระดับที่มีบัญชีกองทุนกับ Yuanta เข้าร่วม"],
+    "terms": ["มีการบันทึกวิดีโอและส่งให้ผู้ลงทะเบียนภายหลังงาน"],
+    "disclaimer": "เนื้อหาในงานสัมมนาจัดทำขึ้นเพื่อให้ข้อมูลเท่านั้น ผู้ลงทุนควรศึกษาข้อมูลในหนังสือชี้ชวนก่อนตัดสินใจลงทุน",
+    "materials": [
+      {
+        "id": "mat-tax-pdf",
+        "type": "pdf",
+        "label": "สไลด์ประกอบการสัมมนา",
+        "url": "/mock-reports/sample-report.pdf",
+        "version": "v1.0",
+        "approved": true
+      }
+    ],
+    "clients": [
+      { "clientId": "110002", "rsvp": "attended" },
+      { "clientId": "110005", "rsvp": "attended" },
+      { "clientId": "110006", "rsvp": "no-show" },
+      { "clientId": "110003", "rsvp": "confirmed" }
+    ]
+  },
+  {
+    "id": "cmp-global-dr",
+    "type": "promotion",
+    "title": "DR หุ้นต่างประเทศ — ยกเว้นค่าธรรมเนียมแปลงสภาพ",
+    "summary": "ลงทุนหุ้นต่างประเทศผ่าน DR ด้วยเงินบาท ไม่ต้องเปิดบัญชีต่างประเทศ",
+    "cover": "/campaigns/global-dr.svg",
+    "featured": false,
+    "products": ["global", "stock"],
+    "segments": ["aggressive", "moderate", "idle-cash"],
+    "startOffset": -2,
+    "endOffset": 18,
+    "conditions": [
+      "ซื้อ DR ในรายการที่กำหนด ผ่านบัญชีซื้อขายหลักทรัพย์กับ Yuanta",
+      "ไม่จำกัดมูลค่าขั้นต่ำต่อรายการ"
+    ],
+    "terms": [
+      "ยกเว้นค่าธรรมเนียมแปลงสภาพ (Conversion Fee) ตลอดระยะเวลาแคมเปญ",
+      "ค่าคอมมิชชันซื้อขายยังคงเป็นไปตามอัตราปกติของบัญชี"
+    ],
+    "disclaimer": "DR มีความเสี่ยงด้านอัตราแลกเปลี่ยนและสภาพคล่อง ผู้ลงทุนควรศึกษาข้อมูลก่อนตัดสินใจลงทุน",
+    "materials": [
+      {
+        "id": "mat-dr-line",
+        "type": "line-image",
+        "label": "ภาพสำหรับส่ง LINE (1040×1040)",
+        "url": "/campaigns/global-dr.svg",
+        "version": "v1.0",
+        "approved": true
+      },
+      {
+        "id": "mat-dr-script",
+        "type": "script",
+        "label": "สคริปต์สนทนาสำหรับโทรหาลูกค้า",
+        "url": "สวัสดีครับคุณ{ชื่อลูกค้า} ถ้าคุณสนใจหุ้นต่างประเทศแต่ไม่อยากเปิดบัญชีต่างประเทศ ตอนนี้ซื้อผ่าน DR ด้วยเงินบาทได้เลยครับ และช่วงนี้ยวนต้ายกเว้นค่าธรรมเนียมแปลงสภาพให้ด้วย ผมส่งรายชื่อ DR ที่น่าสนใจให้ดูไหมครับ",
+        "version": "v1.0",
+        "approved": true
+      }
+    ],
+    "clients": [
+      { "clientId": "110001", "status": "sent" },
+      { "clientId": "110004", "status": "not-sent" },
+      { "clientId": "110008", "status": "not-sent" }
+    ]
+  },
+  {
+    "id": "evt-wealth-clinic",
+    "type": "event",
+    "title": "Wealth Clinic — ตรวจสุขภาพพอร์ตตัวต่อตัว",
+    "summary": "นัดหมายรายบุคคล 45 นาที กับทีม Wealth Planning ที่สำนักงานใหญ่",
+    "cover": "/campaigns/wealth-clinic.svg",
+    "featured": false,
+    "products": ["stock", "mutual-fund", "bond"],
+    "segments": ["hnw", "uhnw", "conservative"],
+    "startOffset": -3,
+    "endOffset": 20,
+    "eventOffset": 24,
+    "format": "onsite",
+    "venue": "ชั้น 10 อาคารลุมพินีทาวเวอร์ (สำนักงานใหญ่ Yuanta)",
+    "seatsTotal": 60,
+    "seatsLeftSeed": 41,
+    "agenda": [
+      { "time": "10:00 - 16:00", "title": "รอบนัดหมายรายบุคคล รอบละ 45 นาที" }
+    ],
+    "speakers": [
+      { "name": "คุณอรทัย วงศ์สถิตย์", "title": "Wealth Planning Specialist, Yuanta Securities" }
+    ],
+    "conditions": [
+      "สงวนสิทธิ์สำหรับลูกค้าระดับ HNW ขึ้นไป",
+      "หนึ่งบัญชีต่อหนึ่งรอบนัดหมาย"
+    ],
+    "terms": [
+      "กรุณายืนยันรอบนัดหมายล่วงหน้าอย่างน้อย 2 วันทำการ",
+      "หากต้องการเลื่อนนัด กรุณาแจ้งผ่านผู้แนะนำการลงทุนของท่าน"
+    ],
+    "disclaimer": "คำแนะนำที่ได้รับจัดทำขึ้นจากข้อมูลที่ลูกค้าให้ไว้ ณ ขณะนั้น มิได้เป็นการรับประกันผลตอบแทนในอนาคต",
+    "materials": [
+      {
+        "id": "mat-clinic-line",
+        "type": "line-image",
+        "label": "การ์ดเชิญสำหรับส่ง LINE",
+        "url": "/campaigns/wealth-clinic.svg",
+        "version": "v1.0",
+        "approved": true
+      },
+      {
+        "id": "mat-clinic-script",
+        "type": "script",
+        "label": "สคริปต์ชวนลูกค้านัดหมาย",
+        "url": "สวัสดีครับคุณ{ชื่อลูกค้า} เดือนนี้ยวนต้าเปิด Wealth Clinic ให้ลูกค้าเข้ามาตรวจสุขภาพพอร์ตตัวต่อตัวกับทีม Wealth Planning รอบละ 45 นาทีครับ ผมดูพอร์ตคุณแล้วคิดว่าน่าจะได้ประโยชน์ ผมจองรอบให้คุณไว้ไหมครับ",
+        "version": "v1.0",
+        "approved": true
+      }
+    ],
+    "clients": [
+      { "clientId": "110003", "rsvp": "registered" },
+      { "clientId": "110006", "status": "sent" },
+      { "clientId": "110005", "status": "not-sent" }
+    ]
+  }
+]

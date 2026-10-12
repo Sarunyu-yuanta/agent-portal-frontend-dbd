@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { mockHouseViewStrategies } from "@/lib/mock-data";
+import { mockCampaigns } from "@/lib/campaign-mock-data";
 import { maskName } from "@/lib/mask-name";
 import type { Client } from "@/types/domain";
 import {
@@ -302,6 +303,16 @@ function labelFor(pathname: string, ctx: BreadcrumbContext): string | null {
   if (insight) {
     const strategy = mockHouseViewStrategies.find((s) => s.id === insight[1]);
     return strategy?.name ?? "Insight";
+  }
+
+  // A campaign is named by its title, not by its id — the rung has to read
+  // "Promotion/Events / FCN Autocall ซีรีส์พิเศษ…", not "… / cmp-fcn-autocall".
+  const campaign = /^\/promotions\/([^/]+)/.exec(pathname);
+  if (campaign) {
+    const found = mockCampaigns.find(
+      (c) => c.id === decodeURIComponent(campaign[1]),
+    );
+    return found?.title ?? "แคมเปญ";
   }
 
   return catalogLabel(pathname);

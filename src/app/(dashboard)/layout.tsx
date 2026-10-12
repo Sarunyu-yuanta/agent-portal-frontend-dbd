@@ -18,6 +18,7 @@ import { HeaderSlotProvider, useHeaderSlot } from "./header-slot-context";
 import { PrivacyProvider } from "@/contexts/privacy-context";
 import { NotesProvider, useNotes } from "@/contexts/notes-context";
 import { OrdersProvider } from "@/contexts/orders-context";
+import { CampaignsProvider } from "@/contexts/campaigns-context";
 import {
   KYC_ALERTS_ENABLED,
   NOTES_ENABLED,
@@ -316,9 +317,14 @@ export default function DashboardLayout({
             behind a flag would mean every `useOrders` call site needing a
             branch for the case where it throws. */}
         <OrdersProvider>
-          <HeaderSlotProvider>
-            <DashboardLayoutInner>{children}</DashboardLayoutInner>
-          </HeaderSlotProvider>
+          {/* Mounted beside `OrdersProvider` and for the same reason: a share
+              or a registration placed on a campaign detail page has to reach
+              the Promotions list's KPI strip without either remounting. */}
+          <CampaignsProvider>
+            <HeaderSlotProvider>
+              <DashboardLayoutInner>{children}</DashboardLayoutInner>
+            </HeaderSlotProvider>
+          </CampaignsProvider>
         </OrdersProvider>
       </NotesProvider>
     </PrivacyProvider>
