@@ -115,6 +115,7 @@ export const mockCampaigns: Campaign[] = campaignsRaw.map((raw) => {
     type: raw.type as CampaignType,
     title: raw.title,
     summary: raw.summary,
+    description: raw.description,
     cover: raw.cover,
     featured: raw.featured,
     products: raw.products as CampaignProduct[],

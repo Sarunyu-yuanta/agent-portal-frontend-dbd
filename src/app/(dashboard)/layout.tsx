@@ -4,7 +4,6 @@ import { Suspense, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   NavHeaderIconButton,
-  Tag,
   type NotificationItem,
 } from "@sarunyu/system-one";
 import { ListIcon } from "@phosphor-icons/react";
@@ -34,18 +33,6 @@ import { useKycNotificationFeed } from "./use-kyc-notification-feed";
 import { useOrderNotificationFeed } from "./orders/use-order-notification-feed";
 import { useDayItemModals } from "./calendar/use-day-item-modals";
 
-function MarketOpenBadge() {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="relative flex items-center justify-center w-3 h-3">
-        <span className="absolute inline-flex w-full h-full rounded-full bg-success opacity-75 animate-ping" />
-        <span className="relative inline-flex w-2 h-2 rounded-full bg-success" />
-      </div>
-      <Tag text="Market Open in 1h 45m" variant="green" size="small" />
-    </div>
-  );
-}
-
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -53,8 +40,8 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const {
     title: pageTitle,
+    titleIcon: PageTitleIcon,
     breadcrumb,
-    isCommandCenter,
     isPerformance,
     isFullWidth,
     isMobileFullBleed,
@@ -183,12 +170,19 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                 </div>
               ) : (
                 <div className="hidden xl:flex items-center gap-3">
+                  {PageTitleIcon && (
+                    <PageTitleIcon
+                      size={20}
+                      weight="fill"
+                      className="text-foreground shrink-0"
+                      aria-hidden
+                    />
+                  )}
                   {pageTitle && (
                     <h1 className="type-subtitle-1 text-foreground">
                       {pageTitle}
                     </h1>
                   )}
-                  {isCommandCenter && <MarketOpenBadge />}
                 </div>
               )}
             </div>
@@ -262,13 +256,20 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
               {!breadcrumb &&
                 !isFullWidth &&
                 !isMobileFullBleed &&
-                (pageTitle || isCommandCenter) && (
+                pageTitle && (
                   <div className="flex items-center justify-between gap-3 xl:hidden">
                     <div className="flex items-center gap-3">
+                      {PageTitleIcon && (
+                        <PageTitleIcon
+                          size={20}
+                          weight="fill"
+                          className="text-foreground shrink-0"
+                          aria-hidden
+                        />
+                      )}
                       {pageTitle && (
                         <h1 className="type-h5 text-foreground">{pageTitle}</h1>
                       )}
-                      {isCommandCenter && <MarketOpenBadge />}
                     </div>
                     {isPerformance && (
                       <div

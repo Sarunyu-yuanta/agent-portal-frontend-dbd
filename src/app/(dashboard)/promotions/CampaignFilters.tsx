@@ -137,11 +137,22 @@ function activeChips(filters: Filters): {
 }
 
 export function CampaignFilters({
+  tabs,
   filters,
   onChange,
   onClear,
   previewCount,
 }: {
+  /**
+   * The list's tab strip, rendered at the left of the same row as search and
+   * the filter button.
+   *
+   * Taken as a slot rather than left for the page to lay out beside this,
+   * because the three controls share one row and one set of breakpoints — and
+   * because the chips below them belong to the same block. The page still owns
+   * what the tabs *are*.
+   */
+  tabs?: React.ReactNode;
   filters: Filters;
   onChange: (next: Partial<Filters>) => void;
   onClear: () => void;
@@ -174,28 +185,47 @@ export function CampaignFilters({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex gap-2.5">
-        <SearchInput
-          placeholder="ค้นหาชื่อแคมเปญ"
-          value={filters.search}
-          onChange={(search) => onChange({ search })}
-          onClear={() => onChange({ search: "" })}
-          className="min-w-0 flex-1"
-        />
-        <Button
-          variant="outline"
-          size="lg"
-          className="shrink-0"
-          leftIcon={<FunnelSimpleIcon size={16} weight="bold" />}
-          onClick={openDialog}
-        >
-          ตัวกรอง
-          {chips.length > 0 && (
-            <span className="ml-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-primary-action px-1 text-[11px] font-bold tabular-nums text-on-primary-action">
-              {chips.length}
-            </span>
-          )}
-        </Button>
+      {/* The list's toolbar: tabs on the left, search and filter pushed to the
+          right. One row from `md` — below that there is no width for both, so
+          the controls drop under the tabs and the search takes the full line. */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+        {tabs && (
+          // The bleed lets the tab strip scroll past the page padding on a
+          // phone. From `md` the tabs fit, so it is cancelled rather than left
+          // to eat into the row beside them.
+          <div className="transparent-tabs scrollable-tabs -mx-4 min-w-0 pl-4 md:mx-0 md:pl-0">
+            {tabs}
+          </div>
+        )}
+
+        {/* `items-center` because the two are not quite the same height — the
+            small search box is 38px and the button 36px. */}
+        <div className="flex items-center gap-2.5 md:ml-auto md:shrink-0">
+          <SearchInput
+            placeholder="ค้นหาชื่อแคมเปญ"
+            value={filters.search}
+            onChange={(search) => onChange({ search })}
+            onClear={() => onChange({ search: "" })}
+            // `sm`, not the default `lg`: at 44px the field towered over the
+            // button beside it and over the tabs it shares the row with.
+            size="sm"
+            className="min-w-0 flex-1 md:w-[320px] md:flex-none"
+          />
+          <Button
+            variant="outline"
+            size="lg"
+            className="shrink-0"
+            leftIcon={<FunnelSimpleIcon size={16} weight="bold" />}
+            onClick={openDialog}
+          >
+            ตัวกรอง
+            {chips.length > 0 && (
+              <span className="ml-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-primary-action px-1 text-[11px] font-bold tabular-nums text-on-primary-action">
+                {chips.length}
+              </span>
+            )}
+          </Button>
+        </div>
       </div>
 
       {chips.length > 0 && (

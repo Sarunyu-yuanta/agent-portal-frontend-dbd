@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { Card } from "@sarunyu/system-one";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -10,41 +11,49 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 export function CampaignDetailSkeleton() {
   return (
-    <div className="flex flex-col gap-6 pb-12">
-      <Skeleton className="hidden h-7 w-16 rounded-md xl:block" />
-      <Skeleton className="h-[180px] rounded-2xl sm:h-[240px] xl:h-[280px]" />
+    <div className="flex flex-col gap-5 pb-12 sm:gap-6">
+      <Skeleton className="hidden h-7 w-16 rounded-full xl:block" />
 
-      <Card variant="default" className="gap-0 p-0!">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="overflow-hidden rounded-2xl border border-border/50 bg-white">
+        <Skeleton className="h-[200px] rounded-none sm:h-[260px] xl:h-[300px]" />
+        <div className="hidden border-t border-border/50 xl:flex xl:items-stretch">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-start gap-2.5 p-4">
-              <Skeleton className="size-8 shrink-0 rounded-lg" />
-              <div className="flex w-full flex-col gap-1.5">
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-4 w-32" />
+            <Fragment key={i}>
+              {i > 0 && (
+                <div aria-hidden className="w-px shrink-0 self-stretch bg-border/50" />
+              )}
+              <div className="flex min-w-0 flex-1 items-start gap-3 p-4 sm:p-5">
+                <Skeleton className="size-10 shrink-0 rounded-xl" />
+                <div className="flex w-full flex-col gap-1.5">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
               </div>
-            </div>
+            </Fragment>
           ))}
         </div>
-      </Card>
+      </div>
 
       <div
-        className="flex flex-col gap-8 lg:grid lg:gap-8"
+        className="flex flex-col gap-5 lg:grid lg:gap-6"
         style={{ gridTemplateColumns: "minmax(0, 1fr) 360px", alignItems: "start" }}
       >
-        <div className="flex min-w-0 flex-col gap-8">
+        <div className="flex min-w-0 flex-col gap-5">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-3">
+            <div
+              key={i}
+              className="flex flex-col gap-3 rounded-2xl border border-border/50 p-5 sm:p-6"
+            >
               <Skeleton className="h-6 w-44" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-5/6" />
               <Skeleton className="h-4 w-3/4" />
             </div>
           ))}
-          <Skeleton className="h-[320px] rounded-lg" />
+          <Skeleton className="h-[320px] rounded-2xl" />
         </div>
 
-        <Card variant="default" className="gap-4">
+        <Card variant="default" className="gap-4 rounded-2xl">
           <Skeleton className="h-6 w-40" />
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-[112px] rounded-xl" />

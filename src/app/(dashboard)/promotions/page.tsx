@@ -11,20 +11,12 @@ import { useCampaignStore } from "@/contexts/campaigns-context";
 import { useScrollTopOnChange } from "@/hooks/use-scroll-top";
 import { setQueryState, withQuery } from "@/lib/query-state";
 import { todayDateKey } from "../calendar/calendar-grid";
-import {
-  CampaignSummaryBar,
-  type CampaignSummaryStat,
-} from "./CampaignSummaryBar";
 import { CampaignCard } from "./CampaignCard";
 import { CampaignFilters, type DropdownFilters } from "./CampaignFilters";
-import { FeaturedCarousel } from "./FeaturedCarousel";
 import { PromotionsSkeleton } from "./PromotionsSkeleton";
 import { PROMOTIONS_GRID_CSS } from "./promotions-grid-css";
 import {
-  campaignStatus,
   filterCampaigns,
-  isEventThisMonth,
-  notYetInvitedCount,
   hasActiveFilters,
   sortByEndingSoonest,
   type CampaignFilters as Filters,
@@ -36,27 +28,25 @@ import type { CampaignFormat, CampaignProduct, ClientSegment } from "@/types/dom
  * Promotions & Events — what the firm is running, and who of this IC's clients
  * it is for.
  *
- * The page answers two questions, in order: what is being pushed right now (the
- * hero, with the counts welded under it) and what else is running (the grid).
- * One column, full width — there is no side rail, and nothing is filed off to
- * the edge of the screen.
+ * One column, full width, and short: a strip of counts, a tab per campaign
+ * type, search beside a filter button, then the grid. No side rail and no
+ * featured hero — both were here and both went, each for its own reason
+ * recorded where it was removed.
  *
- * Deadlines used to live in a rail here. They are not lost: the grid is sorted
- * ending-soonest-first by default, and anything inside a week carries its own
- * "เหลือ N วัน" badge on the card, so the same information arrives in the place
- * the IC is already looking.
+ * The grid is sorted ending-soonest-first, which is the only place a deadline
+ * is expressed now that the cards are the design system's own and carry no
+ * countdown of their own. Worth knowing before changing the sort.
  *
- * Every campaign's status, countdown and eligible count is derived in
- * `campaign-data` rather than here; see that module for why.
+ * Every campaign's status and eligible count is derived in `campaign-data`
+ * rather than here; see that module for why.
  *
  * ## View state
  *
- * Tab, filters and the calendar's month all live in the query string, per the
- * app's convention: the tab is `push`ed (it is a destination the back button
- * should walk out of) and the refinements are `replace`d (they would otherwise
- * pile up history entries the IC has to click through to leave the page). That
- * also makes a filtered list a shareable link, which a promotions desk asks for
- * more than most.
+ * Tab and filters live in the query string, per the app's convention: the tab
+ * is `push`ed (it is a destination the back button should walk out of) and the
+ * refinements are `replace`d (they would otherwise pile up history entries the
+ * IC has to click through to leave the page). That also makes a filtered list a
+ * shareable link, which a promotions desk asks for more than most.
  */
 export default function PromotionsPage() {
   return (
@@ -68,23 +58,29 @@ export default function PromotionsPage() {
 
 const PATH = "/promotions";
 
-/** Up to three hero slides — more and it stops being a shortlist. */
-const FEATURED_LIMIT = 3;
-
+/**
+ * Two tabs, one per campaign type, with no combined view — see `CampaignTab`
+ * for why. Promotions lead because they are the larger half of the book and
+ * the first word in the section's own name.
+ */
 const TABS: { id: CampaignTab; title: string }[] = [
-  { id: "all", title: "ทั้งหมด" },
   { id: "promotion", title: "โปรโมชัน" },
   { id: "event", title: "สัมมนา/อีเว้นท์" },
 ];
 
+const DEFAULT_TAB: CampaignTab = "promotion";
+
+/** The default tab carries no `?tab=`, so a bare `/promotions` is canonical. */
 function normalizeTab(value: string | null): CampaignTab {
-  return TABS.some((t) => t.id === value) ? (value as CampaignTab) : "all";
+  return TABS.some((t) => t.id === value) ? (value as CampaignTab) : DEFAULT_TAB;
 }
 
 function PromotionsPageInner() {
   const searchParams = useSearchParams();
   const { data: campaigns, isLoading } = useCampaigns();
-  const { campaignClients, rsvps, seatsLeft } = useCampaignStore();
+  // Only the seat count reaches this page now — everything else the store
+  // holds is read on a campaign's own detail page.
+  const { seatsLeft } = useCampaignStore();
 
   // Anchored to the calendar day rather than a fresh `Date`, so the memos below
   // don't recompute on every render — same as the Dashboard.
@@ -130,55 +126,6 @@ function PromotionsPageInner() {
 
   // ── Derivations ───────────────────────────────────────────────────────────
 
-  const live = useMemo(
-    () => campaigns.filter((c) => campaignStatus(c, today) !== "ended"),
-    [campaigns, today],
-  );
-
-  const stats: CampaignSummaryStat[] = useMemo(() => {
-    const usable = campaigns.filter((c) => campaignStatus(c, today) === "active");
-    const eventsThisMonth = campaigns.filter((c) => isEventThisMonth(c, today));
-    // Distinct *people*, not seats: a client booked onto three seminars is one
-    // client the IC has got through to, and three would flatter the number.
-    // Scoped to events still ahead — attendance at a seminar held last month is
-    // history, and the tile beside it is already counting this month's events.
-    const registered = new Set(
-      rsvps
-        .filter((row) => live.some((c) => c.id === row.campaignId))
-        .map((row) => row.clientId),
-    );
-    // Live campaigns only, for the same reason: a client nobody invited to a
-    // campaign that has already closed is not work left to do.
-    const notInvited = live.reduce(
-      (sum, c) => sum + notYetInvitedCount(c, campaignClients),
-      0,
-    );
-
-    return [
-      { id: "usable", label: "โปรที่ใช้ได้", value: usable.length },
-      { id: "events", label: "อีเว้นท์เดือนนี้", value: eventsThisMonth.length },
-      { id: "registered", label: "ลูกค้าที่ลงทะเบียน", value: registered.size },
-      {
-        id: "not-invited",
-        label: "เข้าเงื่อนไขแต่ยังไม่ได้ชวน",
-        value: notInvited,
-        // The one number on this page that is work rather than context.
-        accent: true,
-      },
-    ];
-  }, [campaigns, campaignClients, rsvps, live, today]);
-
-  const featured = useMemo(
-    () =>
-      sortByEndingSoonest(
-        campaigns.filter(
-          (c) => c.featured && campaignStatus(c, today) !== "ended",
-        ),
-        today,
-      ).slice(0, FEATURED_LIMIT),
-    [campaigns, today],
-  );
-
   const visible = useMemo(
     () =>
       sortByEndingSoonest(filterCampaigns(campaigns, { tab, filters, today }), today),
@@ -213,37 +160,33 @@ function PromotionsPageInner() {
     <>
       <style>{PROMOTIONS_GRID_CSS}</style>
       <div className="flex flex-col gap-4 xl:gap-5">
-        {/* The hero block: featured artwork, with the counts welded underneath
-            as its base. One surface rounds and clips both — see
-            `CampaignSummaryBar` for why the counts live here rather than in a
-            row of tiles above. With nothing featured the ribbon stands alone
-            and simply rounds on all four corners. */}
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          {featured.length > 0 && (
-            <FeaturedCarousel campaigns={featured} today={today} />
-          )}
-          <CampaignSummaryBar stats={stats} welded={featured.length > 0} />
-        </div>
-
-        <div className="transparent-tabs scrollable-tabs -mx-4 pl-4 xl:-mx-6 xl:pl-6">
-          <TabGroup
-            items={TABS.map((t) => ({ id: t.id, title: t.title }))}
-            activeId={tab}
-            // `push`: a tab is a destination, and the back button should walk
-            // out of it rather than off the page.
-            onChange={(id) => updateQuery({ tab: id === "all" ? null : id }, "push")}
-            size="md"
-          />
-        </div>
-
+        {/* Tabs, search and the filter button share one row — see
+            `CampaignFilters`, which owns that row and the chips under it. */}
         <CampaignFilters
+          tabs={
+            <TabGroup
+              items={TABS.map((t) => ({ id: t.id, title: t.title }))}
+              activeId={tab}
+              // `push`: a tab is a destination, and the back button should walk
+              // out of it rather than off the page.
+              onChange={(id) =>
+                updateQuery({ tab: id === DEFAULT_TAB ? null : id }, "push")
+              }
+              size="md"
+            />
+          }
           filters={filters}
           onChange={setFilters}
           onClear={clearFilters}
           previewCount={previewCount}
         />
 
-        <FadeIn key={`${tab}-${visible.length}`}>
+        {/* Keyed on the tab alone. It used to carry `visible.length` too, which
+            changes on almost every keystroke in the search box — so the list
+            remounted and replayed its fade letter by letter, which read as a
+            flicker. Switching tab is a view swap worth animating; filtering one
+            down is the same view with fewer rows in it. */}
+        <FadeIn key={tab}>
           {visible.length === 0 ? (
             <EmptyState
               icon={
@@ -279,14 +222,17 @@ function PromotionsPageInner() {
 
 function emptyTitle(tab: CampaignTab, filters: Filters): string {
   if (hasActiveFilters(filters)) return "ไม่พบแคมเปญที่ค้นหา";
-  if (tab === "promotion") return "ยังไม่มีโปรโมชัน";
-  if (tab === "event") return "ยังไม่มีสัมมนา/อีเว้นท์";
-  return "ยังไม่มีแคมเปญ";
+  return tab === "promotion" ? "ยังไม่มีโปรโมชัน" : "ยังไม่มีสัมมนา/อีเว้นท์";
 }
 
-function emptyBody(_tab: CampaignTab, filters: Filters): string {
+function emptyBody(tab: CampaignTab, filters: Filters): string {
   if (hasActiveFilters(filters)) {
-    return "ลองค้นหาด้วยคำอื่น หรือล้างตัวกรองเพื่อดูแคมเปญทั้งหมด";
+    // Scoped to the tab now that there is no combined view to fall back to —
+    // telling someone to clear filters "to see everything" would promise a
+    // list that no longer exists.
+    return tab === "promotion"
+      ? "ลองค้นหาด้วยคำอื่น หรือล้างตัวกรองเพื่อดูโปรโมชันทั้งหมด"
+      : "ลองค้นหาด้วยคำอื่น หรือล้างตัวกรองเพื่อดูสัมมนา/อีเว้นท์ทั้งหมด";
   }
   return "เมื่อมีแคมเปญใหม่จากส่วนกลาง จะแสดงที่นี่";
 }

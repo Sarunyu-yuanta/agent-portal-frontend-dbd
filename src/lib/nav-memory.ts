@@ -16,7 +16,7 @@
 import { navRead, navRemove, navWrite } from "./nav-session";
 
 export type NavSectionKey =
-  | "dashboard"
+  | "command-center"
   | "client-hub"
   | "product-catalog"
   | "insights"
@@ -37,7 +37,7 @@ type NavSection = {
 };
 
 const SECTIONS: NavSection[] = [
-  { key: "dashboard", root: "/dashboard", prefixes: ["/dashboard"] },
+  { key: "command-center", root: "/command-center", prefixes: ["/command-center"] },
   // Full Profile (/client/:id) is Client 360's deepest level, not its own section.
   { key: "client-hub", root: "/client-hub", prefixes: ["/client-hub", "/client"] },
   { key: "product-catalog", root: "/product-catalog", prefixes: ["/product-catalog"] },

@@ -16,30 +16,13 @@ export function PromotionsSkeleton() {
       {/* Its own copy rather than the page's: this also serves as the Suspense
           fallback, which renders before the page component exists. */}
       <style>{PROMOTIONS_GRID_CSS}</style>
-      {/* Hero block: artwork with the counts welded under it, as one surface. */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        <Skeleton className="h-[240px] rounded-none sm:h-[300px] xl:h-[340px]" />
-        <div className="grid grid-cols-2 border-t border-border sm:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className={`flex flex-col gap-2 border-border px-4 py-3.5 sm:px-5 ${
-                i === 0 ? "" : "border-l"
-              } ${i % 2 === 0 ? "max-sm:border-l-0" : ""} max-sm:[&:nth-child(n+3)]:border-t`}
-            >
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-5 w-10" />
-            </div>
-          ))}
+      {/* The toolbar: tabs left, search and the filter button right. */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+        <Skeleton className="h-8 w-56 rounded-lg" />
+        <div className="flex items-center gap-2.5 md:ml-auto md:shrink-0">
+          <Skeleton className="h-[38px] flex-1 rounded-lg md:w-[320px] md:flex-none" />
+          <Skeleton className="h-9 w-[116px] shrink-0 rounded-lg" />
         </div>
-      </div>
-
-      <Skeleton className="h-8 w-72 rounded-lg" />
-
-      {/* Search, plus the button the four filters live behind. */}
-      <div className="flex gap-2.5">
-        <Skeleton className="h-11 flex-1 rounded-lg" />
-        <Skeleton className="h-11 w-[116px] shrink-0 rounded-lg" />
       </div>
 
       <div className="promotions-grid grid grid-cols-1 gap-4 sm:grid-cols-2">

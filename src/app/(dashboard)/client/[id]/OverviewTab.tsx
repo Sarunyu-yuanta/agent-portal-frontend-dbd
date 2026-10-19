@@ -9,8 +9,8 @@ import { useStickyRailTop } from "@/hooks/use-sticky-rail";
 import {
   NBA_MESSAGE_CLIENT,
   NbaComingSoonCard,
-} from "../../dashboard/NbaComingSoonCard";
-import { useNbaRows } from "../../dashboard/use-nba-rows";
+} from "../../command-center/NbaComingSoonCard";
+import { useNbaRows } from "../../command-center/use-nba-rows";
 import { useNotes } from "@/contexts/notes-context";
 import { REMINDERS_ENABLED } from "@/lib/feature-flags";
 import { dayFromKey, dayOffset, todayDateKey } from "../../calendar/calendar-grid";

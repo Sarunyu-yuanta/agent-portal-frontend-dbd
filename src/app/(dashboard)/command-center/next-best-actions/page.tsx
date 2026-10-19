@@ -26,7 +26,7 @@ export default function NextBestActionsPage() {
   const { isPrivate } = usePrivacy();
   // Falls back to the Dashboard on a cold entry — a pasted link, or a session
   // restored straight onto this page, where there is no trail to walk up.
-  const goBack = useSectionBack(() => "/dashboard");
+  const goBack = useSectionBack(() => "/command-center");
 
   // Opened from a Dashboard that was scrolled down; `<main>` owns the scroll, so
   // nothing resets it on its own.

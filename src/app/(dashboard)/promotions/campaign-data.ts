@@ -15,7 +15,6 @@
  * stay testable and the components stay about layout.
  */
 
-import { segmentsOfClient } from "@/lib/campaign-mock-data";
 import type {
   Campaign,
   CampaignClient,
@@ -96,54 +95,7 @@ export function isPastEvent(campaign: Campaign, today: Date): boolean {
   );
 }
 
-/** Whether an event's date falls in the same calendar month as `today`. */
-export function isEventThisMonth(campaign: Campaign, today: Date): boolean {
-  if (campaign.type !== "event" || !campaign.eventDate) return false;
-  const date = dayFromIso(campaign.eventDate);
-  return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth()
-  );
-}
-
 // ── Eligibility ─────────────────────────────────────────────────────────────
-
-/**
- * The clients a campaign is for, before anyone is excluded by hand.
- *
- * The segment match is the firm's rule; the per-client rows in the store can
- * still override it to ineligible with a reason (see {@link CampaignClient}).
- * Use {@link eligibleClientIds} when what you want is "who can actually be
- * sent this", which is almost always.
- */
-export function matchesSegments(campaign: Campaign, client: Client): boolean {
-  return segmentsOfClient(client).some((s) => campaign.segments.includes(s));
-}
-
-/** Who can actually be sent this campaign, after the stored overrides. */
-export function eligibleClientIds(
-  campaign: Campaign,
-  rows: CampaignClient[],
-): Set<string> {
-  return new Set(
-    rows
-      .filter((row) => row.campaignId === campaign.id && row.eligible)
-      .map((row) => row.clientId),
-  );
-}
-
-/** Eligible, and nothing has gone out to them yet — the "ยังไม่ได้ชวน" count. */
-export function notYetInvitedCount(
-  campaign: Campaign,
-  rows: CampaignClient[],
-): number {
-  return rows.filter(
-    (row) =>
-      row.campaignId === campaign.id &&
-      row.eligible &&
-      row.status === "not-sent",
-  ).length;
-}
 
 /**
  * One row per client the campaign concerns, joined to the client record and
@@ -210,7 +162,17 @@ export function campaignClientRows(
 
 // ── Filtering and ordering the list ─────────────────────────────────────────
 
-export type CampaignTab = "all" | "promotion" | "event";
+/**
+ * The list is split by type, with no combined view.
+ *
+ * A promotion and an event are not two flavours of one thing on this page —
+ * they carry different facts (a seminar has a venue, seats and a registration
+ * state; a promotion has none of the three) and the card that renders them
+ * leaves visible gaps where the other kind's rows would be. Shown in one grid
+ * they read as broken records rather than as two kinds of campaign, so there
+ * is no "ทั้งหมด": a tab is always exactly one type.
+ */
+export type CampaignTab = CampaignType;
 
 export type CampaignFilters = {
   product: CampaignProduct | null;
@@ -230,11 +192,6 @@ export function hasActiveFilters(filters: CampaignFilters): boolean {
   );
 }
 
-/** Every tab but "all" names a campaign type, so the id *is* the filter. */
-function matchesTab(campaign: Campaign, tab: CampaignTab): boolean {
-  return tab === "all" || campaign.type === (tab as CampaignType);
-}
-
 export function filterCampaigns(
   campaigns: Campaign[],
   {
@@ -249,7 +206,8 @@ export function filterCampaigns(
 ): Campaign[] {
   const needle = filters.search.trim().toLowerCase();
   return campaigns.filter((campaign) => {
-    if (!matchesTab(campaign, tab)) return false;
+    // The tab *is* the type — see `CampaignTab`.
+    if (campaign.type !== tab) return false;
     if (filters.product && !campaign.products.includes(filters.product)) {
       return false;
     }

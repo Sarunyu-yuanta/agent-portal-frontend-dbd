@@ -51,7 +51,7 @@ export type Crumb = { label: string; href?: string };
 export type BreadcrumbContext = { clients: Client[]; isPrivate: boolean };
 
 const SECTION_ROOT: Record<NavSectionKey, { path: string; label: string }> = {
-  dashboard: { path: "/dashboard", label: "Dashboard" },
+  "command-center": { path: "/command-center", label: "Command Center" },
   "client-hub": { path: "/client-hub", label: "Client 360" },
   "product-catalog": { path: "/product-catalog", label: "Product Catalog" },
   // Insight articles all come from the House View tab, which is what this
@@ -265,13 +265,13 @@ const truncate = (label: string, max: number) =>
  * Dashboard sub-pages, which have no id to look up and no generated title —
  * just a fixed name one rung under the section root.
  *
- * `sectionForPath` already claims `/dashboard/*` for the dashboard section, so
- * naming the leaf here is the whole of what a breadcrumb needs: the rung above
- * comes from `SECTION_ROOT.dashboard`.
+ * `sectionForPath` already claims `/command-center/*` for the command-center
+ * section, so naming the leaf here is the whole of what a breadcrumb needs:
+ * the rung above comes from `SECTION_ROOT["command-center"]`.
  */
-const DASHBOARD_SUBPAGE_LABEL: Record<string, string> = {
-  "/dashboard/call-log": "Call Log",
-  "/dashboard/next-best-actions": "Next Best Actions",
+const COMMAND_CENTER_SUBPAGE_LABEL: Record<string, string> = {
+  "/command-center/call-log": "Call Log",
+  "/command-center/next-best-actions": "Next Best Actions",
 };
 
 function labelFor(pathname: string, ctx: BreadcrumbContext): string | null {
@@ -280,8 +280,8 @@ function labelFor(pathname: string, ctx: BreadcrumbContext): string | null {
     return SECTION_ROOT[section].label;
   }
 
-  const dashboardSubpage = DASHBOARD_SUBPAGE_LABEL[pathname];
-  if (dashboardSubpage) return dashboardSubpage;
+  const commandCenterSubpage = COMMAND_CENTER_SUBPAGE_LABEL[pathname];
+  if (commandCenterSubpage) return commandCenterSubpage;
 
   const client = /^\/client\/([^/]+)/.exec(pathname);
   if (client) {

@@ -191,7 +191,7 @@ function Header({ count, seeAll }: { count: number; seeAll: boolean }) {
 }
 
 /** The whole book's log, as its own page. */
-export const CALL_LOG_PAGE = "/dashboard/call-log";
+export const CALL_LOG_PAGE = "/command-center/call-log";
 
 function callLogHref(clientId: string): string {
   return `/client/${clientId}?tab=call-log`;

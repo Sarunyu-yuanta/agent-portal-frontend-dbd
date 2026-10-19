@@ -13,8 +13,8 @@ import {
   NotePencilIcon,
   CalendarBlankIcon,
   GaugeIcon,
+  LayoutIcon,
   MegaphoneIcon,
-  ChartLineUpIcon,
   ClipboardTextIcon,
   GraduationCapIcon,
   UsersThreeIcon,
@@ -43,10 +43,10 @@ import {
  */
 const workspaceItems: NavItem[] = [
   {
-    href: "/dashboard",
-    section: "dashboard",
-    label: "Dashboard",
-    icon: GaugeIcon,
+    href: "/command-center",
+    section: "command-center",
+    label: "Command Center",
+    icon: LayoutIcon,
     badge: null,
   },
   {
@@ -112,7 +112,7 @@ const growthItems: NavItem[] = [
     href: "/performance",
     section: "performance",
     label: "Performance",
-    icon: ChartLineUpIcon,
+    icon: GaugeIcon,
     badge: null,
   },
   {

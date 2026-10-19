@@ -62,7 +62,7 @@ export default function CallLogPage() {
   const router = useRouter();
   // Falls back to the Dashboard on a cold entry — a pasted link, or a session
   // restored straight onto this page, where there is no trail to walk up.
-  const goBack = useSectionBack(() => "/dashboard");
+  const goBack = useSectionBack(() => "/command-center");
 
   // Same in reverse: opened from a Dashboard that was scrolled down.
   useScrollTopOnChange([]);

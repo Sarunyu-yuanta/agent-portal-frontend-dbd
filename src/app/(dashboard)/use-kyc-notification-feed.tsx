@@ -27,7 +27,7 @@ const CHECKPOINTS = [30, 15, 7, 1, 0] as const;
  * one it still satisfies that fired most recently.
  *
  * Exported because the Dashboard's queue rows carry the same checkpoint in
- * their id for the same reason the bell's do — see `dashboard/dashboard-data`.
+ * their id for the same reason the bell's do — see `command-center/dashboard-data`.
  * Two surfaces deriving that number separately is how they start disagreeing
  * about which crossing a row belongs to.
  */

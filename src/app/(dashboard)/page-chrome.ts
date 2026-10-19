@@ -1,6 +1,23 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import {
+  BrainIcon,
+  CalendarBlankIcon,
+  ChartBarIcon,
+  ClipboardTextIcon,
+  FunnelIcon,
+  GaugeIcon,
+  GraduationCapIcon,
+  LayoutIcon,
+  MegaphoneIcon,
+  NotePencilIcon,
+  ShieldCheckIcon,
+  SquaresFourIcon,
+  UsersIcon,
+  UsersThreeIcon,
+  type Icon as PhosphorIcon,
+} from "@phosphor-icons/react";
 import { useClients } from "@/hooks/use-api";
 import { usePrivacy } from "@/contexts/privacy-context";
 import { usePageBreadcrumb, type Crumb } from "./page-breadcrumbs";
@@ -15,8 +32,9 @@ import { usePageBreadcrumb, type Crumb } from "./page-breadcrumbs";
 export type PageChrome = {
   /** Header title, or `null` when a breadcrumb takes its place. */
   title: string | null;
+  /** Sidebar icon for the page title, when one is defined. */
+  titleIcon: PhosphorIcon | null;
   breadcrumb: Crumb[] | null;
-  isCommandCenter: boolean;
   isPerformance: boolean;
   /** Page paints its own padding and bleeds to the edges. */
   isFullWidth: boolean;
@@ -40,7 +58,6 @@ export type PageChrome = {
 };
 
 const PAGE_TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard",
   "/command-center": "Command Center",
   "/client-hub": "Client 360",
   "/pipeline": "Pipeline",
@@ -58,6 +75,28 @@ const PAGE_TITLES: Record<string, string> = {
   "/notes": "Notes",
   "/calendar": "Calendar",
 };
+
+/**
+ * Mirrors the sidebar icon for routes that show a page title instead of a
+ * breadcrumb. Non-sidebar routes pick the icon the page itself already leads
+ * with, so the header stays recognisable even without a nav entry.
+ */
+const PAGE_ICONS = {
+  "/command-center": LayoutIcon,
+  "/client-hub": UsersIcon,
+  "/pipeline": FunnelIcon,
+  "/ai-insights": BrainIcon,
+  "/promotions": MegaphoneIcon,
+  "/performance": GaugeIcon,
+  "/compliance": ShieldCheckIcon,
+  "/insights": ChartBarIcon,
+  "/ic-learning": GraduationCapIcon,
+  "/yaa-team-head": UsersThreeIcon,
+  "/product-catalog": SquaresFourIcon,
+  "/orders": ClipboardTextIcon,
+  "/notes": NotePencilIcon,
+  "/calendar": CalendarBlankIcon,
+} satisfies Record<keyof typeof PAGE_TITLES, PhosphorIcon>;
 
 /**
  * Routes whose content starts on white instead of `main`'s own gray-50.
@@ -95,8 +134,11 @@ export function usePageChrome(): PageChrome {
     // A breadcrumb replaces the title — its leaf already names the page, and
     // the section name is the rung above it.
     title: breadcrumb ? null : titleKey ? PAGE_TITLES[titleKey] : "",
+    titleIcon:
+      breadcrumb || !titleKey
+        ? null
+        : (PAGE_ICONS[titleKey as keyof typeof PAGE_ICONS] ?? null),
     breadcrumb,
-    isCommandCenter: pathname.startsWith("/command-center"),
     isPerformance: pathname.startsWith("/performance"),
     isFullWidth:
       pathname.startsWith("/product-catalog") ||

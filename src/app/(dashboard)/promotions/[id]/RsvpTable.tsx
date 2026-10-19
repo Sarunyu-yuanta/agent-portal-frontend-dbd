@@ -122,10 +122,14 @@ export function RsvpTable({
   );
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4 rounded-2xl border border-border/50 bg-card p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h2 className="type-subtitle-1 font-bold text-foreground">
+          <h2 className="flex items-center gap-2.5 type-subtitle-1 font-bold text-foreground">
+            <span
+              aria-hidden
+              className="h-5 w-1 shrink-0 rounded-full bg-primary-action"
+            />
             {isPast ? "ผู้เข้าร่วมงาน" : "ลงทะเบียนให้ลูกค้า"}
           </h2>
           <p className="text-[12.5px] text-muted-foreground">
@@ -145,7 +149,7 @@ export function RsvpTable({
           ))}
       </div>
 
-      <div className="relative overflow-x-auto rounded-lg border border-[var(--border-default)]">
+      <div className="relative overflow-x-auto rounded-xl border border-[var(--border-default)]">
         <Table className="w-full" style={{ minWidth: 760 }}>
           <TableHead>
             <TableRow>

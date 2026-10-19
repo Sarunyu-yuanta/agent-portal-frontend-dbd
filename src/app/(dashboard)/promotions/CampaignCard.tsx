@@ -7,17 +7,18 @@ import type { Campaign } from "@/types/domain";
 import { campaignDateLine, FORMAT_LABEL, PRODUCT_LABEL } from "./campaign-data";
 
 /**
- * One campaign in the grid: the design system's `Card variant="event"`, and
- * nothing else.
+ * One campaign in the grid: the design system's `Card variant="event"`.
  *
  * Everything rendered here comes out of that card — the banner, the title, the
- * orange calendar row, the venue line, the audience line, the status chip. The
- * only thing wrapped around it is a `<Link>`, which draws nothing and exists so
- * the card has somewhere to go.
+ * orange calendar row, the venue line, the audience line, the status chip. It
+ * is wrapped in a `<Link>` so the card has somewhere to go, and that link adds
+ * exactly one thing of its own: the cover grows a little under the pointer. The
+ * card itself does not lift, tint or change its shadow — the artwork moving is
+ * the whole of the feedback.
  *
- * All this file does, then, is map a `Campaign` onto that card's props. Where
- * the two disagree is written down below, because the card is built for events
- * and half of these are promotions.
+ * All this file does otherwise is map a `Campaign` onto that card's props.
+ * Where the two disagree is written down below, because the card is built for
+ * events and half of these are promotions.
  */
 export function CampaignCard({
   campaign,
@@ -56,7 +57,12 @@ export function CampaignCard({
     : campaign.products.map((p) => PRODUCT_LABEL[p]).join(" · ");
 
   return (
-    <Link href={`/promotions/${campaign.id}`} className="no-underline">
+    <Link
+      href={`/promotions/${campaign.id}`}
+      // `group` so the hover is owned by the whole card rather than by
+      // whichever part of it the pointer happens to be over.
+      className="group block rounded-[8px] no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary-action)]"
+    >
       <Card
         variant="event"
         // `locked` defaults to *true* and stamps a padlock over the banner.
@@ -70,6 +76,34 @@ export function CampaignCard({
         showAudience={attendance !== undefined}
         count={attendance}
         tagStatus={tagStatus}
+        className={[
+          // Fills the grid cell, so a row of cards ends level.
+          "h-full",
+          /**
+           * The body greys off under the pointer. White at rest.
+           *
+           * Aimed at the card's content block — its last child; the first is
+           * the banner, which is an image and wants no tint.
+           *
+           * `gray-50`, and the shade is not free choice: `gray-100` is what the
+           * design system fills the "ยังไม่ลงทะเบียน" chip with, so hovering
+           * would paint the surface the chip's own colour and flatten it into
+           * plain text for as long as the pointer stayed — a glitch, not a
+           * hover. `gray-50` leaves the chip a shade darker than the card, so
+           * it keeps its pill.
+           *
+           * `!` because the block carries the system's own `bg-card`, which
+           * ships unlayered and beats an `@layer utilities` rule whatever its
+           * specificity — without it the card simply stays white.
+           */
+          "[&>div:last-child]:transition-colors [&>div:last-child]:duration-200",
+          "group-hover:[&>div:last-child]:bg-[var(--fill-gray-50)]!",
+          // The cover, and only the cover, responds to the pointer: no lift,
+          // no shadow change. The banner is clipped by the card, so the image
+          // grows into its frame rather than past it.
+          "[&_img]:transition-transform [&_img]:duration-500 [&_img]:ease-out",
+          "group-hover:[&_img]:scale-[1.06]",
+        ].join(" ")}
       />
     </Link>
   );

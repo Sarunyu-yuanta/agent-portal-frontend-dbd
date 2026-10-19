@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  CheckCircleIcon,
+  CheckIcon,
   LinkSimpleIcon,
   MapPinIcon,
   VideoCameraIcon,
@@ -9,6 +9,7 @@ import {
 import { Tag } from "@sarunyu/system-one";
 import type { Campaign } from "@/types/domain";
 import { PRODUCT_LABEL, SEGMENT_LABEL, thaiDay } from "../campaign-data";
+import { DetailSection, DetailSectionGroup, DetailSubsection } from "./DetailSection";
 import { Disclaimer } from "./PromotionBody";
 
 /**
@@ -24,15 +25,21 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
   const online = campaign.format === "online";
 
   return (
-    <div className="flex flex-col gap-8">
-      <section className="flex flex-col gap-3">
-        <h2 className="type-subtitle-1 font-bold text-foreground">
-          เกี่ยวกับงานนี้
-        </h2>
-        <p className="text-[14px] leading-relaxed text-foreground">
-          {campaign.summary}
-        </p>
-        <div className="flex flex-wrap gap-1.5 pt-1">
+    <div className="flex flex-col gap-5">
+      <DetailSection title="เกี่ยวกับงานนี้">
+        {/* The long form, not `summary` — that one-liner is already in the
+            banner directly above this section. */}
+        <div className="flex flex-col gap-3">
+          {campaign.description.map((paragraph) => (
+            <p
+              key={paragraph}
+              className="text-[14px] leading-relaxed text-foreground"
+            >
+              {paragraph}
+            </p>
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-1.5">
           {campaign.products.map((product) => (
             <Tag key={product} text={PRODUCT_LABEL[product]} variant="blue" size="small" />
           ))}
@@ -40,19 +47,16 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
             <Tag key={segment} text={SEGMENT_LABEL[segment]} variant="gray" size="small" />
           ))}
         </div>
-      </section>
+      </DetailSection>
 
       {campaign.agenda && campaign.agenda.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="type-subtitle-1 font-bold text-foreground">กำหนดการ</h2>
+        <DetailSection title="กำหนดการ">
           <div className="flex flex-col">
             {campaign.agenda.map((item, index) => (
               <div
                 key={`${item.time}-${item.title}`}
                 className="flex gap-3 sm:gap-4"
               >
-                {/* Timeline rail: a dot per session, joined by a line that
-                    stops at the last one rather than trailing into nothing. */}
                 <div className="flex w-[82px] shrink-0 flex-col items-end pt-0.5 sm:w-[104px]">
                   <span className="text-[12.5px] font-semibold tabular-nums text-accent-orange">
                     {item.time}
@@ -77,17 +81,16 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
               </div>
             ))}
           </div>
-        </section>
+        </DetailSection>
       )}
 
       {campaign.speakers && campaign.speakers.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="type-subtitle-1 font-bold text-foreground">วิทยากร</h2>
+        <DetailSection title="วิทยากร">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {campaign.speakers.map((speaker) => (
               <div
                 key={speaker.name}
-                className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5"
+                className="flex items-center gap-3 rounded-xl border border-border/40 bg-muted/20 p-3.5"
               >
                 {speaker.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element -- fixed-size headshot, no responsive sizes needed
@@ -101,9 +104,6 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
                     aria-hidden
                     className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-[var(--fill-p1-100)] text-[15px] font-bold text-[var(--fill-p1-600)]"
                   >
-                    {/* The first character of the name as it is written — Thai
-                        names have no Western initials to take, and a two-letter
-                        abbreviation of one reads as nonsense. */}
                     {speaker.name.replace(/^(ดร\.|คุณ|นาย|นาง|นางสาว)\s*/, "").charAt(0)}
                   </span>
                 )}
@@ -118,18 +118,15 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
               </div>
             ))}
           </div>
-        </section>
+        </DetailSection>
       )}
 
-      <section className="flex flex-col gap-3">
-        <h2 className="type-subtitle-1 font-bold text-foreground">
-          สถานที่และการเข้าร่วม
-        </h2>
-        <div className="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-4">
+      <DetailSection title="สถานที่และการเข้าร่วม">
+        <div className="flex flex-col gap-2.5 rounded-xl border border-border/40 bg-muted/20 p-4">
           <div className="flex items-start gap-2.5">
             <span
               aria-hidden
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[var(--fill-p1-100)] text-[var(--fill-p1-600)]"
+              className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--fill-p1-100)] to-white text-[var(--fill-p1-600)] ring-1 ring-[var(--fill-p1-200,rgba(10,110,231,0.12))]"
             >
               {online ? (
                 <VideoCameraIcon size={17} weight="fill" />
@@ -162,47 +159,52 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
             </a>
           )}
         </div>
-      </section>
+      </DetailSection>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="type-subtitle-1 font-bold text-foreground">
-          เงื่อนไขการเข้าร่วม
-        </h2>
-        <ul className="flex list-none flex-col gap-2.5 p-0">
-          {campaign.conditions.map((condition) => (
-            <li key={condition} className="flex items-start gap-2.5">
-              <CheckCircleIcon
-                size={18}
-                weight="fill"
-                className="mt-0.5 shrink-0 text-primary-action"
-              />
-              <span className="text-[14px] leading-relaxed text-foreground">
-                {condition}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <DetailSectionGroup>
+        <DetailSubsection title="เงื่อนไขการเข้าร่วม">
+          <ul className="flex list-none flex-col gap-2 p-0">
+            {campaign.conditions.map((condition) => (
+              <li
+                key={condition}
+                className="flex items-start gap-3 rounded-xl border border-border/40 bg-muted/20 px-4 py-3"
+              >
+                <span
+                  aria-hidden
+                  className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-action text-white"
+                >
+                  <CheckIcon size={13} weight="bold" />
+                </span>
+                <span className="text-[13.5px] leading-relaxed text-foreground">
+                  {condition}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </DetailSubsection>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="type-subtitle-1 font-bold text-foreground">
-          ข้อกำหนดและเงื่อนไข
-        </h2>
-        <ol className="flex list-none flex-col gap-2 p-0">
-          {campaign.terms.map((term, index) => (
-            <li key={term} className="flex items-start gap-2.5">
-              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold tabular-nums text-muted-foreground">
-                {index + 1}
-              </span>
-              <span className="text-[13.5px] leading-relaxed text-foreground">
-                {term}
-              </span>
-            </li>
-          ))}
-        </ol>
-      </section>
+        <DetailSubsection title="ข้อกำหนดและเงื่อนไข">
+          <ol className="flex list-none flex-col gap-2 p-0">
+            {campaign.terms.map((term, index) => (
+              <li
+                key={term}
+                className="flex items-start gap-3 rounded-xl border border-border/40 bg-muted/20 px-4 py-3"
+              >
+                <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-action text-[11px] font-bold tabular-nums text-white">
+                  {index + 1}
+                </span>
+                <span className="text-[13.5px] leading-relaxed text-foreground">
+                  {term}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </DetailSubsection>
 
-      <Disclaimer text={campaign.disclaimer} />
+        <div className="not-first:mt-6 not-first:border-t not-first:border-border/50 not-first:pt-6">
+          <Disclaimer text={campaign.disclaimer} />
+        </div>
+      </DetailSectionGroup>
     </div>
   );
 }

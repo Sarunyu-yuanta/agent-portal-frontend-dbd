@@ -343,8 +343,9 @@ export type CampaignProduct =
  * Each one resolves against a field already on the client record rather than a
  * marketing list that exists nowhere: the wealth tiers come from `tier`, the
  * three risk segments from `riskProfile`, and `idle-cash` from `cashIdlePct`.
- * That is what lets "ลูกค้าที่เข้าเงื่อนไข" be a real count instead of a
- * number someone typed — see `eligibleClientIds` in `campaign-data`.
+ * That is what lets "ลูกค้าที่เข้าเงื่อนไข" be a real list instead of one
+ * someone typed — see `segmentsOfClient` in `lib/campaign-mock-data`, which a
+ * campaign's eligible-clients table reads to say *why* a client qualifies.
  */
 export type ClientSegment =
   | "uhnw"
@@ -407,6 +408,17 @@ export type Campaign = {
   title: string;
   /** One-line pitch under the title on the card and the detail banner. */
   summary: string;
+  /**
+   * The long form, one string per paragraph — what the detail page's
+   * "รายละเอียดแคมเปญ" section is for.
+   *
+   * Separate from {@link Campaign.summary} because the two are read in
+   * different places for different reasons: the summary is scanned on a card
+   * beside nine others, this is read once the IC has already decided to open
+   * it. They were the same field for a while, which made that section a
+   * verbatim repeat of the line in the banner directly above it.
+   */
+  description: string[];
   cover: string;
   /** Carried by the list page's hero carousel. At most three are set. */
   featured: boolean;

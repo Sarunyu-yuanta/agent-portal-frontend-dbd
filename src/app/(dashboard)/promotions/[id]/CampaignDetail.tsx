@@ -1,18 +1,18 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, Suspense, useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import {
   ArrowLeftIcon,
   CalendarBlankIcon,
   ClockIcon,
   LinkSimpleIcon,
   MapPinIcon,
+  PaperPlaneTiltIcon,
   UsersThreeIcon,
   VideoCameraIcon,
 } from "@phosphor-icons/react";
-import { Button, Card, Tag, Toaster } from "@sarunyu/system-one";
+import { Button, Tag, Toaster } from "@sarunyu/system-one";
 import { useSectionBack } from "@/hooks/use-section-back";
 import { useToasts } from "@/hooks/use-toasts";
 import { useClients } from "@/hooks/use-api";
@@ -21,7 +21,7 @@ import { useCampaignStore } from "@/contexts/campaigns-context";
 import { useNotes } from "@/contexts/notes-context";
 import { NOTE_AUTHOR } from "../../notes/note-constants";
 import { todayDateKey } from "../../calendar/calendar-grid";
-import type { CampaignClientStatus, RsvpStatus } from "@/types/domain";
+import type { RsvpStatus } from "@/types/domain";
 import {
   campaignClientRows,
   campaignStatus,
@@ -32,14 +32,12 @@ import {
   PRODUCT_LABEL,
   SEGMENT_LABEL,
   thaiDay,
-  TYPE_LABEL,
 } from "../campaign-data";
 import { CampaignDetailSkeleton } from "./CampaignDetailSkeleton";
-import { EligibleClientsTable } from "./EligibleClientsTable";
 import { EventBody } from "./EventBody";
-import { MaterialsCard } from "./MaterialsCard";
 import { PromotionBody } from "./PromotionBody";
 import { RsvpTable } from "./RsvpTable";
+import { ShareDialog } from "./ShareDialog";
 
 /**
  * One campaign, in full.
@@ -63,15 +61,12 @@ export function CampaignDetail({ id }: { id: string }) {
 }
 
 function CampaignDetailInner({ id }: { id: string }) {
-  const searchParams = useSearchParams();
   const { data: campaign, isLoading } = useCampaign(id);
   const clients = useClients();
   const {
     campaignClients,
     rsvps,
-    shareLogs,
     shareMaterial,
-    setClientStatus,
     registerClients,
     setRsvpStatus,
     seatsLeft,
@@ -86,10 +81,20 @@ function CampaignDetailInner({ id }: { id: string }) {
   const todayKey = todayDateKey();
   const today = useMemo(() => new Date(todayKey), [todayKey]);
 
-  /** The approved material a bulk share would send. */
-  const [materialId, setMaterialId] = useState<string | null>(null);
-  const firstApproved = campaign?.materials.find((m) => m.approved)?.id ?? null;
-  const selectedMaterial = materialId ?? firstApproved;
+  const [shareOpen, setShareOpen] = useState(false);
+
+  /**
+   * What a share actually sends.
+   *
+   * The page no longer lists the materials, so there is nothing for the IC to
+   * choose between — but a `ShareLog` still records a material and a version,
+   * because "which version went out" is the question that log exists to
+   * answer. The first approved material stands in for the campaign's pack.
+   *
+   * `undefined` means nothing is approved yet, which is the one case where
+   * sharing has to be refused rather than silently logged against nothing.
+   */
+  const shareable = campaign?.materials.find((m) => m.approved) ?? null;
 
   const rows = useMemo(
     () =>
@@ -101,15 +106,15 @@ function CampaignDetailInner({ id }: { id: string }) {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
+  /** Confirmed from the share dialog: this material, to these clients. */
   const share = useCallback(
-    async (clientIds: string[], withMaterial?: string) => {
-      const chosen = withMaterial ?? selectedMaterial;
-      if (!campaign || !chosen || clientIds.length === 0) return;
+    async (materialId: string, clientIds: string[]) => {
+      if (!campaign || clientIds.length === 0) return;
       try {
         const written = await shareMaterial({
           campaignId: campaign.id,
           clientIds,
-          materialId: chosen,
+          materialId,
         });
         addToast({
           status: written.length > 0 ? "success" : "warning",
@@ -126,7 +131,7 @@ function CampaignDetailInner({ id }: { id: string }) {
         });
       }
     },
-    [campaign, selectedMaterial, shareMaterial, addToast],
+    [campaign, shareMaterial, addToast],
   );
 
   const register = useCallback(
@@ -152,14 +157,6 @@ function CampaignDetailInner({ id }: { id: string }) {
       }
     },
     [campaign, registerClients, addToast],
-  );
-
-  const changeStatus = useCallback(
-    async (clientId: string, status: CampaignClientStatus) => {
-      if (!campaign) return;
-      await setClientStatus(campaign.id, clientId, status);
-    },
-    [campaign, setClientStatus],
   );
 
   const changeRsvp = useCallback(
@@ -198,23 +195,6 @@ function CampaignDetailInner({ id }: { id: string }) {
     [campaign, clients, addNote, addToast],
   );
 
-  // ── Deep links from the list page's card actions ──────────────────────────
-
-  const focus = searchParams.get("focus");
-  const materialsRef = useRef<HTMLDivElement>(null);
-  const clientsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!focus || isLoading) return;
-    const target = focus === "share" ? materialsRef.current : clientsRef.current;
-    // Next paint: the section has to exist and be laid out before it can be
-    // scrolled to, and on a cold load this effect runs with an empty body.
-    const frame = requestAnimationFrame(() =>
-      target?.scrollIntoView({ behavior: "smooth", block: "start" }),
-    );
-    return () => cancelAnimationFrame(frame);
-  }, [focus, isLoading]);
-
   if (isLoading) return <CampaignDetailSkeleton />;
 
   if (!campaign) {
@@ -238,127 +218,144 @@ function CampaignDetailInner({ id }: { id: string }) {
   const past = isPastEvent(campaign, today);
   const open = seatsLeft(campaign.id);
 
-  const shareDisabledReason = ended
-    ? "แคมเปญนี้หมดเขตแล้ว"
-    : selectedMaterial === null
-      ? "แคมเปญนี้ยังไม่มีสื่อที่อนุมัติให้ส่งได้"
-      : null;
+  const metaItems: MetaItem[] = [
+    {
+      icon: <CalendarBlankIcon size={17} weight="fill" />,
+      label: isEvent ? "วันจัดงาน" : "ระยะเวลาแคมเปญ",
+      labelHint: countdown ?? undefined,
+      value:
+        isEvent && campaign.eventDate
+          ? thaiDay(campaign.eventDate)
+          : `${thaiDay(campaign.startDate)} – ${thaiDay(campaign.endDate)}`,
+    },
+    {
+      icon: <ClockIcon size={17} weight="fill" />,
+      label: isEvent ? "ปิดรับลงทะเบียน" : "สถานะ",
+      value: isEvent
+        ? thaiDay(campaign.endDate)
+        : statusLine(status, campaign.endDate, today),
+    },
+    isEvent
+      ? {
+          icon:
+            campaign.format === "online" ? (
+              <VideoCameraIcon size={17} weight="fill" />
+            ) : (
+              <MapPinIcon size={17} weight="fill" />
+            ),
+          label: campaign.format ? FORMAT_LABEL[campaign.format] : "สถานที่",
+          value: campaign.venue ?? "—",
+        }
+      : {
+          icon: <UsersThreeIcon size={17} weight="fill" />,
+          label: "กลุ่มลูกค้า",
+          value: campaign.segments.map((s) => SEGMENT_LABEL[s]).join(" · "),
+        },
+    {
+      icon: <UsersThreeIcon size={17} weight="fill" />,
+      label: isEvent ? "ที่นั่ง" : "สินทรัพย์",
+      value: isEvent
+        ? campaign.seatsTotal
+          ? `เหลือ ${open ?? 0} จาก ${campaign.seatsTotal} ที่นั่ง`
+          : "ไม่จำกัดที่นั่ง"
+        : campaign.products.map((p) => PRODUCT_LABEL[p]).join(" · "),
+    },
+  ];
 
   return (
     <>
-      <div className="flex flex-col gap-6 pb-12">
+      <div className="flex flex-col gap-5 pb-12 sm:gap-6">
         {/* Mobile breadcrumb comes from the layout, above this content. */}
         <Button
           variant="plain"
           size="sm"
           leftIcon={<ArrowLeftIcon size={16} />}
           onClick={goBack}
-          className="hidden self-start xl:inline-flex"
+          className="hidden self-start rounded-full xl:inline-flex"
         >
           กลับ
         </Button>
 
-        {/* ── Banner ─────────────────────────────────────────────────────── */}
-        <div className="relative overflow-hidden rounded-2xl">
-          {/* eslint-disable-next-line @next/next/no-img-element -- generated SVG cover; the image optimizer rejects SVG */}
-          <img
-            src={campaign.cover}
-            alt=""
-            className={`h-[180px] w-full object-cover sm:h-[240px] xl:h-[280px] ${
-              ended ? "opacity-50 grayscale" : ""
-            }`}
-          />
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-transparent"
-          />
+        {/* Banner + meta share one frame — flush join, radius from the strip below. */}
+        <div className="overflow-hidden rounded-2xl border border-border/50 bg-white shadow-[0_8px_32px_-12px_rgba(15,23,42,0.35)]">
+          <div className="relative overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element -- generated SVG cover; the image optimizer rejects SVG */}
+            <img
+              src={campaign.cover}
+              alt=""
+              className={`h-[200px] w-full object-cover sm:h-[260px] xl:h-[300px] ${
+                ended ? "opacity-50 grayscale" : ""
+              }`}
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/10"
+            />
+            <div
+              aria-hidden
+              className="absolute -right-16 -top-16 size-56 rounded-full bg-white/10 blur-3xl"
+            />
+            <div
+              aria-hidden
+              className="absolute -bottom-20 left-1/4 size-40 rounded-full bg-primary-action/20 blur-3xl"
+            />
 
-          <div className="absolute inset-0 flex flex-col justify-end gap-2.5 p-5 sm:p-7">
-            <div className="flex flex-wrap items-center gap-2">
-              <Tag
-                text={TYPE_LABEL[campaign.type]}
-                variant={isEvent ? "lime" : "blue"}
-                size="small"
-              />
-              {ended ? (
-                <Tag text="หมดเขต" variant="gray" size="small" />
-              ) : (
-                <>
-                  {countdown && <Tag text={countdown} variant="red" size="small" icon />}
-                  {status === "upcoming" && (
-                    <Tag text="เร็ว ๆ นี้" variant="gray" size="small" />
+            <div className="absolute inset-0 flex flex-col justify-end gap-3.5 p-5 sm:gap-4 sm:p-7">
+              {(ended || status === "upcoming" || open === 0) && (
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
+                  {ended ? (
+                    <Tag text="หมดเขต" variant="gray" size="small" />
+                  ) : (
+                    <>
+                      {status === "upcoming" && (
+                        <Tag text="เร็ว ๆ นี้" variant="gray" size="small" />
+                      )}
+                      {open === 0 && (
+                        <Tag text="ที่นั่งเต็ม" variant="yellow" size="small" />
+                      )}
+                    </>
                   )}
-                  {open === 0 && <Tag text="ที่นั่งเต็ม" variant="yellow" size="small" />}
-                </>
+                </div>
+              )}
+
+              <h1 className="max-w-3xl text-[22px] font-bold leading-[1.2] tracking-tight text-white sm:text-[28px] sm:leading-[1.15]">
+                {campaign.title}
+              </h1>
+              <p className="max-w-2xl text-[13px] leading-relaxed text-white/75 sm:text-[15px]">
+                {campaign.summary}
+              </p>
+
+              {/* The page's one action, on the banner so it is reachable
+                  without scrolling past the terms. Gone once the campaign has
+                  closed, and refused outright while nothing is approved —
+                  there would be no version to log the send against. */}
+              {!ended && (
+                <div className="pt-1">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    leftIcon={<PaperPlaneTiltIcon size={16} weight="fill" />}
+                    disabled={shareable === null}
+                    onClick={() => setShareOpen(true)}
+                  >
+                    {shareable === null
+                      ? "ยังไม่มีสื่อที่อนุมัติ"
+                      : "แชร์ให้ลูกค้า"}
+                  </Button>
+                </div>
               )}
             </div>
-
-            <h1 className="max-w-3xl text-[20px] font-bold leading-tight text-white sm:text-[26px]">
-              {campaign.title}
-            </h1>
-            <p className="max-w-2xl text-[13px] leading-snug text-white/80 sm:text-[14.5px]">
-              {campaign.summary}
-            </p>
           </div>
 
+          <MetaStrip items={metaItems} attached />
         </div>
-
-        {/* ── Meta strip ─────────────────────────────────────────────────── */}
-        <Card variant="default" className="gap-0 p-0!">
-          <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-2 sm:divide-y-0 xl:grid-cols-4">
-            <MetaCell
-              icon={<CalendarBlankIcon size={17} weight="fill" />}
-              label={isEvent ? "วันจัดงาน" : "ระยะเวลาแคมเปญ"}
-              value={
-                isEvent && campaign.eventDate
-                  ? thaiDay(campaign.eventDate)
-                  : `${thaiDay(campaign.startDate)} – ${thaiDay(campaign.endDate)}`
-              }
-            />
-            <MetaCell
-              icon={<ClockIcon size={17} weight="fill" />}
-              label={isEvent ? "ปิดรับลงทะเบียน" : "สถานะ"}
-              value={isEvent ? thaiDay(campaign.endDate) : statusLine(status, campaign.endDate, today)}
-            />
-            {isEvent ? (
-              <MetaCell
-                icon={
-                  campaign.format === "online" ? (
-                    <VideoCameraIcon size={17} weight="fill" />
-                  ) : (
-                    <MapPinIcon size={17} weight="fill" />
-                  )
-                }
-                label={campaign.format ? FORMAT_LABEL[campaign.format] : "สถานที่"}
-                value={campaign.venue ?? "—"}
-              />
-            ) : (
-              <MetaCell
-                icon={<UsersThreeIcon size={17} weight="fill" />}
-                label="กลุ่มลูกค้า"
-                value={campaign.segments.map((s) => SEGMENT_LABEL[s]).join(" · ")}
-              />
-            )}
-            <MetaCell
-              icon={<UsersThreeIcon size={17} weight="fill" />}
-              label={isEvent ? "ที่นั่ง" : "สินทรัพย์"}
-              value={
-                isEvent
-                  ? campaign.seatsTotal
-                    ? `เหลือ ${open ?? 0} จาก ${campaign.seatsTotal} ที่นั่ง`
-                    : "ไม่จำกัดที่นั่ง"
-                  : campaign.products.map((p) => PRODUCT_LABEL[p]).join(" · ")
-              }
-            />
-          </div>
-        </Card>
 
         {isEvent && campaign.format === "online" && campaign.joinUrl && !past && (
           <a
             href={campaign.joinUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex w-fit items-center gap-2 rounded-xl border border-border bg-primary-action-light px-4 py-2.5 text-[13px] font-semibold text-primary-action no-underline transition-colors hover:bg-[rgba(10,110,231,0.16)]"
+            className="flex w-fit items-center gap-2 rounded-xl border border-primary-action/20 bg-primary-action-light px-4 py-2.5 text-[13px] font-semibold text-primary-action no-underline shadow-[0_2px_8px_-2px_rgba(10,110,231,0.25)] transition-all hover:border-primary-action/40 hover:bg-[rgba(10,110,231,0.16)]"
           >
             <LinkSimpleIcon size={16} weight="bold" />
             ลิงก์เข้าร่วมงาน
@@ -366,71 +363,102 @@ function CampaignDetailInner({ id }: { id: string }) {
         )}
 
         {/* ── Body ───────────────────────────────────────────────────────── */}
-        <div
-          className="flex flex-col gap-8 lg:grid lg:gap-8"
-          style={{ gridTemplateColumns: "minmax(0, 1fr) 360px", alignItems: "start" }}
-        >
-          <div className="flex min-w-0 flex-col gap-8">
-            {isEvent ? (
-              <EventBody campaign={campaign} />
-            ) : (
-              <PromotionBody campaign={campaign} />
-            )}
+        {/* One column. The materials panel used to hold the right-hand track;
+            with it gone there is nothing to put beside the body, and a 360px
+            empty gutter is worse than full width. */}
+        <div className="flex flex-col gap-5">
+          {isEvent ? (
+            <EventBody campaign={campaign} />
+          ) : (
+            <PromotionBody campaign={campaign} />
+          )}
 
-            <div ref={clientsRef} className="scroll-mt-6">
-              {isEvent ? (
-                <RsvpTable
-                  rows={rows}
-                  seatsLeft={open}
-                  isPast={past}
-                  onRegister={register}
-                  onSetRsvp={changeRsvp}
-                  onFollowUp={followUp}
-                />
-              ) : (
-                <EligibleClientsTable
-                  rows={rows}
-                  campaignSegments={campaign.segments}
-                  shareDisabledReason={shareDisabledReason}
-                  onShare={(ids) => void share(ids)}
-                  onSetStatus={(clientId, next) => void changeStatus(clientId, next)}
-                />
-              )}
-            </div>
-
-            <ShareLogCard count={shareLogs.filter((l) => l.campaignId === campaign.id).length} />
-          </div>
-
-          {/* Materials sit in the sidebar on desktop and inline on tablet and
-              below — the same arrangement an insight's PDF panel uses. */}
-          <div ref={materialsRef} className="scroll-mt-6 lg:sticky lg:top-6">
-            <Card variant="default" className="gap-4">
-              <MaterialsCard
-                materials={campaign.materials}
-                selectedId={selectedMaterial}
-                closed={ended}
-                onSelect={setMaterialId}
-                onShareOne={(mid) => {
-                  setMaterialId(mid);
-                  clientsRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-                  addToast({
-                    status: "information",
-                    message: "เลือกสื่อแล้ว — เลือกลูกค้าด้านล่างเพื่อส่ง",
-                  });
-                }}
-                onCopied={(label) =>
-                  addToast({ status: "success", message: `คัดลอก "${label}" แล้ว` })
-                }
-              />
-            </Card>
-          </div>
+          {/* Events keep their table: registering someone, confirming a seat
+              and marking attendance all happen on the row itself. A promotion
+              has no such table any more — once picking clients moved into the
+              share dialog, the list below it was the same names again with
+              nothing to do to them. */}
+          {isEvent && (
+            <RsvpTable
+              rows={rows}
+              seatsLeft={open}
+              isPast={past}
+              onRegister={register}
+              onSetRsvp={changeRsvp}
+              onFollowUp={followUp}
+            />
+          )}
         </div>
       </div>
 
+      {/* Who gets it. Which material is no longer asked — see `shareable`. */}
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        material={shareable}
+        rows={rows}
+        onConfirm={(clientIds) => {
+          if (shareable) void share(shareable.id, clientIds);
+        }}
+      />
+
       <Toaster items={toasts} onRemove={removeToast} />
+    </>
+  );
+}
+
+type MetaItem = {
+  icon: React.ReactNode;
+  label: string;
+  /** Shown in parentheses after the label — e.g. the ending-soon countdown. */
+  labelHint?: string;
+  value: string;
+};
+
+/**
+ * One bordered frame, three layouts. Vertical rules are separate elements that
+ * stretch with the row — cell borders were stopping short and read as a second
+ * bottom edge.
+ */
+function MetaStrip({
+  items,
+  attached = false,
+}: {
+  items: MetaItem[];
+  /** Sits flush under the banner inside a shared rounded frame. */
+  attached?: boolean;
+}) {
+  const frame = attached
+    ? "border-t border-border/50 bg-white"
+    : "rounded-2xl border border-border/50 bg-white";
+
+  return (
+    <>
+      <div className={`flex flex-col ${frame} sm:hidden`}>
+        {items.map((item, i) => (
+          <Fragment key={item.label}>
+            {i > 0 && <div aria-hidden className="h-px bg-border/50" />}
+            <MetaCell {...item} />
+          </Fragment>
+        ))}
+      </div>
+
+      <div className={`hidden sm:grid sm:grid-cols-2 ${frame} xl:hidden`}>
+        {items.map((item) => (
+          <MetaCell key={item.label} {...item} />
+        ))}
+      </div>
+
+      <div className={`hidden xl:flex xl:items-stretch ${frame}`}>
+        {items.map((item, i) => (
+          <Fragment key={item.label}>
+            {i > 0 && (
+              <div aria-hidden className="w-px shrink-0 self-stretch bg-border/50" />
+            )}
+            <MetaCell {...item} className="min-w-0 flex-1" />
+          </Fragment>
+        ))}
+      </div>
     </>
   );
 }
@@ -449,25 +477,35 @@ function statusLine(
 function MetaCell({
   icon,
   label,
+  labelHint,
   value,
+  className = "",
 }: {
   icon: React.ReactNode;
   label: string;
+  labelHint?: string;
   value: string;
+  className?: string;
 }) {
   return (
-    <div className="flex items-start gap-2.5 p-4">
+    <div className={`flex items-start gap-3 p-4 sm:p-5 ${className}`}>
       <span
         aria-hidden
-        className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[var(--fill-p1-100)] text-[var(--fill-p1-600)]"
+        className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--fill-p1-100)] to-white text-[var(--fill-p1-600)] ring-1 ring-[var(--fill-p1-200,rgba(10,110,231,0.12))]"
       >
         {icon}
       </span>
       <div className="flex min-w-0 flex-col gap-0.5">
-        <p className="text-[11.5px] font-semibold uppercase tracking-wide text-muted-foreground">
-          {label}
+        <p className="text-[11px] font-semibold tracking-wider text-muted-foreground">
+          <span className="uppercase">{label}</span>
+          {labelHint ? (
+            <span className="normal-case font-medium text-destructive">
+              {" "}
+              ({labelHint})
+            </span>
+          ) : null}
         </p>
-        <p className="text-[13px] font-medium leading-snug text-foreground">
+        <p className="text-[13.5px] font-semibold leading-snug text-foreground">
           {value}
         </p>
       </div>
@@ -475,20 +513,3 @@ function MetaCell({
   );
 }
 
-/**
- * The compliance trail, as a count rather than a list.
- *
- * Every share writes a `ShareLog`, and saying so where the sharing happens is
- * what makes the rule visible to the IC. The rows themselves belong to
- * compliance's own surface, not to the IC's campaign page, so this stops at the
- * number.
- */
-function ShareLogCard({ count }: { count: number }) {
-  return (
-    <p className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-[12.5px] leading-snug text-muted-foreground">
-      การส่งสื่อทุกครั้งจะถูกบันทึกไว้เพื่อการตรวจสอบ — แคมเปญนี้มีประวัติการส่งแล้ว{" "}
-      <span className="font-semibold tabular-nums text-foreground">{count}</span>{" "}
-      รายการ
-    </p>
-  );
-}
