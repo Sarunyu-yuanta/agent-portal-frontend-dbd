@@ -9,7 +9,7 @@ import {
 import { Tag } from "@sarunyu/system-one";
 import type { Campaign } from "@/types/domain";
 import { PRODUCT_LABEL, SEGMENT_LABEL, thaiDay } from "../campaign-data";
-import { DetailSection, DetailSectionGroup, DetailSubsection } from "./DetailSection";
+import { DetailSectionGroup, DetailSubsection } from "./DetailSection";
 import { Disclaimer } from "./PromotionBody";
 
 /**
@@ -25,8 +25,8 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
   const online = campaign.format === "online";
 
   return (
-    <div className="flex flex-col gap-5">
-      <DetailSection title="เกี่ยวกับงานนี้">
+    <DetailSectionGroup>
+      <DetailSubsection title="เกี่ยวกับงานนี้">
         {/* The long form, not `summary` — that one-liner is already in the
             banner directly above this section. */}
         <div className="flex flex-col gap-3">
@@ -47,10 +47,10 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
             <Tag key={segment} text={SEGMENT_LABEL[segment]} variant="gray" size="small" />
           ))}
         </div>
-      </DetailSection>
+      </DetailSubsection>
 
       {campaign.agenda && campaign.agenda.length > 0 && (
-        <DetailSection title="กำหนดการ">
+        <DetailSubsection title="กำหนดการ">
           <div className="flex flex-col">
             {campaign.agenda.map((item, index) => (
               <div
@@ -81,16 +81,16 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
               </div>
             ))}
           </div>
-        </DetailSection>
+        </DetailSubsection>
       )}
 
       {campaign.speakers && campaign.speakers.length > 0 && (
-        <DetailSection title="วิทยากร">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <DetailSubsection title="วิทยากร">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {campaign.speakers.map((speaker) => (
               <div
                 key={speaker.name}
-                className="flex items-center gap-3 rounded-xl border border-border/40 bg-muted/20 p-3.5"
+                className="flex items-center gap-3"
               >
                 {speaker.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element -- fixed-size headshot, no responsive sizes needed
@@ -118,11 +118,11 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
               </div>
             ))}
           </div>
-        </DetailSection>
+        </DetailSubsection>
       )}
 
-      <DetailSection title="สถานที่และการเข้าร่วม">
-        <div className="flex flex-col gap-2.5 rounded-xl border border-border/40 bg-muted/20 p-4">
+      <DetailSubsection title="สถานที่และการเข้าร่วม">
+        <div className="flex flex-col gap-2.5">
           <div className="flex items-start gap-2.5">
             <span
               aria-hidden
@@ -159,52 +159,53 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
             </a>
           )}
         </div>
-      </DetailSection>
+      </DetailSubsection>
 
-      <DetailSectionGroup>
-        <DetailSubsection title="เงื่อนไขการเข้าร่วม">
-          <ul className="flex list-none flex-col gap-2 p-0">
-            {campaign.conditions.map((condition) => (
-              <li
-                key={condition}
-                className="flex items-start gap-3 rounded-xl border border-border/40 bg-muted/20 px-4 py-3"
-              >
-                <span
-                  aria-hidden
-                  className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-action text-white"
-                >
+      <DetailSubsection title="เงื่อนไขการเข้าร่วม">
+        <ul className="flex list-none flex-col gap-3 p-0">
+          {campaign.conditions.map((condition) => (
+            <li
+              key={condition}
+              className="flex items-start gap-3 text-[13.5px] leading-relaxed"
+            >
+              {/* One line tall, so the badge centres on the first line of
+                  text rather than sitting on its top edge. */}
+              <span aria-hidden className="flex h-lh shrink-0 items-center">
+                <span className="flex size-6 items-center justify-center rounded-full bg-primary-action-light text-primary-action">
                   <CheckIcon size={13} weight="bold" />
                 </span>
-                <span className="text-[13.5px] leading-relaxed text-foreground">
-                  {condition}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </DetailSubsection>
+              </span>
+              <span className="text-foreground">
+                {condition}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </DetailSubsection>
 
-        <DetailSubsection title="ข้อกำหนดและเงื่อนไข">
-          <ol className="flex list-none flex-col gap-2 p-0">
-            {campaign.terms.map((term, index) => (
-              <li
-                key={term}
-                className="flex items-start gap-3 rounded-xl border border-border/40 bg-muted/20 px-4 py-3"
-              >
-                <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-action text-[11px] font-bold tabular-nums text-white">
+      <DetailSubsection title="ข้อกำหนดและเงื่อนไข">
+        <ol className="flex list-none flex-col gap-3 p-0">
+          {campaign.terms.map((term, index) => (
+            <li
+              key={term}
+              className="flex items-start gap-3 text-[13.5px] leading-relaxed"
+            >
+              <span className="flex h-lh shrink-0 items-center">
+                <span className="flex size-6 items-center justify-center rounded-full bg-primary-action-light text-[11px] font-bold tabular-nums text-primary-action">
                   {index + 1}
                 </span>
-                <span className="text-[13.5px] leading-relaxed text-foreground">
-                  {term}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </DetailSubsection>
+              </span>
+              <span className="text-foreground">
+                {term}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </DetailSubsection>
 
-        <div className="not-first:mt-6 not-first:border-t not-first:border-border/50 not-first:pt-6">
-          <Disclaimer text={campaign.disclaimer} />
-        </div>
-      </DetailSectionGroup>
-    </div>
+      <div className="not-first:mt-6 not-first:border-t not-first:border-border/50 not-first:pt-6">
+        <Disclaimer text={campaign.disclaimer} />
+      </div>
+    </DetailSectionGroup>
   );
 }

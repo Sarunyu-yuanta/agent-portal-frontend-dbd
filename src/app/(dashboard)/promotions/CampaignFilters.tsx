@@ -7,15 +7,14 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import type {
   CampaignFormat,
   CampaignProduct,
-  CampaignStatus,
   ClientSegment,
 } from "@/types/domain";
 import {
   FORMAT_LABEL,
   PRODUCT_LABEL,
   SEGMENT_LABEL,
-  STATUS_LABEL,
   type CampaignFilters as Filters,
+  type CampaignTab,
 } from "./campaign-data";
 
 /**
@@ -54,7 +53,6 @@ function chipOptions<T extends string>(
 }
 
 const PRODUCT_OPTIONS = chipOptions(PRODUCT_LABEL);
-const STATUS_OPTIONS = chipOptions(STATUS_LABEL);
 const SEGMENT_OPTIONS = chipOptions(SEGMENT_LABEL);
 const FORMAT_OPTIONS = chipOptions(FORMAT_LABEL);
 
@@ -124,9 +122,6 @@ function activeChips(filters: Filters): {
   if (filters.product) {
     chips.push({ key: "product", label: PRODUCT_LABEL[filters.product] });
   }
-  if (filters.status) {
-    chips.push({ key: "status", label: STATUS_LABEL[filters.status] });
-  }
   if (filters.segment) {
     chips.push({ key: "segment", label: SEGMENT_LABEL[filters.segment] });
   }
@@ -138,6 +133,7 @@ function activeChips(filters: Filters): {
 
 export function CampaignFilters({
   tabs,
+  tab,
   filters,
   onChange,
   onClear,
@@ -153,6 +149,11 @@ export function CampaignFilters({
    * what the tabs *are*.
    */
   tabs?: React.ReactNode;
+  /**
+   * Which axes the dialog offers. Format is event-only, since a promotion has
+   * none. Status is not here at all — it is the chip row over the grid.
+   */
+  tab: CampaignTab;
   filters: Filters;
   onChange: (next: Partial<Filters>) => void;
   onClear: () => void;
@@ -261,7 +262,8 @@ export function CampaignFilters({
         // half of one decision when it is really the opposite of all of them.
         headerAction={{
           label: "ล้างทั้งหมด",
-          onClick: () => setDraft(NO_DROPDOWNS),
+          // The status chip lives outside the dialog; keep it.
+          onClick: () => setDraft((d) => ({ ...NO_DROPDOWNS, status: d.status })),
         }}
         closeOnBackdrop
         desktopContentClassName="w-[440px] max-w-full"
@@ -276,14 +278,6 @@ export function CampaignFilters({
             }
           />
           <ChipGroup
-            label="สถานะ"
-            options={STATUS_OPTIONS}
-            value={draft.status}
-            onChange={(status: CampaignStatus | null) =>
-              setDraft((d) => ({ ...d, status }))
-            }
-          />
-          <ChipGroup
             label="กลุ่มลูกค้า"
             options={SEGMENT_OPTIONS}
             value={draft.segment}
@@ -291,14 +285,16 @@ export function CampaignFilters({
               setDraft((d) => ({ ...d, segment }))
             }
           />
-          <ChipGroup
-            label="รูปแบบงาน"
-            options={FORMAT_OPTIONS}
-            value={draft.format}
-            onChange={(format: CampaignFormat | null) =>
-              setDraft((d) => ({ ...d, format }))
-            }
-          />
+          {tab === "event" && (
+            <ChipGroup
+              label="รูปแบบงาน"
+              options={FORMAT_OPTIONS}
+              value={draft.format}
+              onChange={(format: CampaignFormat | null) =>
+                setDraft((d) => ({ ...d, format }))
+              }
+            />
+          )}
 
           {/* The count is the point of committing rather than applying live:
               it is the only way to know the draft leaves anything before the

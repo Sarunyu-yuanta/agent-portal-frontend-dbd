@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { TabGroup } from "@sarunyu/system-one";
+import { Chip, TabGroup } from "@sarunyu/system-one";
 import { MegaphoneIcon } from "@phosphor-icons/react";
 import { FadeIn } from "@/components/ui/fade-in";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -18,11 +18,23 @@ import { PROMOTIONS_GRID_CSS } from "./promotions-grid-css";
 import {
   filterCampaigns,
   hasActiveFilters,
+  isNewCampaign,
+  campaignStatus,
+  SEAT_STATE_LABEL,
+  SEAT_STATES,
+  STATUS_LABEL,
+  seatState,
   sortByEndingSoonest,
+  type SeatState,
   type CampaignFilters as Filters,
   type CampaignTab,
 } from "./campaign-data";
-import type { CampaignFormat, CampaignProduct, ClientSegment } from "@/types/domain";
+import type {
+  CampaignFormat,
+  CampaignProduct,
+  CampaignStatus,
+  ClientSegment,
+} from "@/types/domain";
 
 /**
  * Promotions & Events — what the firm is running, and who of this IC's clients
@@ -70,6 +82,9 @@ const TABS: { id: CampaignTab; title: string }[] = [
 
 const DEFAULT_TAB: CampaignTab = "promotion";
 
+/** Running first: it is what an IC can act on today. */
+const PROMOTION_STATUSES: CampaignStatus[] = ["active", "upcoming", "ended"];
+
 /** The default tab carries no `?tab=`, so a bare `/promotions` is canonical. */
 function normalizeTab(value: string | null): CampaignTab {
   return TABS.some((t) => t.id === value) ? (value as CampaignTab) : DEFAULT_TAB;
@@ -89,15 +104,32 @@ function PromotionsPageInner() {
 
   const tab = normalizeTab(searchParams.get("tab"));
 
+  /** The "ใหม่" chip — either tab, one of the same single-select row. */
+  const newOnly = searchParams.get("new") === "1";
+
+  /** Event tab only; a stray `?seats=` on the promotion tab is ignored. */
+  const seats: SeatState | null =
+    tab === "event" && SEAT_STATES.includes(searchParams.get("seats") as SeatState)
+      ? (searchParams.get("seats") as SeatState)
+      : null;
+
   const filters: Filters = useMemo(
     () => ({
       product: (searchParams.get("product") as CampaignProduct | null) ?? null,
-      status: (searchParams.get("status") as Filters["status"]) ?? null,
+      // Each tab reads only the axes its dialog offers, so a stale param from
+      // the other tab can't narrow the list with no chip to show for it.
+      status:
+        tab === "promotion"
+          ? ((searchParams.get("status") as Filters["status"]) ?? null)
+          : null,
       segment: (searchParams.get("segment") as ClientSegment | null) ?? null,
-      format: (searchParams.get("format") as CampaignFormat | null) ?? null,
+      format:
+        tab === "event"
+          ? ((searchParams.get("format") as CampaignFormat | null) ?? null)
+          : null,
       search: searchParams.get("q") ?? "",
     }),
-    [searchParams],
+    [searchParams, tab],
   );
 
   const updateQuery = useCallback(
@@ -120,17 +152,80 @@ function PromotionsPageInner() {
   );
 
   const clearFilters = useCallback(
-    () => updateQuery({ product: null, status: null, segment: null, format: null, q: null }),
+    () =>
+      updateQuery({
+        product: null,
+        status: null,
+        segment: null,
+        format: null,
+        q: null,
+        seats: null,
+        new: null,
+      }),
     [updateQuery],
   );
 
   // ── Derivations ───────────────────────────────────────────────────────────
 
-  const visible = useMemo(
+  /**
+   * Everything the tab, search and dialog leave — before the status chips.
+   * `status` is held back here because it is one of those chips now, and the
+   * chip counts need the list it would be applied to.
+   */
+  const filtered = useMemo(
     () =>
-      sortByEndingSoonest(filterCampaigns(campaigns, { tab, filters, today }), today),
+      sortByEndingSoonest(
+        filterCampaigns(campaigns, { tab, filters: { ...filters, status: null }, today }),
+        today,
+      ),
     [campaigns, tab, filters, today],
   );
+
+  /**
+   * The chip row over the grid: campaign status on the promotion tab, seat
+   * state on the event tab. Each carries its count, so an empty bucket is
+   * visible before it is clicked.
+   */
+  const statusChips = useMemo(() => {
+    if (tab === "promotion") {
+      return PROMOTION_STATUSES.map((value) => ({
+        key: value,
+        label: STATUS_LABEL[value],
+        count: filtered.filter((c) => campaignStatus(c, today) === value).length,
+        selected: filters.status === value,
+        onClick: () =>
+          updateQuery({ status: filters.status === value ? null : value, new: null }),
+      }));
+    }
+    return SEAT_STATES.map((value) => ({
+      key: value,
+      label: SEAT_STATE_LABEL[value],
+      count: filtered.filter(
+        (c) => seatState(c, today, seatsLeft(c.id)) === value,
+      ).length,
+      selected: seats === value,
+      onClick: () =>
+        updateQuery({ seats: seats === value ? null : value, new: null }),
+    }));
+  }, [tab, filtered, today, filters.status, seats, seatsLeft, updateQuery]);
+
+  const newCount = useMemo(
+    () => filtered.filter((c) => isNewCampaign(c, today)).length,
+    [filtered, today],
+  );
+
+  const visible = useMemo(() => {
+    if (newOnly) return filtered.filter((c) => isNewCampaign(c, today));
+    if (filters.status) {
+      return filtered.filter((c) => campaignStatus(c, today) === filters.status);
+    }
+    if (seats) {
+      return filtered.filter((c) => seatState(c, today, seatsLeft(c.id)) === seats);
+    }
+    return filtered;
+  }, [filtered, newOnly, filters.status, seats, today, seatsLeft]);
+
+  const narrowed = hasActiveFilters(filters) || seats !== null || newOnly;
 
   /**
    * How many campaigns a draft set of filters would leave.
@@ -170,16 +265,60 @@ function PromotionsPageInner() {
               // `push`: a tab is a destination, and the back button should walk
               // out of it rather than off the page.
               onChange={(id) =>
-                updateQuery({ tab: id === DEFAULT_TAB ? null : id }, "push")
+                updateQuery(
+                  // Status, format and the seat chip each belong to one tab;
+                  // don't carry them into the other.
+                  {
+                    tab: id === DEFAULT_TAB ? null : id,
+                    status: null,
+                    format: null,
+                    seats: null,
+                    new: null,
+                  },
+                  "push",
+                )
               }
               size="md"
             />
           }
+          tab={tab}
           filters={filters}
           onChange={setFilters}
-          onClear={clearFilters}
+          // The dialog's axes only — the status chips over the grid keep theirs.
+          onClear={() =>
+            updateQuery({ product: null, segment: null, format: null, q: null })
+          }
           previewCount={previewCount}
         />
+
+        <div className="flex flex-wrap gap-2">
+          <Chip
+            label={`ทั้งหมด (${filtered.length})`}
+            type="single"
+            size="small"
+            selected={!newOnly && statusChips.every((chip) => !chip.selected)}
+            onClick={() => updateQuery({ status: null, seats: null, new: null })}
+          />
+          <Chip
+            label={`ใหม่ (${newCount})`}
+            type="single"
+            size="small"
+            selected={newOnly}
+            onClick={() =>
+              updateQuery({ new: newOnly ? null : "1", status: null, seats: null })
+            }
+          />
+          {statusChips.map((chip) => (
+            <Chip
+              key={chip.key}
+              label={`${chip.label} (${chip.count})`}
+              type="single"
+              size="small"
+              selected={chip.selected}
+              onClick={chip.onClick}
+            />
+          ))}
+        </div>
 
         {/* Keyed on the tab alone. It used to carry `visible.length` too, which
             changes on almost every keystroke in the search box — so the list
@@ -195,10 +334,10 @@ function PromotionsPageInner() {
                   className="text-[var(--text-default-placeholder)]"
                 />
               }
-              title={emptyTitle(tab, filters)}
-              body={emptyBody(tab, filters)}
+              title={emptyTitle(tab, narrowed)}
+              body={emptyBody(tab, narrowed)}
               action={
-                hasActiveFilters(filters)
+                narrowed
                   ? { label: "ล้างตัวกรอง", onClick: clearFilters }
                   : undefined
               }
@@ -210,6 +349,7 @@ function PromotionsPageInner() {
                   key={campaign.id}
                   campaign={campaign}
                   seatsLeft={seatsLeft(campaign.id)}
+                  isNew={isNewCampaign(campaign, today)}
                 />
               ))}
             </div>
@@ -220,13 +360,13 @@ function PromotionsPageInner() {
   );
 }
 
-function emptyTitle(tab: CampaignTab, filters: Filters): string {
-  if (hasActiveFilters(filters)) return "ไม่พบแคมเปญที่ค้นหา";
+function emptyTitle(tab: CampaignTab, narrowed: boolean): string {
+  if (narrowed) return "ไม่พบแคมเปญที่ค้นหา";
   return tab === "promotion" ? "ยังไม่มีโปรโมชัน" : "ยังไม่มีสัมมนา/อีเว้นท์";
 }
 
-function emptyBody(tab: CampaignTab, filters: Filters): string {
-  if (hasActiveFilters(filters)) {
+function emptyBody(tab: CampaignTab, narrowed: boolean): string {
+  if (narrowed) {
     // Scoped to the tab now that there is no combined view to fall back to —
     // telling someone to clear filters "to see everything" would promise a
     // list that no longer exists.

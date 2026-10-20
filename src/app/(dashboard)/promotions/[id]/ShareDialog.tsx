@@ -1,14 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Button, Checkbox } from "@sarunyu/system-one";
-import { EnvelopeSimpleIcon, ProhibitIcon } from "@phosphor-icons/react";
+import { useEffect, useMemo, useState } from "react";
+import { Avatar, Button, Checkbox } from "@sarunyu/system-one";
+import {
+  CheckIcon,
+  CopySimpleIcon,
+  EnvelopeSimpleIcon,
+  LinkSimpleIcon,
+  PaperPlaneTiltIcon,
+} from "@phosphor-icons/react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { TierBadge } from "@/components/ui/tier-badge";
 import { usePrivacy } from "@/contexts/privacy-context";
+import { getInitials } from "@/lib/client-utils";
 import { maskName } from "@/lib/mask-name";
 import type { CampaignMaterial } from "@/types/domain";
-import { CLIENT_STATUS_LABEL, type CampaignClientRow } from "../campaign-data";
+import type { CampaignClientRow } from "../campaign-data";
 
 /**
  * Pick who one piece of material goes to.
@@ -30,18 +37,43 @@ import { CLIENT_STATUS_LABEL, type CampaignClientRow } from "../campaign-data";
 export function ShareDialog({
   open,
   onOpenChange,
-  material,
   rows,
+  mode = "share",
+  joinUrl,
   onConfirm,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The material being sent. `null` closes the dialog. */
+  /** The material being sent. No longer shown; the share logs it. */
   material: CampaignMaterial | null;
-  /** Everyone the campaign concerns; the ineligible are shown but unpickable. */
+  /** Everyone the campaign concerns; only the eligible, unredeemed are listed. */
   rows: CampaignClientRow[];
+  /** `invite` is the event wording — "ชวน" rather than "แชร์". */
+  mode?: "share" | "invite";
+  /** An online event's link, shown with a copy button above the list. */
+  joinUrl?: string;
   onConfirm: (clientIds: string[]) => void;
 }) {
+  const verb = mode === "invite" ? "ชวนลูกค้า" : "แชร์ให้ลูกค้า";
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  const copyLink = async () => {
+    if (!joinUrl) return;
+    try {
+      await navigator.clipboard.writeText(joinUrl);
+      setCopied(true);
+    } catch {
+      // Clipboard can be blocked (insecure origin, permissions); the link is
+      // still on screen to select by hand.
+    }
+  };
+
   const { isPrivate } = usePrivacy();
   const [picked, setPicked] = useState<Set<string>>(new Set());
 
@@ -58,9 +90,14 @@ export function ShareDialog({
     onOpenChange(next);
   };
 
-  const selectable = useMemo(
-    () => rows.filter((row) => row.eligible).map((row) => row.client.id),
+  /** Only who can still use it — the ineligible and the already-redeemed are left out. */
+  const eligibleRows = useMemo(
+    () => rows.filter((row) => row.eligible && row.status !== "redeemed"),
     [rows],
+  );
+  const selectable = useMemo(
+    () => eligibleRows.map((row) => row.client.id),
+    [eligibleRows],
   );
 
   const allPicked = selectable.length > 0 && picked.size === selectable.length;
@@ -77,72 +114,85 @@ export function ShareDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title="แชร์ให้ลูกค้า"
-      headerAction={
-        selectable.length > 0
-          ? {
-              label: allPicked ? "ล้างที่เลือก" : "เลือกทั้งหมด",
-              onClick: () =>
-                setPicked(allPicked ? new Set() : new Set(selectable)),
-            }
-          : undefined
-      }
+      title={verb}
       closeOnBackdrop
       desktopContentClassName="w-[460px] max-w-full"
     >
       <div className="flex flex-col gap-4 pt-1">
-        {material && (
-          <p className="rounded-lg bg-muted/50 px-3 py-2.5 text-[12.5px] leading-snug text-muted-foreground">
-            กำลังจะส่ง{" "}
-            <span className="font-semibold text-foreground">{material.label}</span>{" "}
-            <span className="tabular-nums">({material.version})</span>
-          </p>
+        {joinUrl && (
+          <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/30 py-1.5 pl-3 pr-1.5">
+            <LinkSimpleIcon size={16} weight="bold" className="shrink-0 text-primary-action" />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="text-[11px] text-muted-foreground">ลิงก์เข้าร่วมงาน</span>
+              <span className="truncate text-[12.5px] font-medium text-foreground">
+                {joinUrl}
+              </span>
+            </div>
+            <Button
+              variant="plain"
+              size="icon-sm"
+              aria-label={copied ? "คัดลอกแล้ว" : "คัดลอกลิงก์"}
+              title={copied ? "คัดลอกแล้ว" : "คัดลอกลิงก์"}
+              onClick={() => void copyLink()}
+              className="shrink-0"
+            >
+              {copied ? (
+                <CheckIcon size={16} weight="bold" />
+              ) : (
+                <CopySimpleIcon size={16} weight="bold" />
+              )}
+            </Button>
+          </div>
         )}
 
-        <div className="flex max-h-[42vh] flex-col gap-1 overflow-y-auto">
-          {rows.map((row) => {
-            const name = maskName(row.client.name, isPrivate);
-            if (!row.eligible) {
-              return (
-                <div
-                  key={row.client.id}
-                  className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 opacity-60"
-                >
-                  <ProhibitIcon
-                    size={16}
-                    className="shrink-0 text-[var(--text-default-placeholder)]"
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <p className="truncate text-[13px] font-semibold text-foreground">
-                      {name}
-                    </p>
-                    <p className="truncate text-[11.5px] leading-snug text-muted-foreground">
-                      {row.ineligibleReason ?? "ไม่เข้าเงื่อนไขของแคมเปญนี้"}
-                    </p>
-                  </div>
-                </div>
-              );
-            }
+        {selectable.length > 0 && (
+          <div className="-mb-1 flex items-center justify-between pl-1">
+            <span className="text-[12.5px] font-semibold text-muted-foreground">
+              รายชื่อลูกค้า
+            </span>
+            <Button
+              variant="plain"
+              size="sm"
+              onClick={() =>
+                setPicked(allPicked ? new Set() : new Set(selectable))
+              }
+            >
+              {allPicked ? "ล้างที่เลือก" : "เลือกทั้งหมด"}
+            </Button>
+          </div>
+        )}
 
+        <div className="-mx-1 flex max-h-[46vh] flex-col gap-2 overflow-y-auto px-1 py-0.5">
+          {eligibleRows.length === 0 && (
+            <p className="rounded-xl bg-muted/40 px-4 py-6 text-center text-[12.5px] text-muted-foreground">
+              ไม่มีลูกค้าที่ส่งได้ในแคมเปญนี้
+            </p>
+          )}
+          {eligibleRows.map((row) => {
+            const name = maskName(row.client.name, isPrivate);
+            const checked = picked.has(row.client.id);
             return (
               <label
                 key={row.client.id}
-                className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-muted/60"
+                className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors ${
+                  checked
+                    ? "border-primary-action/40 bg-primary-action-light"
+                    : "border-border/60 hover:border-border hover:bg-muted/40"
+                }`}
               >
                 <Checkbox
-                  checked={picked.has(row.client.id)}
+                  checked={checked}
                   onChange={(next) => toggle(row.client.id, next)}
                 />
-                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-foreground">
+                <Avatar type="text" initials={getInitials(name)} size="s" />
+                <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-foreground">
                   {name}
                 </span>
-                <TierBadge tier={row.client.membershipTier} />
-                <span className="shrink-0 text-[11.5px] text-muted-foreground">
-                  {CLIENT_STATUS_LABEL[row.status]}
-                </span>
+                <TierBadge tier={row.client.membershipTier} className="shrink-0" />
               </label>
             );
           })}
+
         </div>
 
         <div className="flex flex-col gap-3 border-t border-border pt-4">
@@ -156,13 +206,14 @@ export function ShareDialog({
             variant="primary"
             size="lg"
             className="w-full"
+            leftIcon={<PaperPlaneTiltIcon size={16} weight="fill" />}
             disabled={picked.size === 0}
             onClick={() => {
               onConfirm([...picked]);
               setOpen(false);
             }}
           >
-            {picked.size > 0 ? `ส่งให้ ${picked.size} ลูกค้า` : "เลือกลูกค้าก่อน"}
+            {picked.size > 1 ? `${verb} ${picked.size} คน` : verb}
           </Button>
         </div>
       </div>

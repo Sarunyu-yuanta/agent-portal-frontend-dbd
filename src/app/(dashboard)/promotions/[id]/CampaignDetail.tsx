@@ -6,7 +6,7 @@ import {
   ArrowLeftIcon,
   CalendarBlankIcon,
   ClockIcon,
-  LinkSimpleIcon,
+  DownloadSimpleIcon,
   MapPinIcon,
   PaperPlaneTiltIcon,
   UsersThreeIcon,
@@ -18,10 +18,7 @@ import { useToasts } from "@/hooks/use-toasts";
 import { useClients } from "@/hooks/use-api";
 import { useCampaign } from "@/hooks/use-campaigns";
 import { useCampaignStore } from "@/contexts/campaigns-context";
-import { useNotes } from "@/contexts/notes-context";
-import { NOTE_AUTHOR } from "../../notes/note-constants";
 import { todayDateKey } from "../../calendar/calendar-grid";
-import type { RsvpStatus } from "@/types/domain";
 import {
   campaignClientRows,
   campaignStatus,
@@ -36,7 +33,6 @@ import {
 import { CampaignDetailSkeleton } from "./CampaignDetailSkeleton";
 import { EventBody } from "./EventBody";
 import { PromotionBody } from "./PromotionBody";
-import { RsvpTable } from "./RsvpTable";
 import { ShareDialog } from "./ShareDialog";
 
 /**
@@ -67,11 +63,8 @@ function CampaignDetailInner({ id }: { id: string }) {
     campaignClients,
     rsvps,
     shareMaterial,
-    registerClients,
-    setRsvpStatus,
     seatsLeft,
   } = useCampaignStore();
-  const { addNote } = useNotes();
   const { toasts, addToast, removeToast } = useToasts();
   // Called before any early return — a missing campaign must not skip a hook.
   // No fallback override: `/promotions/` is registered in `sectionRoot`, so a
@@ -95,6 +88,22 @@ function CampaignDetailInner({ id }: { id: string }) {
    * sharing has to be refused rather than silently logged against nothing.
    */
   const shareable = campaign?.materials.find((m) => m.approved) ?? null;
+
+  /** Saves the same material a share would send. Scripts are text, not a file. */
+  const download = useCallback(() => {
+    if (!shareable) return;
+    const isScript = shareable.type === "script";
+    const href = isScript
+      ? URL.createObjectURL(new Blob([shareable.url], { type: "text/plain;charset=utf-8" }))
+      : shareable.url;
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = isScript
+      ? `${shareable.label}-${shareable.version}.txt`
+      : shareable.url.split("/").pop() ?? shareable.label;
+    a.click();
+    if (isScript) URL.revokeObjectURL(href);
+  }, [shareable]);
 
   const rows = useMemo(
     () =>
@@ -134,67 +143,6 @@ function CampaignDetailInner({ id }: { id: string }) {
     [campaign, shareMaterial, addToast],
   );
 
-  const register = useCallback(
-    async (clientIds: string[]) => {
-      if (!campaign || clientIds.length === 0) return;
-      try {
-        const added = await registerClients({
-          campaignId: campaign.id,
-          clientIds,
-        });
-        addToast({
-          status: "success",
-          message: `ลงทะเบียนให้ลูกค้า ${added.length} รายแล้ว`,
-        });
-      } catch (error) {
-        addToast({
-          status: "critical",
-          message:
-            error instanceof Error
-              ? error.message
-              : "ลงทะเบียนไม่สำเร็จ กรุณาลองใหม่",
-        });
-      }
-    },
-    [campaign, registerClients, addToast],
-  );
-
-  const changeRsvp = useCallback(
-    async (clientId: string, status: RsvpStatus) => {
-      if (!campaign) return;
-      await setRsvpStatus(campaign.id, clientId, status);
-    },
-    [campaign, setRsvpStatus],
-  );
-
-  /**
-   * Post-event follow-up.
-   *
-   * Writes a Note rather than a Call Log entry. The spec offers either, and
-   * only one of them is writable: `data/call-log-data.ts` is a static map with
-   * no mutator and no store behind it, while Notes has a provider, survives
-   * navigation, and already shows up on the client's own profile and in the
-   * Calendar — which is where a follow-up actually needs to resurface.
-   */
-  const followUp = useCallback(
-    async (clientId: string) => {
-      if (!campaign) return;
-      const client = clients.find((c) => c.id === clientId);
-      await addNote({
-        clientIds: [clientId],
-        title: `ติดตามผลหลังงาน: ${campaign.title}`,
-        body: `${client?.name ?? "ลูกค้า"} เข้าร่วมงาน ${campaign.title} เมื่อ ${
-          campaign.eventDate ? thaiDay(campaign.eventDate) : "ที่ผ่านมา"
-        }\n\nสิ่งที่ต้องติดตาม:\n- `,
-        author: NOTE_AUTHOR,
-        reminderAt: null,
-        reminderDone: false,
-      });
-      addToast({ status: "success", message: "สร้างโน้ตติดตามผลแล้ว ดูได้ที่ Notes" });
-    },
-    [campaign, clients, addNote, addToast],
-  );
-
   if (isLoading) return <CampaignDetailSkeleton />;
 
   if (!campaign) {
@@ -216,7 +164,12 @@ function CampaignDetailInner({ id }: { id: string }) {
   const countdown = countdownLabel(campaign, today);
   const isEvent = campaign.type === "event";
   const past = isPastEvent(campaign, today);
+  /** Only an online event still to come has a link worth handing out. */
+  const joinUrl =
+    isEvent && campaign.format === "online" && !past ? campaign.joinUrl : undefined;
   const open = seatsLeft(campaign.id);
+  /** No seats left: nothing to invite anyone to. */
+  const full = isEvent && open === 0;
 
   const metaItems: MetaItem[] = [
     {
@@ -256,9 +209,12 @@ function CampaignDetailInner({ id }: { id: string }) {
       label: isEvent ? "ที่นั่ง" : "สินทรัพย์",
       value: isEvent
         ? campaign.seatsTotal
-          ? `เหลือ ${open ?? 0} จาก ${campaign.seatsTotal} ที่นั่ง`
+          ? full
+            ? `เต็มแล้ว (${campaign.seatsTotal} ที่นั่ง)`
+            : `เหลือ ${open ?? 0} จาก ${campaign.seatsTotal} ที่นั่ง`
           : "ไม่จำกัดที่นั่ง"
         : campaign.products.map((p) => PRODUCT_LABEL[p]).join(" · "),
+      critical: full,
     },
   ];
 
@@ -301,66 +257,71 @@ function CampaignDetailInner({ id }: { id: string }) {
             />
 
             <div className="absolute inset-0 flex flex-col justify-end gap-3.5 p-5 sm:gap-4 sm:p-7">
-              {(ended || status === "upcoming" || open === 0) && (
+              {/* A full event says so on its button instead — see below. */}
+              {(ended || status === "upcoming") && (
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
                   {ended ? (
-                    <Tag text="หมดเขต" variant="gray" size="small" />
+                    <Tag text="หมดเขต" variant="gray" size="large" />
                   ) : (
-                    <>
-                      {status === "upcoming" && (
-                        <Tag text="เร็ว ๆ นี้" variant="gray" size="small" />
-                      )}
-                      {open === 0 && (
-                        <Tag text="ที่นั่งเต็ม" variant="yellow" size="small" />
-                      )}
-                    </>
+                    <Tag text="เร็ว ๆ นี้" variant="gray" size="large" />
                   )}
                 </div>
               )}
 
-              <h1 className="max-w-3xl text-[22px] font-bold leading-[1.2] tracking-tight text-white sm:text-[28px] sm:leading-[1.15]">
-                {campaign.title}
-              </h1>
-              <p className="max-w-2xl text-[13px] leading-relaxed text-white/75 sm:text-[15px]">
-                {campaign.summary}
-              </p>
-
-              {/* The page's one action, on the banner so it is reachable
-                  without scrolling past the terms. Gone once the campaign has
-                  closed, and refused outright while nothing is approved —
-                  there would be no version to log the send against. */}
-              {!ended && (
-                <div className="pt-1">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    leftIcon={<PaperPlaneTiltIcon size={16} weight="fill" />}
-                    disabled={shareable === null}
-                    onClick={() => setShareOpen(true)}
-                  >
-                    {shareable === null
-                      ? "ยังไม่มีสื่อที่อนุมัติ"
-                      : "แชร์ให้ลูกค้า"}
-                  </Button>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+                <div className="flex min-w-0 flex-col gap-3.5 sm:gap-4">
+                  <h1 className="max-w-3xl text-[22px] font-bold leading-[1.2] tracking-tight text-white sm:text-[28px] sm:leading-[1.15]">
+                    {campaign.title}
+                  </h1>
+                  <p className="max-w-2xl text-[13px] leading-relaxed text-white/75 sm:text-[15px]">
+                    {campaign.summary}
+                  </p>
                 </div>
-              )}
+
+                {/* The page's one action, on the banner so it is reachable
+                    without scrolling past the terms. Gone until the campaign has
+                    opened and once it has closed, and refused outright while nothing is approved —
+                    there would be no version to log the send against. */}
+                {!ended && status !== "upcoming" && (
+                  <div className="flex shrink-0 flex-col gap-2.5 sm:w-52">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="w-full"
+                      leftIcon={
+                        full ? undefined : <PaperPlaneTiltIcon size={16} weight="fill" />
+                      }
+                      disabled={shareable === null || full}
+                      onClick={() => setShareOpen(true)}
+                    >
+                      {full
+                        ? "เต็มแล้ว"
+                        : shareable === null
+                          ? "ยังไม่มีสื่อที่อนุมัติ"
+                          : isEvent
+                            ? "ชวนลูกค้า"
+                            : "แชร์ให้ลูกค้า"}
+                    </Button>
+                    {!isEvent && (
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        leftIcon={<DownloadSimpleIcon size={16} weight="bold" />}
+                        disabled={shareable === null}
+                        onClick={download}
+                        className="w-full border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
+                      >
+                        ดาวน์โหลดเอกสาร
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           <MetaStrip items={metaItems} attached />
         </div>
-
-        {isEvent && campaign.format === "online" && campaign.joinUrl && !past && (
-          <a
-            href={campaign.joinUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex w-fit items-center gap-2 rounded-xl border border-primary-action/20 bg-primary-action-light px-4 py-2.5 text-[13px] font-semibold text-primary-action no-underline shadow-[0_2px_8px_-2px_rgba(10,110,231,0.25)] transition-all hover:border-primary-action/40 hover:bg-[rgba(10,110,231,0.16)]"
-          >
-            <LinkSimpleIcon size={16} weight="bold" />
-            ลิงก์เข้าร่วมงาน
-          </a>
-        )}
 
         {/* ── Body ───────────────────────────────────────────────────────── */}
         {/* One column. The materials panel used to hold the right-hand track;
@@ -373,21 +334,6 @@ function CampaignDetailInner({ id }: { id: string }) {
             <PromotionBody campaign={campaign} />
           )}
 
-          {/* Events keep their table: registering someone, confirming a seat
-              and marking attendance all happen on the row itself. A promotion
-              has no such table any more — once picking clients moved into the
-              share dialog, the list below it was the same names again with
-              nothing to do to them. */}
-          {isEvent && (
-            <RsvpTable
-              rows={rows}
-              seatsLeft={open}
-              isPast={past}
-              onRegister={register}
-              onSetRsvp={changeRsvp}
-              onFollowUp={followUp}
-            />
-          )}
         </div>
       </div>
 
@@ -397,6 +343,8 @@ function CampaignDetailInner({ id }: { id: string }) {
         onOpenChange={setShareOpen}
         material={shareable}
         rows={rows}
+        mode={isEvent ? "invite" : "share"}
+        joinUrl={joinUrl}
         onConfirm={(clientIds) => {
           if (shareable) void share(shareable.id, clientIds);
         }}
@@ -413,6 +361,8 @@ type MetaItem = {
   /** Shown in parentheses after the label — e.g. the ending-soon countdown. */
   labelHint?: string;
   value: string;
+  /** Paints the value red — a fact the IC must not miss, like a full room. */
+  critical?: boolean;
 };
 
 /**
@@ -479,12 +429,14 @@ function MetaCell({
   label,
   labelHint,
   value,
+  critical = false,
   className = "",
 }: {
   icon: React.ReactNode;
   label: string;
   labelHint?: string;
   value: string;
+  critical?: boolean;
   className?: string;
 }) {
   return (
@@ -505,7 +457,11 @@ function MetaCell({
             </span>
           ) : null}
         </p>
-        <p className="text-[13.5px] font-semibold leading-snug text-foreground">
+        <p
+          className={`text-[13.5px] font-semibold leading-snug ${
+            critical ? "text-destructive" : "text-foreground"
+          }`}
+        >
           {value}
         </p>
       </div>

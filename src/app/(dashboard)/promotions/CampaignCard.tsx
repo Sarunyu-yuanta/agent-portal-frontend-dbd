@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Card } from "@sarunyu/system-one";
+import { Card, Tag } from "@sarunyu/system-one";
 import type { CardTagStatus } from "@sarunyu/system-one";
 import type { Campaign } from "@/types/domain";
 import { campaignDateLine, FORMAT_LABEL, PRODUCT_LABEL } from "./campaign-data";
@@ -23,10 +23,13 @@ import { campaignDateLine, FORMAT_LABEL, PRODUCT_LABEL } from "./campaign-data";
 export function CampaignCard({
   campaign,
   seatsLeft,
+  isNew = false,
 }: {
   campaign: Campaign;
   /** Events only; `null` for a promotion, which has no seats. */
   seatsLeft: number | null;
+  /** Recently opened — see `isNewCampaign`. Pinned over the cover's corner. */
+  isNew?: boolean;
 }) {
   const isEvent = campaign.type === "event";
 
@@ -61,7 +64,7 @@ export function CampaignCard({
       href={`/promotions/${campaign.id}`}
       // `group` so the hover is owned by the whole card rather than by
       // whichever part of it the pointer happens to be over.
-      className="group block rounded-[8px] no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary-action)]"
+      className="group relative block rounded-[8px] no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary-action)]"
     >
       <Card
         variant="event"
@@ -79,6 +82,10 @@ export function CampaignCard({
         className={[
           // Fills the grid cell, so a row of cards ends level.
           "h-full",
+          // Title on one line, truncated. The card clamps it to two, so the
+          // date row moved up or down with the title's length; `!` for the
+          // same unlayered-stylesheet reason as the hover tint below.
+          "[&_p.line-clamp-2]:line-clamp-1!",
           /**
            * The body greys off under the pointer. White at rest.
            *
@@ -105,6 +112,13 @@ export function CampaignCard({
           "group-hover:[&_img]:scale-[1.06]",
         ].join(" ")}
       />
+      {/* Over the cover rather than in the body: the card has no slot for a
+          second tag, and the corner is where a glance lands first. */}
+      {isNew && (
+        <span className="pointer-events-none absolute left-3 top-3 z-10">
+          <Tag text="ใหม่" variant="red" size="large" />
+        </span>
+      )}
     </Link>
   );
 }

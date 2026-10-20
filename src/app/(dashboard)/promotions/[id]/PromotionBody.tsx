@@ -44,19 +44,20 @@ export function PromotionBody({ campaign }: { campaign: Campaign }) {
         </DetailSubsection>
 
         <DetailSubsection title="เงื่อนไขการเข้าร่วม">
-          <ul className="flex list-none flex-col gap-2 p-0">
+          <ul className="flex list-none flex-col gap-3 p-0">
             {campaign.conditions.map((condition) => (
               <li
                 key={condition}
-                className="flex items-start gap-3 rounded-xl border border-border/40 bg-muted/20 px-4 py-3"
+                className="flex items-start gap-3 text-[13.5px] leading-relaxed"
               >
-                <span
-                  aria-hidden
-                  className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-action text-white"
-                >
-                  <CheckIcon size={13} weight="bold" />
+                {/* One line tall, so the badge centres on the first line of
+                    text rather than sitting on its top edge. */}
+                <span aria-hidden className="flex h-lh shrink-0 items-center">
+                  <span className="flex size-6 items-center justify-center rounded-full bg-primary-action-light text-primary-action">
+                    <CheckIcon size={13} weight="bold" />
+                  </span>
                 </span>
-                <span className="text-[13.5px] leading-relaxed text-foreground">
+                <span className="text-foreground">
                   {condition}
                 </span>
               </li>
@@ -65,16 +66,18 @@ export function PromotionBody({ campaign }: { campaign: Campaign }) {
         </DetailSubsection>
 
         <DetailSubsection title="ข้อกำหนดและเงื่อนไข">
-          <ol className="flex list-none flex-col gap-2 p-0">
+          <ol className="flex list-none flex-col gap-3 p-0">
             {campaign.terms.map((term, index) => (
               <li
                 key={term}
-                className="flex items-start gap-3 rounded-xl border border-border/40 bg-muted/20 px-4 py-3"
+                className="flex items-start gap-3 text-[13.5px] leading-relaxed"
               >
-                <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-action text-[11px] font-bold tabular-nums text-white">
-                  {index + 1}
+                <span className="flex h-lh shrink-0 items-center">
+                  <span className="flex size-6 items-center justify-center rounded-full bg-primary-action-light text-[11px] font-bold tabular-nums text-primary-action">
+                    {index + 1}
+                  </span>
                 </span>
-                <span className="text-[13.5px] leading-relaxed text-foreground">
+                <span className="text-foreground">
                   {term}
                 </span>
               </li>

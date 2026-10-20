@@ -86,6 +86,23 @@ export function isEndingSoon(campaign: Campaign, today: Date): boolean {
   );
 }
 
+/** How long after opening a campaign still wears the "ใหม่" tag. */
+export const NEW_DAYS = 7;
+
+/**
+ * Opened within {@link NEW_DAYS} and still running.
+ *
+ * Keyed on `startDate` because a campaign carries no publish date of its own;
+ * when the backend sends one, this is the line to change. An upcoming campaign
+ * is not "new" — it has "เร็ว ๆ นี้" for that.
+ */
+export function isNewCampaign(campaign: Campaign, today: Date): boolean {
+  return (
+    campaignStatus(campaign, today) === "active" &&
+    daysUntil(campaign.startDate, today) >= -NEW_DAYS
+  );
+}
+
 /** An event already held — the only state in which attendance can be marked. */
 export function isPastEvent(campaign: Campaign, today: Date): boolean {
   return (
@@ -93,6 +110,33 @@ export function isPastEvent(campaign: Campaign, today: Date): boolean {
     campaign.eventDate !== undefined &&
     daysUntil(campaign.eventDate, today) < 0
   );
+}
+
+/**
+ * Where an event stands for booking, as the event tab's chips filter it.
+ *
+ * Held apart from {@link CampaignFilters}: the seat count lives in the
+ * campaigns store, not on the `Campaign`, so this is applied by the page after
+ * `filterCampaigns` rather than inside it. A past event is "past" whatever its
+ * seats say — a full room last week is not something to wait on.
+ */
+export type SeatState = "available" | "full" | "past";
+
+export const SEAT_STATES: SeatState[] = ["available", "full", "past"];
+
+export const SEAT_STATE_LABEL: Record<SeatState, string> = {
+  available: "ยังไม่เต็ม",
+  full: "เต็มแล้ว",
+  past: "ผ่านไปแล้ว",
+};
+
+export function seatState(
+  campaign: Campaign,
+  today: Date,
+  seatsLeft: number | null,
+): SeatState {
+  if (isPastEvent(campaign, today)) return "past";
+  return seatsLeft === 0 ? "full" : "available";
 }
 
 // ── Eligibility ─────────────────────────────────────────────────────────────
