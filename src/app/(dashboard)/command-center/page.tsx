@@ -28,6 +28,9 @@ import {
 import { CallLogPanel } from "./CallLogPanel";
 import { KycAlertsPanel } from "./KycAlertsPanel";
 import { AssetSummaryPanel } from "./AssetSummaryPanel";
+import { RiskAlertsPanel } from "./RiskAlertsPanel";
+import { SEVERITY_ORDER } from "./risk-config";
+import type { RiskSeverity } from "@/types/domain";
 import { buildCallLog } from "./call-log-feed";
 import {
   buildQueue,
@@ -37,8 +40,10 @@ import {
   HIDDEN_QUEUE_IDS_PREF,
   CALL_LOG_ROW_LIMIT,
   KYC_INLINE_DAYS,
+  RISK_ALERT_ROW_FLOOR,
 } from "./dashboard-data";
 import { useNbaRows } from "./use-nba-rows";
+import { useRiskAlertRows } from "./use-risk-alert-rows";
 
 /**
  * The page an IC opens first.
@@ -101,6 +106,11 @@ function DashboardPageInner() {
     isQueueId,
   );
   const { rows: nbaRows, dismiss: dismissNba } = useNbaRows();
+  const {
+    rows: riskRows,
+    acknowledgedRows: riskAcknowledged,
+    acknowledge: acknowledgeRisk,
+  } = useRiskAlertRows();
 
   // The modals a queue row opens — the same pair the bell and a client's
   // Reminders tab open, from the one definition. No `pinnedClientId`: this page
@@ -112,6 +122,17 @@ function DashboardPageInner() {
   // reminders card.
   const todayKey = todayDateKey();
   const today = useMemo(() => new Date(todayKey), [todayKey]);
+
+  /** Which severity the Proactive Compliance Alerts card is narrowed to, as a
+   *  query param rather than component state: the dashboard layout never
+   *  remounts, so a card narrowed to `วิกฤต` survives a trip into a client and
+   *  back — and the view can be linked to. `null` is ทั้งหมด. */
+  const riskSeverity = useMemo(() => {
+    const value = searchParams.get("risk");
+    return SEVERITY_ORDER.includes(value as RiskSeverity)
+      ? (value as RiskSeverity)
+      : null;
+  }, [searchParams]);
 
   const monthOffset = Number(searchParams.get("month")) || 0;
   const viewDate = useMemo(() => addMonths(today, monthOffset), [today, monthOffset]);
@@ -265,6 +286,34 @@ function DashboardPageInner() {
 
             <StatTiles tiles={tiles} />
 
+            {/* What could go wrong today, before what could go right.
+
+                Above the Next Best Actions card on purpose: an obligation
+                outranks a suggestion at eight in the morning, and that
+                suggestion card is still held behind a blur — a live, actionable
+                list buried under a placeholder reads as the page hiding its
+                working half. The tiles directly above already count KYC
+                expiries, so a strip that counts work handing straight to a list
+                of work is the natural read.
+
+                Full width because its rows carry the figure the rule fired on
+                hard right, which a half-width column would have to drop — and
+                because "is anything on fire" is not a question to answer in a
+                gutter.
+
+                Distinct from the rail's KYC card by construction: no row here
+                is a KYC expiry. See `RiskAlertsPanel`. */}
+            <Card variant="default" className="gap-4">
+              <RiskAlertsPanel
+                rows={riskRows}
+                floor={RISK_ALERT_ROW_FLOOR}
+                acknowledgedCount={riskAcknowledged.length}
+                onAcknowledge={acknowledgeRisk}
+                severity={riskSeverity}
+                onSeverityChange={(next) => updateQuery({ risk: next })}
+              />
+            </Card>
+
             {/* The one card on this page that asks for something gets the row
                 to itself — its rows carry two lines plus a drafted message, and
                 sharing the width cost the draft more than a neighbour gained. */}
@@ -389,6 +438,20 @@ function DashboardSkeleton() {
               <Skeleton key={i} className="h-[96px] rounded-2xl" />
             ))}
           </div>
+          {/* Proactive Compliance Alerts — five rows, matching
+              `RISK_ALERT_ROW_FLOOR`; move the two together or the page jumps
+              when the data lands. */}
+          <Card variant="default" className="gap-4">
+            {/* `w-56` = 224px, which is what "Proactive Compliance Alerts"
+                measures at `CardHeader`'s 16px. Re-measure if either the title
+                or the heading size changes — it was briefly 253px while the
+                heading was still `type-h6`. */}
+            <Skeleton className="h-7 w-56" />
+            <Skeleton className="h-7 w-[300px] rounded-full" />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-[62px] rounded-xl" />
+            ))}
+          </Card>
           {/* Next Best Actions */}
           <Card variant="default" className="gap-4">
             <Skeleton className="h-7 w-52" />

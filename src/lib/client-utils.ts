@@ -62,6 +62,20 @@ export function formatThbDecimal(amount: number): string {
   });
 }
 
+/**
+ * A whole-baht amount with the symbol — 2140000 → "฿ 2,140,000".
+ *
+ * Sits between the other two on purpose. {@link formatAumThb} rounds to ฿2.1M,
+ * which is right for a book total and wrong for a margin top-up: an IC reading
+ * it off to a client over the phone needs the figure that will actually clear
+ * the call. {@link formatThbDecimal} keeps every baht but always draws two
+ * decimals, and "2,140,000.00" claims a precision a threshold figure does not
+ * have.
+ */
+export function formatThbWhole(amount: number): string {
+  return `฿ ${Math.round(amount).toLocaleString("en-US")}`;
+}
+
 export function formatThbAmount(amount: number, withSign = false): string {
   const formatted = formatThbDecimal(Math.abs(amount));
   if (!withSign) return formatted;

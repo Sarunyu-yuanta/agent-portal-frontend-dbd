@@ -58,6 +58,13 @@ type RawClientRow = RawCampaign["clients"][number];
  * once is clearer than an assertion at each of the eight sites.
  */
 type RawEventFields = {
+  /**
+   * Absent on a campaign the firm published with no window — see
+   * {@link Campaign.startDate}. Read through the same optional shape as the
+   * event-only keys for the same `resolveJsonModule` reason.
+   */
+  startOffset?: number;
+  endOffset?: number;
   eventOffset?: number;
   format?: string;
   venue?: string;
@@ -69,13 +76,21 @@ type RawEventFields = {
 };
 
 /**
- * An offset in days turned into an ISO day.
+ * An offset in days turned into an ISO day — `null` when there is no offset.
  *
  * Local midnight, not UTC: every comparison downstream is against the user's
  * own "today" (`dayKey` in `calendar-grid` reads local parts too), and a UTC
  * stamp would put a Bangkok afternoon on the previous day.
+ *
+ * The null passes straight through rather than defaulting to today: a fixture
+ * that omits `startOffset` is stating that the firm published no window, and
+ * substituting a date here would be this module inventing the one fact it
+ * exists to keep honest.
  */
-function dayFromOffset(offset: number): string {
+function dayFromOffset(offset: number): string;
+function dayFromOffset(offset: number | undefined): string | null;
+function dayFromOffset(offset: number | undefined): string | null {
+  if (offset === undefined) return null;
   const now = new Date();
   const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
   const month = String(day.getMonth() + 1).padStart(2, "0");
@@ -120,10 +135,9 @@ export const mockCampaigns: Campaign[] = campaignsRaw.map((raw) => {
     featured: raw.featured,
     products: raw.products as CampaignProduct[],
     segments: raw.segments as ClientSegment[],
-    startDate: dayFromOffset(raw.startOffset),
-    endDate: dayFromOffset(raw.endOffset),
-    eventDate:
-      event.eventOffset === undefined ? undefined : dayFromOffset(event.eventOffset),
+    startDate: dayFromOffset(event.startOffset),
+    endDate: dayFromOffset(event.endOffset),
+    eventDate: dayFromOffset(event.eventOffset) ?? undefined,
     format: event.format as CampaignFormat | undefined,
     venue: event.venue,
     joinUrl: event.joinUrl,

@@ -21,6 +21,7 @@ import { useCampaignStore } from "@/contexts/campaigns-context";
 import { todayDateKey } from "../../calendar/calendar-grid";
 import {
   campaignClientRows,
+  campaignDateLine,
   campaignStatus,
   countdownLabel,
   daysUntil,
@@ -179,13 +180,14 @@ function CampaignDetailInner({ id }: { id: string }) {
       value:
         isEvent && campaign.eventDate
           ? thaiDay(campaign.eventDate)
-          : `${thaiDay(campaign.startDate)} – ${thaiDay(campaign.endDate)}`,
+          : campaignDateLine(campaign),
     },
     {
       icon: <ClockIcon size={17} weight="fill" />,
       label: isEvent ? "ปิดรับลงทะเบียน" : "สถานะ",
+      // An event always carries both dates — see `Campaign.startDate`.
       value: isEvent
-        ? thaiDay(campaign.endDate)
+        ? thaiDay(campaign.endDate!)
         : statusLine(status, campaign.endDate, today),
     },
     isEvent
@@ -235,7 +237,7 @@ function CampaignDetailInner({ id }: { id: string }) {
         {/* Banner + meta share one frame — flush join, radius from the strip below. */}
         <div className="overflow-hidden rounded-2xl border border-border/50 bg-white shadow-[0_8px_32px_-12px_rgba(15,23,42,0.35)]">
           <div className="relative overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element -- generated SVG cover; the image optimizer rejects SVG */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- the events' covers are generated SVGs, which the image optimizer rejects */}
             <img
               src={campaign.cover}
               alt=""
@@ -415,9 +417,12 @@ function MetaStrip({
 
 function statusLine(
   status: ReturnType<typeof campaignStatus>,
-  endDate: string,
+  endDate: string | null,
   today: Date,
 ): string {
+  // No closing date: the status *is* the whole answer, and a countdown would
+  // have to invent the day it counts to. See `Campaign.startDate`.
+  if (endDate === null) return "กำลังดำเนินการ";
   if (status === "ended") return `หมดเขตเมื่อ ${thaiDay(endDate)}`;
   if (status === "upcoming") return "ยังไม่เริ่ม";
   const left = Math.max(0, daysUntil(endDate, today));

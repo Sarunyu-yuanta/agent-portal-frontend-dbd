@@ -272,6 +272,8 @@ const truncate = (label: string, max: number) =>
 const COMMAND_CENTER_SUBPAGE_LABEL: Record<string, string> = {
   "/command-center/call-log": "Call Log",
   "/command-center/next-best-actions": "Next Best Actions",
+  // 27 characters, inside the 28 a leaf rung gets before `truncate` bites.
+  "/command-center/risk-alerts": "Proactive Compliance Alerts",
 };
 
 function labelFor(pathname: string, ctx: BreadcrumbContext): string | null {
@@ -306,7 +308,7 @@ function labelFor(pathname: string, ctx: BreadcrumbContext): string | null {
   }
 
   // A campaign is named by its title, not by its id — the rung has to read
-  // "Promotion/Events / FCN Autocall ซีรีส์พิเศษ…", not "… / cmp-fcn-autocall".
+  // "Promotion/Events / เทรดนอกสุดคุ้ม…", not "… / cmp-global-rewards".
   const campaign = /^\/promotions\/([^/]+)/.exec(pathname);
   if (campaign) {
     const found = mockCampaigns.find(

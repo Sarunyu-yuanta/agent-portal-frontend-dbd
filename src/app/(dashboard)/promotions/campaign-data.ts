@@ -61,16 +61,30 @@ export function daysUntil(isoDay: string, today: Date): number {
  * The window is inclusive at both ends: a campaign ending today is still one
  * the IC can act on this afternoon, and calling it "หมดเขต" at midnight of its
  * own last day would be wrong by a working day.
+ *
+ * A campaign with no window is "active" — see {@link Campaign.startDate}. It
+ * has been published and nothing has closed it, which is the whole of what the
+ * other two states are about; "upcoming" and "ended" are both claims about a
+ * date, and there is none to make them from.
  */
 export function campaignStatus(campaign: Campaign, today: Date): CampaignStatus {
+  if (campaign.startDate === null) return "active";
   if (daysUntil(campaign.startDate, today) > 0) return "upcoming";
-  if (daysUntil(campaign.endDate, today) < 0) return "ended";
+  if (campaign.endDate !== null && daysUntil(campaign.endDate, today) < 0) {
+    return "ended";
+  }
   return "active";
 }
 
-/** Days left to act. Negative for an ended campaign, so callers can clamp. */
-export function daysLeft(campaign: Campaign, today: Date): number {
-  return daysUntil(campaign.endDate, today);
+/**
+ * Days left to act. Negative for an ended campaign, so callers can clamp.
+ *
+ * `null` when there is no closing date — distinct from a large number, because
+ * "runs until pulled" is not "runs for a long time", and the callers that print
+ * a countdown have nothing to print.
+ */
+export function daysLeft(campaign: Campaign, today: Date): number | null {
+  return campaign.endDate === null ? null : daysUntil(campaign.endDate, today);
 }
 
 /** The threshold the countdown badge and the "ใกล้หมดเขต" rail both use. */
@@ -79,6 +93,8 @@ export const ENDING_SOON_DAYS = 7;
 /** Active, and inside {@link ENDING_SOON_DAYS} of closing. */
 export function isEndingSoon(campaign: Campaign, today: Date): boolean {
   const left = daysLeft(campaign, today);
+  // Nothing to run out of, so never soon — see {@link daysLeft}.
+  if (left === null) return false;
   return (
     campaignStatus(campaign, today) === "active" &&
     left >= 0 &&
@@ -94,9 +110,11 @@ export const NEW_DAYS = 7;
  *
  * Keyed on `startDate` because a campaign carries no publish date of its own;
  * when the backend sends one, this is the line to change. An upcoming campaign
- * is not "new" — it has "เร็ว ๆ นี้" for that.
+ * is not "new" — it has "เร็ว ๆ นี้" for that, and a campaign with no window
+ * has no opening day to be within seven of.
  */
 export function isNewCampaign(campaign: Campaign, today: Date): boolean {
+  if (campaign.startDate === null) return false;
   return (
     campaignStatus(campaign, today) === "active" &&
     daysUntil(campaign.startDate, today) >= -NEW_DAYS
@@ -279,6 +297,10 @@ export function filterCampaigns(
  * reference, not work — and within each group the nearer deadline leads. An
  * upcoming campaign sorts by when it *closes* like everything else, so the
  * question the order answers stays "what runs out first".
+ *
+ * A campaign with no closing date answers that question with "it doesn't", so
+ * it sits below every dated one but above the ended block: there is no deadline
+ * to beat, and nothing is lost by reaching it last.
  */
 export function sortByEndingSoonest(
   campaigns: Campaign[],
@@ -288,8 +310,13 @@ export function sortByEndingSoonest(
     const aEnded = campaignStatus(a, today) === "ended";
     const bEnded = campaignStatus(b, today) === "ended";
     if (aEnded !== bEnded) return aEnded ? 1 : -1;
-    const byDate = a.endDate.localeCompare(b.endDate);
-    if (byDate !== 0) return byDate;
+    if ((a.endDate === null) !== (b.endDate === null)) {
+      return a.endDate === null ? 1 : -1;
+    }
+    if (a.endDate !== null && b.endDate !== null) {
+      const byDate = a.endDate.localeCompare(b.endDate);
+      if (byDate !== 0) return byDate;
+    }
     return a.title.localeCompare(b.title);
   });
 }
@@ -352,16 +379,26 @@ export function thaiDay(isoDay: string): string {
   });
 }
 
+/** What a card and the detail header print where a date range would go. */
+export const NO_PERIOD_LABEL = "ไม่ระบุช่วงเวลา";
+
 /**
  * The one date line a card shows.
  *
  * An event is defined by the day it happens; a promotion by the window it is
  * open. Printing both for an event would put the registration deadline next to
  * the event date with nothing to tell them apart.
+ *
+ * A promotion with no window says so in words rather than rendering an empty
+ * row: the dash the row would otherwise collapse to reads as a layout fault,
+ * and the IC's question — "how long have I got?" — still has an answer.
  */
 export function campaignDateLine(campaign: Campaign): string {
   if (campaign.type === "event" && campaign.eventDate) {
     return thaiDay(campaign.eventDate);
+  }
+  if (campaign.startDate === null || campaign.endDate === null) {
+    return NO_PERIOD_LABEL;
   }
   return `${thaiDay(campaign.startDate)} – ${thaiDay(campaign.endDate)}`;
 }
@@ -370,5 +407,6 @@ export function campaignDateLine(campaign: Campaign): string {
 export function countdownLabel(campaign: Campaign, today: Date): string | null {
   if (!isEndingSoon(campaign, today)) return null;
   const left = daysLeft(campaign, today);
+  if (left === null) return null;
   return left === 0 ? "วันสุดท้าย" : `เหลือ ${left} วัน`;
 }

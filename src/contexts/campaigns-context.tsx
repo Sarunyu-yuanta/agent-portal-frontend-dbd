@@ -5,7 +5,7 @@
  * registered for which event, and who turned up.
  *
  * Mounted once in the dashboard layout, for the same reason `OrdersProvider`
- * is: a share sent from `/promotions/cmp-fcn-autocall` has to move the
+ * is: a share sent from `/promotions/cmp-dr-qqqm19` has to move the
  * "ลูกค้าที่เข้าเงื่อนไขแต่ยังไม่ได้ชวน" tile on `/promotions` without either
  * screen remounting, and the layout is the only thing that doesn't.
  *
@@ -165,8 +165,9 @@ export function CampaignsProvider({ children }: { children: ReactNode }) {
         );
       }
       // `endDate` inclusive, matching `campaignStatus` — a campaign closing
-      // today is one the IC can still act on this afternoon.
-      if (campaign && todayIsoDay() > campaign.endDate) {
+      // today is one the IC can still act on this afternoon. A null one never
+      // closes, so there is nothing to refuse.
+      if (campaign?.endDate != null && todayIsoDay() > campaign.endDate) {
         throw new Error(`Campaign ${campaignId} has closed and takes no shares`);
       }
 

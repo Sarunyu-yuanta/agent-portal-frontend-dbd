@@ -543,6 +543,28 @@ export const CALL_LOG_ROW_LIMIT = 6;
  */
 export const KYC_INLINE_DAYS = 14;
 
+/**
+ * How many risk alerts the Command Center section names before handing the rest
+ * to `/command-center/risk-alerts`.
+ *
+ * A **floor, not a cap** — every open `critical` gets a named row and the
+ * quieter severities fill up to this, which is why `inlineRiskAlerts` takes it
+ * rather than the card doing a `.slice`. A hard count is the wrong axis for the
+ * reason `KYC_INLINE_DAYS` gives just above: it would hide a live margin call
+ * because four other criticals happened to sort first.
+ *
+ * Five, which against today's fixtures is the four open criticals plus one
+ * warning. That last row is the one doing the extra work: every critical here
+ * is closed by the desk or by Compliance rather than by an IC, so without a row
+ * from the tier below, the card would carry no acknowledgeable row at all and
+ * the tick would be an affordance that never appeared.
+ *
+ * Measured rather than guessed: at 68px a row, five rows plus the heading and
+ * the severity strip leave the card inside the fold on a 900px viewport, where
+ * seven ran 44px past it.
+ */
+export const RISK_ALERT_ROW_FLOOR = 5;
+
 // ── House view, and what it points at ───────────────────────────────────────
 
 export type SpotlightProduct = { id: string; name: string; sub: string; href: string };

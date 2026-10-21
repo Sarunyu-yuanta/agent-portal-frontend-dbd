@@ -37,15 +37,10 @@ const HEIGHT = 540;
  * Keyed by desk instead, so the grid reads as a palette rather than confetti.
  */
 const PALETTE = {
-  "cmp-fcn-autocall": { from: "#1e3a8a", to: "#6d28d9", motif: "arcs" },
-  "cmp-fund-nofee": { from: "#065f46", to: "#0d9488", motif: "bars" },
   "evt-global-outlook": { from: "#0a3d91", to: "#0ea5e9", motif: "grid" },
   "evt-fund-webinar": { from: "#1e1b4b", to: "#7c3aed", motif: "waves" },
-  "cmp-bond-primary": { from: "#334155", to: "#b45309", motif: "bars" },
   "evt-elite-dinner": { from: "#1c1917", to: "#92400e", motif: "arcs" },
-  "cmp-stock-fee": { from: "#7c2d12", to: "#ea580c", motif: "waves" },
   "evt-tax-planning": { from: "#134e4a", to: "#0891b2", motif: "grid" },
-  "cmp-global-dr": { from: "#0c4a6e", to: "#06b6d4", motif: "waves" },
   "evt-wealth-clinic": { from: "#3730a3", to: "#2563eb", motif: "arcs" },
 };
 
@@ -126,6 +121,11 @@ fs.mkdirSync(OUT, { recursive: true });
 
 let written = 0;
 for (const campaign of campaigns) {
+  // A `.webp` cover is real artwork pulled from Yuanta's CMS by
+  // `fetch-campaign-covers.mjs`. Drawing over it would replace the banner the
+  // client has already seen on the public site with a gradient.
+  if (!campaign.cover.endsWith(".svg")) continue;
+
   // The fixture names the file it expects; writing anywhere else would leave a
   // broken banner that only shows up three screens away.
   const expected = campaign.cover;

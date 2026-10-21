@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "logos": "node scripts/generate-underlying-logos.mjs",
-    "covers": "node scripts/generate-campaign-covers.mjs"
+    "covers": "node scripts/generate-campaign-covers.mjs",
+    "covers:fetch": "node scripts/fetch-campaign-covers.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -36,6 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "sharp": "^0.34.5"
   }
 }
