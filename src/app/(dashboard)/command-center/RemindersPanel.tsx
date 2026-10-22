@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { IdentificationCardIcon } from "@phosphor-icons/react";
+import { BellIcon, CaretRightIcon } from "@phosphor-icons/react";
 import type { DayItem } from "../calendar/day-items";
 import { HolderContactOverlay } from "../calendar/HolderContact";
-import { ReminderPreviewRow, RemindersPreviewEmpty } from "../calendar/reminder-preview";
-import { kycCheckpointTone } from "../use-kyc-notification-feed";
-import { CARD_LINK_CLASS } from "./CardHeader";
-import type { QueueItem } from "./dashboard-data";
+import { RemindersPreviewEmpty } from "../calendar/reminder-preview";
+import { RowIcon } from "./CardHeader";
+import { KycRow } from "./KycAlertsPanel";
+import { REMINDER_ROW_LIMIT, type QueueItem } from "./dashboard-data";
+
+const REMINDERS_PAGE = "/calendar?tab=reminder";
 
 /** A reminder already placed on its calendar day, ready for the preview row. */
 export type PreviewReminder = {
@@ -55,16 +57,14 @@ export function RemindersPanel({
    *  and the Calendar's Reminder tab make. */
   const [contact, setContact] = useState<{ clientId: string; name: string } | null>(null);
 
+  const kycShown = kycItems.slice(0, REMINDER_ROW_LIMIT);
+  const dayShown = dayItems.slice(0, Math.max(0, REMINDER_ROW_LIMIT - kycShown.length));
+  const hiddenCount =
+    kycItems.length + dayItems.length - kycShown.length - dayShown.length;
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-2">
-        <h6 className="type-h6 text-foreground">Reminders</h6>
-        {/* Straight to the Calendar's Reminder tab — the list of everything
-            lives there, beside the grid that places the same rows on days. */}
-        <Link href="/calendar?tab=reminder" className={CARD_LINK_CLASS}>
-          ดูทั้งหมด
-        </Link>
-      </div>
+      <h6 className="type-h6 text-foreground">Reminders</h6>
 
       {/* The card is always today, so the label is the word and nothing else —
           no date, no badge. The rows used to carry "Due today · 29 Sept 2026"
@@ -85,34 +85,25 @@ export function RemindersPanel({
               which is the order `SOURCE_WEIGHT` in `dashboard-data` puts the
               same sources in. A card, not a bell — nobody set an alarm on a KYC
               record, it expires on its own. */}
-          {kycItems.map((row) => (
-            <ReminderPreviewRow
+          {kycShown.map((row) => (
+            <KycRow
               key={row.id}
-              title={row.title}
-              meta={row.detail}
-              dayIso={row.day.toISOString()}
-              dueToday
-              icon={<IdentificationCardIcon size={18} weight="duotone" />}
-              iconToneClassName={kycCheckpointTone(row.daysLeft)}
-              onClick={() =>
+              row={row}
+              showBadge={false}
+              onOpen={() =>
                 setContact({ clientId: row.clientIds[0], name: row.title })
               }
-              flush
-              showDate={false}
             />
           ))}
-          {dayItems.map((row) => (
-            <ReminderPreviewRow
+          {dayShown.map((row) => (
+            <ReminderRow
               key={row.item.id}
               title={row.item.title}
               meta={clientLine(row.item, clientNames)}
-              dayIso={row.day.toISOString()}
-              dueToday={row.daysUntil === 0}
-              onClick={() => onOpen(row.item, row.day)}
-              flush
-              showDate={false}
+              onOpen={() => onOpen(row.item, row.day)}
             />
           ))}
+          {hiddenCount > 0 && <MoreRow count={hiddenCount} />}
         </div>
       )}
 
@@ -124,6 +115,62 @@ export function RemindersPanel({
         />
       )}
     </div>
+  );
+}
+
+/** Same row chrome as {@link KycRow} — icon square and two-line body, no pill. */
+function ReminderRow({
+  title,
+  meta,
+  onOpen,
+}: {
+  title: string;
+  meta?: string;
+  onOpen: () => void;
+}) {
+  const tone = "bg-[var(--fill-yellow-100)] text-[var(--fill-yellow-600)]";
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      className="flex cursor-pointer items-center gap-3 p-3 transition-colors hover:bg-[var(--fill-p1-100)]"
+    >
+      <RowIcon tone={tone}>
+        <BellIcon size={18} weight="fill" />
+      </RowIcon>
+
+      <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+        <p className="truncate text-[14px] font-bold text-foreground">{title}</p>
+        {meta ? (
+          <p className="truncate text-[11px] text-muted-foreground">{meta}</p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function MoreRow({ count }: { count: number }) {
+  return (
+    <Link
+      href={REMINDERS_PAGE}
+      className="flex w-full items-center gap-2 p-3 text-left no-underline transition-colors hover:bg-[var(--fill-p1-100)]"
+    >
+      <p className="min-w-0 flex-1 truncate text-[13px] font-bold text-foreground">
+        ดูอีก {count} รายการ
+      </p>
+      <CaretRightIcon
+        size={16}
+        className="shrink-0 text-[var(--text-default-placeholder)]"
+      />
+    </Link>
   );
 }
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Tag } from "@sarunyu/system-one";
+import { Chip, Tag } from "@sarunyu/system-one";
 import { CaretRightIcon, ShieldCheckIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { withQuery } from "@/lib/query-state";
@@ -130,14 +130,12 @@ export function RiskAlertsPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* The count follows the filter, as it does on the sub page — a card
-          showing three rows under a "17" reads as though fourteen went
-          missing. */}
-      <CardHeader
-        title={RISK_ALERTS_TITLE}
-        count={visible.length}
-        link={seeAll}
-      />
+      {/* No count beside the title. The strip directly under it already opens
+          with "ทั้งหมด N" and then breaks that N down by severity, so a badge
+          on the heading was the same figure stated twice, an inch apart — and
+          the one that said less of the two, since it could only give a total
+          where the strip gives the total *and* what it is made of. */}
+      <CardHeader title={RISK_ALERTS_TITLE} link={seeAll} />
 
       <RiskSeverityStrip
         counts={counts}
@@ -205,9 +203,9 @@ export function RiskAlertsPanel({
  * responsive Tailwind `grid-cols-*`, which is the whole reason the Command
  * Center injects `DASHBOARD_RAIL_CSS`. Flex has nothing to collide with.
  *
- * A chip row rather than a grid of bordered count-boxes: this card sits one row
- * under `StatTiles`, and three bordered boxes directly below three bordered
- * tiles read as one six-tile block.
+ * Design-system `Chip`s rather than a grid of bordered count-boxes: this card
+ * sits one row under `StatTiles`, and three bordered boxes directly below
+ * three bordered tiles read as one six-tile block.
  */
 export function RiskSeverityStrip({
   counts,
@@ -223,21 +221,12 @@ export function RiskSeverityStrip({
   value: RiskSeverity | null;
   onChange: (next: RiskSeverity | null) => void;
 }) {
-  /** `dot: null` on ทั้งหมด. The dot is the severity's own colour, and
-   *  ทั้งหมด is not a severity — a grey bullet there read as a fourth level
-   *  rather than as the absence of a filter. */
-  const cells: {
-    id: RiskSeverity | null;
-    label: string;
-    n: number;
-    dot: string | null;
-  }[] = [
-    { id: null, label: "ทั้งหมด", n: total, dot: null },
+  const cells: { id: RiskSeverity | null; label: string; n: number }[] = [
+    { id: null, label: "ทั้งหมด", n: total },
     ...SEVERITY_ORDER.map((id) => ({
       id,
       label: RISK_SEVERITY_META[id].label,
       n: counts[id],
-      dot: RISK_SEVERITY_META[id].dot,
     })),
   ];
 
@@ -245,49 +234,18 @@ export function RiskSeverityStrip({
     <div className="flex flex-wrap items-center gap-2">
       {cells.map((cell) => {
         const selected = cell.id === value;
-        /* Selected takes the severity's own tint rather than one shared
-           highlight: the chips are already colour-coded by their dots, and a
-           blue "selected" wash over a red chip would be a third colour meaning
-           a fourth thing. "ทั้งหมด" has no severity of its own, so it takes the
-           brand tint. */
-        const selectedTone =
-          cell.id === null
-            ? "bg-[var(--fill-p1-100)] text-primary-action"
-            : RISK_SEVERITY_META[cell.id].pill;
 
         return (
-          <button
+          <Chip
             key={cell.id ?? "all"}
-            type="button"
-            aria-pressed={selected}
+            type="single"
+            size="small"
+            label={`${cell.label} ${cell.n}`}
+            selected={selected}
+            disabled={cell.n === 0 && !selected}
             aria-label={`${cell.label} ${cell.n} รายการ`}
-            /* Toggling off a selected severity goes back to ทั้งหมด, so the
-               chip a reader just pressed is also the way out of it. */
             onClick={() => onChange(selected ? null : cell.id)}
-            className={`inline-flex h-7 cursor-pointer select-none items-center gap-1.5 rounded-full border px-2.5 transition-colors ${
-              selected
-                ? `border-transparent ${selectedTone}`
-                : "border-border bg-background hover:bg-hover-bg"
-            } ${cell.n === 0 && !selected ? "opacity-50" : ""}`}
-          >
-            {cell.dot && (
-              <span aria-hidden className={`size-1.5 rounded-full ${cell.dot}`} />
-            )}
-            <span
-              className={`text-[12px] font-medium ${
-                selected ? "" : "text-muted-foreground"
-              }`}
-            >
-              {cell.label}
-            </span>
-            <span
-              className={`text-[12px] font-bold tabular-nums ${
-                selected ? "" : "text-foreground"
-              }`}
-            >
-              {cell.n}
-            </span>
-          </button>
+          />
         );
       })}
     </div>
@@ -333,7 +291,7 @@ export function RiskAlertRowItem({
           onOpen();
         }
       }}
-      className={`flex cursor-pointer items-center gap-3 p-3 transition-colors hover:bg-[var(--fill-p1-100)] ${
+      className={`flex cursor-pointer items-start gap-3 p-3 transition-colors hover:bg-[var(--fill-p1-100)] ${
         acknowledged ? "opacity-60" : ""
       }`}
     >
@@ -342,24 +300,34 @@ export function RiskAlertRowItem({
       </RowIcon>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        {/* Line one is **who**, and how bad.
-
-            The finding used to lead here and the name sat in the grey run
-            below, which is backwards for this desk: an IC scans this list for a
-            person, not for a rule. `KycAlertsPanel` already had it right — the
-            `title` of a KYC queue row *is* the client's name — and this row was
-            the odd one out. */}
-        <div className="flex min-w-0 items-center gap-1.5">
+        {/* Line one is **who**, and how bad — with elapsed time top-right so
+            line two can use the full width and is not squeezed beside it. */}
+        <div className="flex min-w-0 items-start gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <p className="truncate text-[14px] font-bold text-foreground">
             {row.displayName}
           </p>
-          <span className="shrink-0">
-            {acknowledged ? (
-              <Tag text="รับทราบแล้ว" variant="gray" size="small" />
-            ) : (
-              <Tag text={severity.label} variant={severity.variant} size="small" />
-            )}
-          </span>
+          {/* `shrink-0` on the `Tag` itself, not on a wrapper. A wrapper
+              `<span>` is `display: block`, so the `inline-flex` Tag inside it
+              sat on that block's *baseline* rather than being centred — two
+              pixels low against the name, which `items-center` on the row could
+              not fix, because it was centring the wrapper and the wrapper was
+              already centred. As a direct flex item the Tag centres itself. */}
+          {acknowledged ? (
+            <Tag
+              text="รับทราบแล้ว"
+              variant="gray"
+              size="small"
+              className="shrink-0"
+            />
+          ) : (
+            <Tag
+              text={severity.label}
+              variant={severity.variant}
+              size="small"
+              className="shrink-0"
+            />
+          )}
           {/* The deadline sits with the severity, because "how bad" and "by
               when" are the same question asked twice, and only some rules carry
               one. It used to share the right-hand column with the elapsed time,
@@ -376,6 +344,16 @@ export function RiskAlertRowItem({
               {deadlineLabel(alert.daysLeft)}
             </span>
           )}
+          </div>
+
+          {/* Elapsed time sits top-right — see comment on line two below. */}
+          <span
+            suppressHydrationWarning
+            title={detectedAtLabel(alert.detectedAt, new Date())}
+            className="shrink-0 pt-0.5 text-[12px] leading-none tabular-nums text-muted-foreground"
+          >
+            {detectedAgoLabel(alert.detectedAt, new Date())}
+          </span>
         </div>
 
         {/* Line two is **what**, and where. The finding keeps `text-foreground`
@@ -384,7 +362,7 @@ export function RiskAlertRowItem({
             behind it are context. One run, so `truncate` drops them
             right-to-left: exactly the order they matter least in. */}
         <p
-          className="min-w-0 truncate text-[12px] text-foreground"
+          className="min-w-0 max-w-[80%] truncate text-[12px] text-foreground"
           title={alert.title}
         >
           {alert.title}
@@ -394,31 +372,6 @@ export function RiskAlertRowItem({
           </span>
         </p>
       </div>
-
-      {/* The right-hand column carries **one** fact, on **every** row: how long
-          ago the rule fired.
-
-          Every finding has a `detectedAt`; only some have a deadline, which is
-          why the deadline cannot live here — a column that means "ผ่านมา 3 ชม."
-          on one row and "ครบกำหนดวันนี้" on the next is two columns drawn in
-          one place, and the eye cannot run down it. The deadline moved up
-          beside the severity tag, where it belongs.
-
-          It briefly carried the triggering figure too, big and bold. That could
-          not do the job claimed for it either: `NbaPanel` can put a bare number
-          hard right because every one of its rows is ฿xM, where these are
-          "6 คู่", "27.4%", "92%", "฿ 12,400,000" — four units in four rows,
-          nothing to compare down a column, each unreadable without its 10px
-          grey label. Those figures live in the detail panel, with their labels.
-
-          Elapsed rather than a clock time — see `detectedAgoLabel`. The exact
-          stamp stays on hover, and is printed in full in the panel. */}
-      <span
-        title={detectedAtLabel(alert.detectedAt, new Date())}
-        className="shrink-0 text-[12px] tabular-nums text-muted-foreground"
-      >
-        {detectedAgoLabel(alert.detectedAt, new Date())}
-      </span>
 
       {/* Nothing follows. Acknowledging happens in the detail panel, not from a
           tick out here. A row carried one briefly, revealed on hover, to save

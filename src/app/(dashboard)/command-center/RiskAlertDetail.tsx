@@ -1,15 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { Alert, Button, Tag } from "@sarunyu/system-one";
-import {
-  ArrowCounterClockwiseIcon,
-  CheckCircleIcon,
-  PhoneIcon,
-} from "@phosphor-icons/react";
-import { ButtonLink } from "@/components/ui/button-link";
+import { CaretRightIcon } from "@phosphor-icons/react";
 import { ResponsiveBottomSheetModal } from "@/components/ResponsiveBottomSheetModal";
-import { ContactFields } from "../calendar/HolderContact";
+import { ContactChips } from "../calendar/HolderContact";
 import type { RiskAlert } from "@/types/domain";
 import {
   deadlineLabel,
@@ -18,6 +13,23 @@ import {
   RISK_SEVERITY_META,
 } from "./risk-config";
 import type { RiskAlertRow } from "./risk-feed";
+
+/**
+ * The shell every block of *information* in this panel wears — the prose
+ * detail and each triggering figure.
+ *
+ * One constant rather than the same three classes written at each site: the
+ * card heading in `RiskAlertsPanel` had already drifted a size away from its
+ * neighbours by being hand-rolled instead of shared, and two boxes an inch
+ * apart disagreeing about their border is the same mistake at a smaller scale.
+ *
+ * `border-black/[0.05]`, not `border-border` (0.1): these only need to be told
+ * apart from each other, and a hairline is enough for that. 0.05 is also
+ * exactly what the row lists rule themselves with (`divide-black/[0.05]`), so
+ * the feature carries one hairline weight rather than two.
+ */
+const INFO_BOX =
+  "rounded-xl border border-black/[0.05] bg-[var(--bg-default-secondary)]";
 
 /**
  * One finding, in full: what it is, the figures that triggered it, and what to
@@ -51,27 +63,22 @@ export function RiskAlertDetail({
    *  The Command Center card filters them out and never passes this. */
   onUnacknowledge?: (alert: RiskAlert) => void;
 }) {
-  /**
-   * Which alert's contact details are showing, rather than a bare boolean.
-   *
-   * Contact rows are revealed, not always shown: most of these sheets are read
-   * and cleared without a call, and an always-open block put three copy rows
-   * between the advice and the buttons.
-   *
-   * Holding the *id* is what resets it. A boolean would need an effect to clear
-   * itself when the next alert opens, and a `setState` in an effect is a
-   * cascading render for a value that was already derivable — comparing against
-   * the open alert gets the same reset for free, and keeps the block expanded
-   * through the sheet's own closing animation rather than collapsing it on the
-   * way out.
-   */
-  const [contactFor, setContactFor] = useState<string | null>(null);
-
   if (!row) return null;
 
-  const contactOpen = contactFor === row.alert.id;
-
   const { alert } = row;
+  /** Whether this panel may tell the reader how to reach the client at all —
+   *  see `RiskAlert.contactAllowed`, which is `false` wherever asking would be
+   *  tipping-off. */
+  const showContact = Boolean(alert.clientId) && alert.contactAllowed;
+  /** What the footer can offer, resolved once — the strip is hidden when the
+   *  answer is "nothing". Only acknowledgement lives there now: reaching the
+   *  client is no longer a button, and going to their profile is the link in
+   *  the header. */
+  const canUnacknowledge =
+    alert.dismissible && row.acknowledged && Boolean(onUnacknowledge);
+  const canAcknowledge = alert.dismissible && !row.acknowledged;
+  const showFooter = canUnacknowledge || canAcknowledge;
+
   const severity = RISK_SEVERITY_META[alert.severity];
   const category = RISK_CATEGORY_META[alert.category];
   const CategoryIcon = category.Icon;
@@ -86,43 +93,137 @@ export function RiskAlertDetail({
       desktopMaxWidth="max-w-[560px]"
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
-        {/* The square takes the *category* hue here — severity is stated by the
-            Tag an inch below, so the colour is free to mean the other thing. */}
+        {/* The square takes the **severity** tint, the same one the row the
+            reader just clicked was wearing.
+
+            It used to take the category's hue, on the argument that a severity
+            Tag sits an inch below so the colour was free to mean the other
+            thing. In practice that made one finding two colours: a critical
+            wash-trade was a red square in the list and an amber one here, so
+            the thing changed appearance on the way in — and amber chrome around
+            a วิกฤต alert quietly argues it is less than it is. One rule
+            instead: colour is severity, everywhere. The family is carried by
+            the glyph and said in words by the grey Tag. */}
         <div className="flex items-start gap-3">
           <span
             aria-hidden
-            className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${category.tone}`}
+            className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${severity.pill}`}
           >
             <CategoryIcon size={20} weight="duotone" />
           </span>
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            {/* Whose problem this is, first — the same order the row the reader
-                just clicked now uses. The finding follows it.
+          {/* Three lines, not four, and **when** pulled out to the right.
+              Stacked flush left the header was four runs of decreasing
+              importance carrying equal visual weight, and the family was stated
+              twice over — once by the glyph in the square, again by a grey Tag
+              below it.
 
-                `font-bold!`, with the bang: `.type-body-1` sets its own
-                `font-weight` from a stylesheet that loads after `globals.css`,
-                so a plain Tailwind weight ties on specificity and loses — this
-                line rendered at 400 beside a 400 title until it was flagged.
-                Same trap `tier-badge` documents. */}
-            <p className="type-body-1 font-bold! leading-snug text-foreground">
-              {row.displayName}
-            </p>
+              The time goes hard right because that is where this feature
+              already keeps it: every row in the list behind this panel carries
+              its age in the same corner. The severity stays beside the name,
+              for the same reason — the row the reader just clicked had them
+              adjacent, and the panel should not rearrange the two facts they
+              used to pick it.
+
+              Everything left over is reference rather than reading — family,
+              account, which rule — and collapses into one muted run at the
+              bottom, rule number last, since that is the thing a reader looks
+              *up* rather than reads. */}
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div className="flex min-w-0 items-center gap-2">
+              {/* `font-bold!`, with the bang: `.type-body-1` sets its own
+                  `font-weight` from a stylesheet that loads after
+                  `globals.css`, so a plain Tailwind weight ties on specificity
+                  and loses — this line rendered at 400 beside a 400 title until
+                  it was flagged. Same trap `tier-badge` documents. */}
+              {/* The name *is* the way to the client, rather than a button in
+                  the footer repeating it. It is the first thing read here, and
+                  "click the person to go to the person" needs no label — which
+                  leaves the footer for things done *to the alert* rather than
+                  navigation away from it.
+
+                  The caret is the affordance. A bold heading gives no hint it
+                  can be pressed, and colour alone would not survive a reader
+                  who does not see it; this is the same drill-in mark the card's
+                  "ดูอีก N รายการ" row wears. */}
+              {alert.clientId ? (
+                /* A quiet second path, not the advertised one. Clicking a
+                   person's name to open them is strong enough convention that
+                   it is worth honouring for whoever tries it, but a bold
+                   heading announces nothing — so the discoverable control is
+                   the labelled link below, and this one carries no caret and no
+                   colour of its own. Hover is the whole hint, which is exactly
+                   the weight a bonus path should have. */
+                <Link
+                  href={`/client/${alert.clientId}`}
+                  title="ดูโปรไฟล์ลูกค้า"
+                  className="type-body-1 min-w-0 truncate font-bold! leading-snug text-foreground no-underline transition-colors hover:text-primary-action"
+                >
+                  {row.displayName}
+                </Link>
+              ) : (
+                /* No client to go to — the sanctions screen that matched a name
+                   before anyone could confirm whose it was. */
+                <p className="type-body-1 min-w-0 truncate font-bold! leading-snug text-foreground">
+                  {row.displayName}
+                </p>
+              )}
+              {/* `shrink-0` on the Tag itself. A wrapper `<span>` is
+                  `display: block`, and the `inline-flex` Tag inside one sits on
+                  that block's baseline instead of centring — the two-pixel drop
+                  the list rows had to be fixed for. */}
+              <Tag
+                text={severity.label}
+                variant={severity.variant}
+                size="small"
+                className="shrink-0"
+              />
+              {/* The spacer `CardHeader` uses, rather than `justify-between`:
+                  the name and the Tag belong together on the left, and only the
+                  time is pushed away from them. */}
+              <span className="flex-1" />
+              {/* The stamp, not the elapsed figure the rows carry. A list is
+                  read for staleness; a compliance record is read for when, and
+                  this panel is the record. */}
+              <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                {detectedAtLabel(alert.detectedAt, new Date())}
+              </span>
+            </div>
+
             <p className="type-body-2 leading-snug text-foreground">
               {alert.title}
             </p>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Tag text={severity.label} variant={severity.variant} size="small" />
-              <Tag text={category.label} variant="gray" size="small" />
-            </div>
+
             {/* Raw `text-[11px]` rather than `.type-caption`, which sets its own
                 `font-weight` from a stylesheet loading after `globals.css` — the
-                same trap `tier-badge` documents, sidestepped rather than fought
-                with a trailing `!`. */}
-            <p className="text-[11px] leading-relaxed text-muted-foreground">
-              {alert.accountLabel && `${alert.accountLabel} · `}
-              {detectedAtLabel(alert.detectedAt, new Date())}
-              {` · กฎ ${alert.ruleCode}`}
-            </p>
+                same trap, sidestepped rather than fought with a trailing `!`. */}
+            {/* All that is left of the reference line is the way to the client.
+                The family, the rule code and the account went with it — the
+                family was said three times over already (the glyph, the row
+                behind this panel, the filter the reader came through), the rule
+                number is a key for looking a rule up rather than something read
+                at a glance, and the account is on the row too. Between them
+                they turned the one line carrying an action into a run it had to
+                be fished out of.
+
+                No `<p>` wrapper now that nothing shares the line: the link
+                brings its own size and colour, and a muted 11px paragraph
+                around a 12px blue link only existed to style the text beside
+                it. `self-start` because a flex column stretches its children,
+                and a link as wide as the panel has a click target reaching far
+                past its own words.
+
+                The name above links too, but a bold heading gives no sign it
+                can be pressed; an affordance only the curious find is not an
+                affordance, which is why this one is labelled. */}
+            {alert.clientId && (
+              <Link
+                href={`/client/${alert.clientId}`}
+                className="inline-flex w-fit items-center gap-0.5 self-start text-[12px] font-semibold text-primary-action no-underline hover:underline"
+              >
+                ดูโปรไฟล์ลูกค้า
+                <CaretRightIcon size={12} weight="bold" />
+              </Link>
+            )}
           </div>
         </div>
 
@@ -131,7 +232,11 @@ export function RiskAlertDetail({
             sheet gets acted on now or filed. */}
         {alert.daysLeft !== null && (
           <div
-            className={`flex items-center gap-2 rounded-xl px-3 py-2.5 ${severity.bar}`}
+            /* `w-fit self-start` — a flex column stretches its children, so this
+               ran the width of the panel with four words in it and most of a red
+               field saying nothing. Sized to its sentence it reads as a stamp on
+               the finding rather than a banner across it. */
+            className={`flex w-fit items-center gap-2 self-start rounded-xl px-3 py-2.5 ${severity.bar}`}
           >
             <SeverityIcon size={16} weight="fill" className="shrink-0" />
             <p className="type-body-2 font-semibold">
@@ -141,7 +246,7 @@ export function RiskAlertDetail({
         )}
 
         <Section title="รายละเอียด">
-          <div className="rounded-xl bg-[var(--bg-default-secondary)] p-4">
+          <div className={`${INFO_BOX} p-4`}>
             <p className="type-body-2 leading-relaxed text-foreground">
               {alert.message}
             </p>
@@ -150,15 +255,28 @@ export function RiskAlertDetail({
 
         {alert.metrics.length > 0 && (
           <Section title="ตัวเลขที่ทำให้เกิดการแจ้งเตือน">
-            {/* `flex`, not `grid-cols-1 sm:grid-cols-2`: `@sarunyu/system-one`
-                ships an unlayered `.grid-cols-1` that loads after
-                `globals.css` and takes the source-order tie, so the responsive
-                utility never applies. Flex has nothing to collide with. */}
-            <div className="flex flex-col gap-px overflow-hidden rounded-xl bg-black/[0.05] sm:flex-row sm:flex-wrap">
+            {/* Four separate cards, not one block ruled into quarters. Each
+                figure is an independent reading taken by the same rule, and
+                hairlines between them implied a table — rows and columns that
+                meant something, which they never did: "อัตราหลักประกัน" and
+                "เกณฑ์รักษา" share a row only because they were authored in that
+                order.
+
+                `flex`, not `grid-cols-1 sm:grid-cols-2`: `@sarunyu/system-one`
+                ships an unlayered `.grid-cols-1` that loads after `globals.css`
+                and takes the source-order tie, so the responsive utility never
+                applies. Flex has nothing to collide with.
+
+                `grow` + `basis`, not `flex-1`: `flex-1` is `flex: 1 1 0%` and
+                would set the basis itself, leaving two classes fighting over
+                `flex-basis` on equal specificity. Two per row from `sm`, and an
+                odd last one stretches rather than leaving a half-width stub.
+                `0.25rem` is half of `gap-2`. */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {alert.metrics.map((metric) => (
                 <div
                   key={metric.label}
-                  className="flex flex-1 flex-col gap-1 bg-[var(--bg-default-secondary)] px-3 py-2.5 sm:min-w-[calc(50%-1px)]"
+                  className={`${INFO_BOX} flex grow flex-col gap-1 px-3 py-2.5 sm:basis-[calc(50%-0.25rem)]`}
                 >
                   <p className="text-[11px] text-muted-foreground">{metric.label}</p>
                   <p
@@ -174,87 +292,84 @@ export function RiskAlertDetail({
           </Section>
         )}
 
-        <Section title="สิ่งที่ควรทำต่อ">
-          <div className="rounded-xl border border-border p-4">
-            <p className="type-body-2 leading-relaxed text-foreground">
-              {alert.recommendedAction}
-            </p>
-          </div>
-        </Section>
-
         {/* Why the contact button is missing. Said out loud rather than left to
             a disabled control: "ห้ามถาม" is a rule an IC has to know, and an
-            absent button teaches nothing. */}
+            absent button teaches nothing.
+
+            The last block, and now the only one that tells the reader to do
+            anything — it sits directly above the footer whose buttons it
+            constrains. Kept at `warning` rather than `critical`: this is a rule
+            about handling, not a second opinion on how bad the finding is, and
+            the finding's own severity is already stated in red at the top. */}
         {!alert.contactAllowed && alert.contactNote && (
-          <Alert status="warning" title="ข้อจำกัดในการติดต่อ" message={alert.contactNote} multiline />
+          <Alert
+            status="warning"
+            title="ข้อจำกัดในการติดต่อ"
+            message={alert.contactNote}
+            multiline
+          />
         )}
 
-        {contactOpen && alert.clientId && (
+        {/* Shown outright, not behind a "ติดต่อลูกค้า" button.
+            Three pills on one line cost a fraction of what the stacked
+            copy-rows did, which is what made revealing them worth a click in
+            the first place; at this size, hiding them only means every reader
+            who wants a number pays an extra press to be told what the panel
+            already had room to say.
+
+            Still gated on `contactAllowed`. This block and the tipping-off
+            warning above it are the two halves of one answer and never both
+            appear: either here is how to reach them, or here is why you may
+            not. */}
+        {showContact && alert.clientId && (
           <Section title="ช่องทางติดต่อ">
-            <ContactFields clientId={alert.clientId} />
+            <ContactChips clientId={alert.clientId} />
           </Section>
         )}
       </div>
 
-      {/* Acknowledge on the left — it is the quiet exit; the two ways forward on
-          the right. `flex-wrap` so three controls survive a 360px phone rather
-          than being squeezed under their own labels. */}
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-3">
-        {alert.dismissible && row.acknowledged && onUnacknowledge ? (
-          /* The only way back. The row used to carry a tick that toggled both
-             ways; with that gone, an acknowledged finding opened from the
-             archive would otherwise be a one-way door. */
-          <Button
-            variant="plain"
-            size="sm"
-            leftIcon={<ArrowCounterClockwiseIcon size={16} weight="bold" />}
-            onClick={() => onUnacknowledge(alert)}
-          >
-            ยกเลิกการรับทราบ
-          </Button>
-        ) : alert.dismissible ? (
-          <Button
-            variant="plain"
-            size="sm"
-            leftIcon={<CheckCircleIcon size={16} weight="fill" />}
-            onClick={() => onAcknowledge(alert)}
-          >
-            รับทราบ
-          </Button>
-        ) : (
-          /* Not a disabled button. A greyed "รับทราบ" says "try again later";
-             this row is never going to be closable by an IC, and the sentence
-             is the information. */
-          <p className="text-[11px] text-muted-foreground">
-            ต้องให้ฝ่ายกำกับเป็นผู้ปิดรายการนี้
-          </p>
-        )}
+      {/* A decision, put as a pair: leave it, or clear it.
 
-        <div className="flex items-center gap-2">
-          {alert.clientId && alert.contactAllowed && !contactOpen && (
+          It was one `plain` button that read as a stray blue word in the corner
+          — enough that it had to be asked what it did. A bordered pair says a
+          choice is being offered and that the right-hand one is the commitment,
+          without a sentence explaining either.
+
+          Still only rendered when there is a decision to make. On a finding an
+          IC may not close there is nothing to weigh, and a lone "ยกเลิก" would
+          be a second close button under the X already in the header.
+
+          No icons: a tick and a counter-clockwise arrow were decoration on
+          two-word Thai labels that already say exactly what they do. */}
+      {showFooter && (
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-border px-4 py-3">
+          <Button variant="outline" size="sm" onClick={onClose}>
+            ยกเลิก
+          </Button>
+          {canUnacknowledge ? (
+            /* The only way back. The row used to carry a tick that toggled both
+               ways; with that gone, an acknowledged finding opened from the
+               archive would otherwise be a one-way door.
+               Not "ยกเลิกการรับทราบ" any more — it would be the second ยกเลิก
+               in one footer, meaning something different from its neighbour. */
             <Button
-              variant="outline"
-              size="sm"
-              leftIcon={<PhoneIcon size={16} weight="fill" />}
-              onClick={() => setContactFor(alert.id)}
-            >
-              ติดต่อลูกค้า
-            </Button>
-          )}
-          {alert.clientId && (
-            /* A `<Link>` wearing `Button`'s clothes — `ButtonLink` exists for
-               exactly this: an action that *navigates* has to keep ⌘-click and
-               "open in new tab", and `Button` has no `asChild`. */
-            <ButtonLink
-              href={`/client/${alert.clientId}`}
               variant="primary"
               size="sm"
+              onClick={() => onUnacknowledge?.(alert)}
             >
-              ดูโปรไฟล์ลูกค้า
-            </ButtonLink>
+              นำกลับเข้ารายการ
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onAcknowledge(alert)}
+            >
+              รับทราบ
+            </Button>
           )}
         </div>
-      </div>
+      )}
     </ResponsiveBottomSheetModal>
   );
 }

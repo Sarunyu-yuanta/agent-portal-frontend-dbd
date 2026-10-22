@@ -130,7 +130,13 @@ export function buildRiskAlertRows({
       (a, b) =>
         RISK_SEVERITY_RANK[a.alert.severity] - RISK_SEVERITY_RANK[b.alert.severity] ||
         (a.alert.daysLeft ?? 0) - (b.alert.daysLeft ?? 0) ||
-        b.alert.detectedAt.localeCompare(a.alert.detectedAt),
+        b.alert.detectedAt.localeCompare(a.alert.detectedAt) ||
+        // A total order, so two findings stamped at the same minute cannot fall
+        // back to the order the fixture happens to be authored in. Sort
+        // stability makes that *look* fine and it is not: the same tie resolved
+        // against a differently-filtered array lands differently, which is how
+        // the card and the sub page would start disagreeing about row order.
+        a.alert.id.localeCompare(b.alert.id),
     );
 }
 
@@ -163,22 +169,16 @@ export function countRiskByCategory(
 /**
  * The rows the Command Center card names, and how many are behind them.
  *
- * A **floor, not a cap**, which is why this exists rather than a `.slice`.
- * A hard count is the wrong axis here for the reason `KYC_INLINE_DAYS` gives
- * about deadlines: with `.slice(0, 4)`, a fifth critical finding is hidden
- * because four others happened to sort above it — and "there were five fires
- * this morning, you were shown four" is not a thing a triage card may do.
- *
- * So every open `critical` gets a named row, and the quieter severities fill up
- * to `floor` behind them. On a normal day that is exactly `floor` rows; on a
- * bad one the card grows, which is the correct direction for it to grow in.
+ * Every open `critical` is named first; quieter severities fill up to `floor`
+ * when there are fewer criticals. The result is capped at `floor` — the card
+ * is a preview, and the full list lives on `/command-center/risk-alerts`.
  */
 export function inlineRiskAlerts(
   rows: RiskAlertRow[],
   floor: number,
 ): { shown: RiskAlertRow[]; hiddenCount: number } {
   const criticals = rows.filter((row) => row.alert.severity === "critical");
-  const shown =
+  const shown = (
     criticals.length >= floor
       ? criticals
       : [
@@ -186,6 +186,7 @@ export function inlineRiskAlerts(
           ...rows
             .filter((row) => row.alert.severity !== "critical")
             .slice(0, floor - criticals.length),
-        ];
+        ]
+  ).slice(0, floor);
   return { shown, hiddenCount: rows.length - shown.length };
 }

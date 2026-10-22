@@ -4,13 +4,7 @@ import { Suspense, use, useState, useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Avatar, Card, TabGroup } from "@sarunyu/system-one";
 import { ClientAssetSidebarContent } from "@/components/ClientAssetSidebarContent";
-import {
-  PhoneIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  EnvelopeSimpleIcon,
-  ChatCircleIcon,
-} from "@phosphor-icons/react";
+import { ArrowUpIcon, ArrowDownIcon } from "@phosphor-icons/react";
 import { mockClients, mockClientDetails } from "@/lib/mock-data";
 import { useClientsResource } from "@/hooks/use-api";
 import { ClientProfileSkeleton } from "./ClientProfileSkeleton";
@@ -24,6 +18,7 @@ import { ResponsiveBreadcrumb } from "@/components/layout/ResponsiveBreadcrumb";
 import { TierBadge } from "@/components/ui/tier-badge";
 import { getCallLogs } from "@/data/call-log-data";
 import { getClientProfile } from "@/data/client-profiles";
+import { ContactChips } from "../../calendar/HolderContact";
 import { LiabilitiesDetailModal } from "@/components/LiabilitiesDetailModal";
 import type { LiabilitiesDetail } from "@/data/liabilities-details";
 import {
@@ -205,36 +200,14 @@ function ClientPageInner({ id }: { id: string }) {
             {/* Quick contact — collapses on scroll */}
             <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${scrolled ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"}`}>
               <div className="overflow-hidden min-h-0 -mx-4 xl:-mx-6">
-                <div
-                  ref={quickContactRef}
-                  className="flex items-center gap-2 overflow-x-auto snap-x snap-mandatory px-4 xl:px-6 py-0.5 [scroll-padding-inline:1rem] xl:[scroll-padding-inline:1.5rem] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                >
-                  {/* Plain spans, not `tel:`/`mailto:` links — an RM copies these
-                      into a phone or CRM rather than dialing from the desktop,
-                      and an anchor hijacks the drag as a link-drag so the text
-                      can't be selected. The icon bubble is `select-none` to keep
-                      the copied string down to the value itself. */}
-                  <span className="flex items-center gap-1.5 pl-1.5 pr-3 py-1 rounded-full bg-muted/70 text-foreground shrink-0 whitespace-nowrap snap-start">
-                    <span className="flex items-center justify-center size-6 rounded-full bg-card shadow-sm shrink-0 select-none">
-                      <PhoneIcon size={13} className="text-muted-foreground" />
-                    </span>
-                    <span className="type-caption font-medium select-text cursor-text">{profile.phone}</span>
-                  </span>
-                  <span className="flex items-center gap-1.5 pl-1.5 pr-3 py-1 rounded-full bg-muted/70 text-foreground shrink-0 whitespace-nowrap snap-start">
-                    <span className="flex items-center justify-center size-6 rounded-full bg-card shadow-sm shrink-0 select-none">
-                      <EnvelopeSimpleIcon size={13} className="text-muted-foreground" />
-                    </span>
-                    <span className="type-caption font-medium select-text cursor-text">{profile.email}</span>
-                  </span>
-                  {profile.lineId && (
-                    <span className="flex items-center gap-1.5 pl-1.5 pr-3 py-1 rounded-full bg-muted/70 text-foreground shrink-0 whitespace-nowrap snap-start">
-                      <span className="flex items-center justify-center size-6 rounded-full bg-card shadow-sm shrink-0 select-none">
-                        <ChatCircleIcon size={13} className="text-muted-foreground" />
-                      </span>
-                      <span className="type-caption font-medium select-text cursor-text">{profile.lineId}</span>
-                    </span>
-                  )}
-                </div>
+                <ContactChips
+                  clientId={client.id}
+                  scrollerRef={quickContactRef}
+                  /* Bleeds past the card's padding so a pill can sit under the
+                     edge while scrolling, and scroll-padding puts it back
+                     inside when one is snapped to. */
+                  className="px-4 xl:px-6 py-0.5 [scroll-padding-inline:1rem] xl:[scroll-padding-inline:1.5rem]"
+                />
               </div>
             </div>
           </div>

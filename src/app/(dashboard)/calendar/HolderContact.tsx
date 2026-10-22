@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Avatar, BottomSheet } from "@sarunyu/system-one";
 import {
   ArrowLeftIcon,
+  ChatCircleIcon,
   ChatCircleTextIcon,
   CheckIcon,
   CopyIcon,
@@ -20,6 +21,83 @@ import { getClientProfile } from "@/data/client-profiles";
 /** How long the tick stays after a copy. Long enough to be seen if you glanced
  * away, short enough that the row is back to normal before you need it again. */
 const COPIED_MS = 1600;
+
+/**
+ * A client's ways of being reached, as a row of pills.
+ *
+ * The other shape contact details take in this app — {@link ContactFields} is
+ * the stacked, copy-on-click list for a panel with a column to fill, this is
+ * the single line for a header that has width but no height to spare.
+ *
+ * Lifted out of Client 360's page, where it was three near-identical five-line
+ * spans written inline, and where a second copy of the markup was about to be
+ * pasted into the risk panel. The sizes, the radii and the icon bubble now have
+ * one definition — and since two features' headers are drawn from it, the thing
+ * it must never become again is a copy.
+ *
+ * Plain `<span>`s, not `tel:`/`mailto:` links: an RM copies these into a phone
+ * or a CRM rather than dialling from a desktop, and an anchor hijacks the drag
+ * as a link-drag so the text cannot be selected. The icon bubble is
+ * `select-none` so a selection across the pill yields the value alone.
+ */
+export function ContactChips({
+  clientId,
+  className,
+  scrollerRef,
+}: {
+  clientId: string;
+  /** For the scroller itself — Client 360 bleeds it past the card's padding. */
+  className?: string;
+  /** Client 360 forces this to `scrollLeft = 0` on mount: with scroll-snap and
+   *  a negative-margin bleed, some browsers land on a non-zero offset on first
+   *  paint. Nothing else needs it. */
+  scrollerRef?: React.Ref<HTMLDivElement>;
+}) {
+  const profile = getClientProfile(clientId);
+
+  /** Only `lineId` is optional on the profile; phone and email are always on
+   *  file. A channel the client has not given is dropped rather than shown as
+   *  empty — every pill here is something to copy, and one holding nothing to
+   *  copy is only in the way. */
+  const chips: { key: string; icon: ReactNode; value: string | null }[] = [
+    {
+      key: "phone",
+      icon: <PhoneIcon size={13} className="text-muted-foreground" />,
+      value: profile.phone,
+    },
+    {
+      key: "email",
+      icon: <EnvelopeSimpleIcon size={13} className="text-muted-foreground" />,
+      value: profile.email,
+    },
+    {
+      key: "line",
+      icon: <ChatCircleIcon size={13} className="text-muted-foreground" />,
+      value: profile.lineId ?? null,
+    },
+  ].filter((chip) => chip.value !== null);
+
+  return (
+    <div
+      ref={scrollerRef}
+      className={`flex items-center gap-2 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className ?? ""}`}
+    >
+      {chips.map((chip) => (
+        <span
+          key={chip.key}
+          className="flex items-center gap-1.5 pl-1.5 pr-3 py-1 rounded-full bg-muted/70 text-foreground shrink-0 whitespace-nowrap snap-start"
+        >
+          <span className="flex items-center justify-center size-6 rounded-full bg-card shadow-sm shrink-0 select-none">
+            {chip.icon}
+          </span>
+          <span className="type-caption font-medium select-text cursor-text">
+            {chip.value}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
 
 /**
  * One contact line with the thing you actually came for: its value on the

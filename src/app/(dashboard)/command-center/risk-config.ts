@@ -86,45 +86,27 @@ export const RISK_SEVERITY_META: Record<
 };
 
 /**
- * Which rule family raised it.
+ * Which rule family raised it — a word and a glyph, and no colour.
  *
- * `tone` is **not** used on a row's `RowIcon`. That square carries the
- * *severity* tint, because in a triage list the loudest mark on the row should
- * say how bad a thing is, and three tints beat four for a glance. The family is
- * carried on the row by the glyph's shape and by the word in the second line.
- * `tone` is for the detail panel's header square, where a full severity `Tag`
- * sits an inch below and the hue is free to mean the other thing.
+ * The family deliberately has no tint of its own. Every tinted surface in this
+ * feature means **severity**: the row's `RowIcon`, the detail panel's header
+ * square, the filter chips. A family hue briefly lived here for the panel's
+ * square, and all it bought was one finding wearing two colours — red in the
+ * list, amber in the panel it opened — plus amber chrome around alerts the list
+ * had just called วิกฤต.
  *
- * No family is red. With severity on the square, an AML-critical row would
- * otherwise show a red square beside a red pill and an AML-watch row a red
- * square beside a blue one — one hue meaning two things on one row. Reserving
- * red for severity alone is what makes the strip and the squares legible
- * together.
+ * Which family a finding belongs to is carried by the glyph's shape and by the
+ * grey Tag that says it in words, neither of which competes with severity for
+ * the reader's first glance.
  */
 export const RISK_CATEGORY_META: Record<
   RiskAlertCategory,
-  { label: string; Icon: ElementType; tone: string }
+  { label: string; Icon: ElementType }
 > = {
-  margin: {
-    label: "มาร์จิ้น/วงเงิน",
-    Icon: ChartLineDownIcon,
-    tone: "bg-[var(--fill-orange-100)] text-[var(--fill-orange-600)]",
-  },
-  aml: {
-    label: "AML/บัญชีม้า",
-    Icon: ShieldWarningIcon,
-    tone: "bg-[var(--fill-violet-100)] text-[var(--fill-violet-600)]",
-  },
-  suitability: {
-    label: "ความเหมาะสมการลงทุน",
-    Icon: UserFocusIcon,
-    tone: "bg-[var(--fill-p1-100)] text-[var(--fill-p1-600)]",
-  },
-  conduct: {
-    label: "พฤติกรรมการซื้อขาย",
-    Icon: EyeIcon,
-    tone: "bg-[var(--fill-amber-100)] text-[var(--fill-amber-600)]",
-  },
+  margin: { label: "มาร์จิ้น/วงเงิน", Icon: ChartLineDownIcon },
+  aml: { label: "AML/บัญชีม้า", Icon: ShieldWarningIcon },
+  suitability: { label: "ความเหมาะสมการลงทุน", Icon: UserFocusIcon },
+  conduct: { label: "พฤติกรรมการซื้อขาย", Icon: EyeIcon },
 };
 
 /**

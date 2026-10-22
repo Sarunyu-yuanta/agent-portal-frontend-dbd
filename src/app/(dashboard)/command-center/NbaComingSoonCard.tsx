@@ -4,7 +4,13 @@ import { Card } from "@sarunyu/system-one";
 import { SparkleIcon } from "@phosphor-icons/react";
 import { CardHeader } from "./CardHeader";
 import { NbaPanel } from "./NbaPanel";
-import type { NbaRow } from "./dashboard-data";
+import { NBA_ROW_LIMIT, type NbaRow } from "./dashboard-data";
+
+/** Blurred rows behind the Coming Soon panel — enough to read the shape. */
+const COMING_SOON_PREVIEW_LIMIT = 4;
+
+/** Fixed band the overlay sits over; tall rows are clipped, not counted. */
+const COMING_SOON_BAND_CLASS = "relative min-h-[300px] max-h-[400px] overflow-hidden";
 
 /**
  * "AI Next Best Actions", held behind a blur until the feature is live.
@@ -24,6 +30,7 @@ export function NbaComingSoonCard({
   rows,
   message,
   onDismiss,
+  paired = false,
 }: {
   rows: NbaRow[];
   /** What the feature will do, in the voice of the surface it sits on. */
@@ -35,14 +42,20 @@ export function NbaComingSoonCard({
    * out rather than invent one.
    */
   onDismiss?: (id: string) => void;
+  /** Beside Proactive Compliance Alerts — stretch to the row height and clip
+   *  the blur rather than letting tall rows set it. */
+  paired?: boolean;
 }) {
   return (
-    <Card variant="default" className="gap-4">
+    <Card
+      variant="default"
+      className={`gap-4 ${paired ? "flex h-full flex-col" : ""}`}
+    >
       {/* No count while the card is held behind the blur — a number promises
           rows you can read, and these are a preview of a shape, not things
           waiting to be done. */}
       <CardHeader title="AI Next Best Actions" />
-      <div className="relative">
+      <div className={paired ? "relative min-h-0 flex-1" : COMING_SOON_BAND_CLASS}>
         {/* `aria-hidden` and `pointer-events-none` because it is decoration: a
             screen reader should not read out suggestions nobody can act on, and
             Tab should not stop on their buttons.
@@ -51,21 +64,30 @@ export function NbaComingSoonCard({
             is a smudge, not a preview — so the card just holds enough height
             for the panel to sit in. */}
         {rows.length > 0 ? (
-          <div aria-hidden className="pointer-events-none select-none blur-[3px]">
-            <NbaPanel rows={rows} onDismiss={onDismiss ?? (() => {})} />
+          <div
+            aria-hidden
+            className={`pointer-events-none select-none blur-[3px] ${
+              paired ? "absolute inset-0 overflow-hidden" : ""
+            }`}
+          >
+            <NbaPanel
+              rows={rows}
+              limit={paired ? NBA_ROW_LIMIT : COMING_SOON_PREVIEW_LIMIT}
+              onDismiss={onDismiss ?? (() => {})}
+            />
           </div>
         ) : (
-          <div aria-hidden className="min-h-[220px]" />
+          <div aria-hidden className={paired ? "absolute inset-0" : undefined} />
         )}
-        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-card/40 p-6">
+        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-card/40 p-4">
           {/* The message sits on a solid panel of its own. Laid straight over
               the blur it was two soft greys on top of each other — legible in
               isolation, washed out in place. The card title above already names
               the feature, so this says what it will do rather than repeating
               it. */}
-          <div className="flex max-w-[400px] flex-col items-center gap-3 rounded-2xl border border-border bg-card px-6 py-5 text-center shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-primary-action-light">
-              <SparkleIcon size={20} weight="fill" className="text-primary-action" />
+          <div className="flex max-w-[400px] flex-col items-center gap-2 rounded-2xl border border-border bg-card px-5 py-3.5 text-center shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-primary-action-light">
+              <SparkleIcon size={18} weight="fill" className="text-primary-action" />
             </span>
             <p className="type-body-2 leading-relaxed text-muted-foreground">
               {message}

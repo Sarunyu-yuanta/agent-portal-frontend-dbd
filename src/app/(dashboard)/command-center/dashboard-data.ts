@@ -518,13 +518,14 @@ export function isNbaId(id: string): boolean {
   return /^\d+$/.test(id);
 }
 
-/** How many actions are shown before the card stops being a shortlist. */
-export const NBA_ROW_LIMIT = 4;
+/** How many actions the NBA card shows before handing off to its page. */
+export const NBA_ROW_LIMIT = 6;
 
-/** How many logged calls the card lists before handing off to its sheet. Six,
- *  which is what it takes to stand level with the allocation card sharing its
- *  row — the count in the header and "ดูทั้งหมด" already say there are more. */
-export const CALL_LOG_ROW_LIMIT = 6;
+/** How many logged calls the rail card lists before its "ดูอีก" row. */
+export const CALL_LOG_ROW_LIMIT = 3;
+
+/** How many today's reminders the rail card lists before its "ดูอีก" row. */
+export const REMINDER_ROW_LIMIT = 3;
 
 /**
  * How far ahead the rail card lists KYC expiries by name before handing the
@@ -547,21 +548,12 @@ export const KYC_INLINE_DAYS = 14;
  * How many risk alerts the Command Center section names before handing the rest
  * to `/command-center/risk-alerts`.
  *
- * A **floor, not a cap** — every open `critical` gets a named row and the
- * quieter severities fill up to this, which is why `inlineRiskAlerts` takes it
- * rather than the card doing a `.slice`. A hard count is the wrong axis for the
- * reason `KYC_INLINE_DAYS` gives just above: it would hide a live margin call
- * because four other criticals happened to sort first.
+ * Criticals are named first; quieter severities fill in when there are fewer
+ * open criticals. Capped here — the card is a preview, not the full queue.
  *
- * Five, which against today's fixtures is the four open criticals plus one
- * warning. That last row is the one doing the extra work: every critical here
- * is closed by the desk or by Compliance rather than by an IC, so without a row
- * from the tier below, the card would carry no acknowledgeable row at all and
- * the tick would be an affordance that never appeared.
- *
- * Measured rather than guessed: at 68px a row, five rows plus the heading and
- * the severity strip leave the card inside the fold on a 900px viewport, where
- * seven ran 44px past it.
+ * Four — the card names the most pressing findings and hands the rest to
+ * `/command-center/risk-alerts`. Criticals are named first; quieter severities
+ * fill in only when fewer criticals are open, up to this cap.
  */
 export const RISK_ALERT_ROW_FLOOR = 5;
 

@@ -1,12 +1,10 @@
 "use client";
 
 import { useMemo, useRef, useState, type ReactNode } from "react";
-import Link from "next/link";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { BottomSheet, Button, Toaster } from "@sarunyu/system-one";
 import { CaretLeftIcon, CaretRightIcon, PlusIcon } from "@phosphor-icons/react";
 import { useNotes } from "@/contexts/notes-context";
-import { CALENDAR_ENABLED } from "@/lib/feature-flags";
 import { useClients } from "@/hooks/use-api";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useToasts } from "@/hooks/use-toasts";
@@ -25,8 +23,6 @@ import { NoteDetailPane } from "../notes/NoteDetailPane";
 import { NoteModalShell } from "../notes/note-modal-shell";
 import { reminderAtFromDate } from "../notes/note-format";
 import type { DatedReminder } from "./dashboard-data";
-import { CARD_BUTTON_CLASS } from "./CardHeader";
-
 /**
  * The month, small.
  *
@@ -191,13 +187,6 @@ export function MiniCalendar({
           })}
         </div>
       </div>
-
-      {CALENDAR_ENABLED && (
-        <Link href="/calendar" className={`${CARD_BUTTON_CLASS} w-full`}>
-          เปิดปฏิทินเต็ม
-          <CaretRightIcon size={14} weight="bold" />
-        </Link>
-      )}
 
     </div>
     </PopoverPrimitive.Anchor>

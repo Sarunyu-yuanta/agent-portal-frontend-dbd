@@ -3,13 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@sarunyu/system-one";
-import { ArrowDownLeftIcon, ArrowUpRightIcon, PhoneIcon } from "@phosphor-icons/react";
+import {
+  ArrowDownLeftIcon,
+  ArrowUpRightIcon,
+  CaretRightIcon,
+  PhoneIcon,
+} from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ResponsiveBottomSheetModal } from "@/components/ResponsiveBottomSheetModal";
 import Link from "next/link";
 import { ContactFields } from "../calendar/HolderContact";
-import { relativeCallDate } from "@/data/call-log-data";
-import { CardCount, CARD_LINK_CLASS } from "./CardHeader";
+import { CardHeader } from "./CardHeader";
 import type { CallLogRow } from "./call-log-feed";
 
 /** Outbound is the desk reaching out, inbound is the client. One glyph and one
@@ -63,7 +67,7 @@ export function CallLogPanel({ rows, limit }: { rows: CallLogRow[]; limit: numbe
   if (rows.length === 0) {
     return (
       <div className="flex flex-col gap-4">
-        <Header count={0} seeAll={false} />
+        <CardHeader title="Call Log" />
         <EmptyState
         icon={<PhoneIcon size={40} weight="duotone" className="text-[var(--text-default-placeholder)]" />}
           title="ยังไม่มีบันทึกการโทร"
@@ -75,7 +79,11 @@ export function CallLogPanel({ rows, limit }: { rows: CallLogRow[]; limit: numbe
 
   return (
     <div className="flex flex-col gap-4">
-      <Header count={rows.length} seeAll={rows.length > limit} />
+      <CardHeader
+        title="Call Log"
+        count={rows.length}
+        link={{ href: CALL_LOG_PAGE, label: "ดูทั้งหมด" }}
+      />
 
       {/* One surface with rules inside it, rather than a stack of separate
           boxes: a log is a continuous record, and five outlined cards in a
@@ -85,6 +93,9 @@ export function CallLogPanel({ rows, limit }: { rows: CallLogRow[]; limit: numbe
         {rows.slice(0, limit).map((row) => (
           <CallRow key={row.id} row={row} onOpen={() => setDetail(row)} />
         ))}
+        {rows.length > limit && (
+          <MoreRow count={rows.length - limit} />
+        )}
       </div>
 
       <CallDetailModal
@@ -167,34 +178,28 @@ export function CallDetailModal({
   );
 }
 
-function Header({ count, seeAll }: { count: number; seeAll: boolean }) {
-  return (
-    <div className="flex items-center gap-2">
-      <h6 className="type-h6 text-foreground">Call Log</h6>
-      {count > 0 && <CardCount value={count} />}
-      <span className="flex-1" />
-      {/* A page now, not a sheet — thirteen calls each with a record behind it
-          is somewhere you arrive rather than something that opens over what you
-          were reading. A `Link` styled as the design system's plain button, for
-          the reason `HolderContact` gives: `Button` has no `asChild`, and this
-          one should keep middle-click and open-in-new-tab. */}
-      {seeAll && (
-        <Link
-          href={CALL_LOG_PAGE}
-          className={CARD_LINK_CLASS}
-        >
-          ดูทั้งหมด
-        </Link>
-      )}
-    </div>
-  );
-}
-
 /** The whole book's log, as its own page. */
 export const CALL_LOG_PAGE = "/command-center/call-log";
 
 function callLogHref(clientId: string): string {
   return `/client/${clientId}?tab=call-log`;
+}
+
+function MoreRow({ count }: { count: number }) {
+  return (
+    <Link
+      href={CALL_LOG_PAGE}
+      className="flex w-full items-center gap-2 p-3 text-left no-underline transition-colors hover:bg-[var(--fill-p1-100)]"
+    >
+      <p className="min-w-0 flex-1 truncate text-[13px] font-bold text-foreground">
+        ดูอีก {count} รายการ
+      </p>
+      <CaretRightIcon
+        size={16}
+        className="shrink-0 text-[var(--text-default-placeholder)]"
+      />
+    </Link>
+  );
 }
 
 export function CallRow({ row, onOpen }: { row: CallLogRow; onOpen: () => void }) {
@@ -211,14 +216,14 @@ export function CallRow({ row, onOpen }: { row: CallLogRow; onOpen: () => void }
           onOpen();
         }
       }}
-      className="flex items-start gap-3 p-4 cursor-pointer transition-colors hover:bg-[var(--fill-p1-100)]"
+      className="flex items-center gap-3 p-3 cursor-pointer transition-colors hover:bg-[var(--fill-p1-100)]"
     >
       <Icon
         size={18}
         weight="bold"
         role="img"
         aria-label={label}
-        className={`mt-0.5 shrink-0 ${color}`}
+        className={`shrink-0 ${color}`}
       />
 
       <div className="min-w-0 flex-1 flex flex-col gap-0.5">
@@ -228,15 +233,6 @@ export function CallRow({ row, onOpen }: { row: CallLogRow; onOpen: () => void }
             Call Log tab, where it is not cut at all. */}
         <p className="truncate text-[11px] text-muted-foreground" title={row.entry.summary}>
           {row.entry.summary}
-        </p>
-      </div>
-
-      {/* Relative on top because "2 months ago" is what a reader is scanning
-          for; the clock time and length sit under it for when they are not. */}
-      <div className="shrink-0 text-right">
-        <p className="text-[11px] font-medium text-foreground">{relativeCallDate(row.entry.date)}</p>
-        <p className="mt-0.5 text-[10px] text-muted-foreground tabular-nums">
-          {row.entry.time} · {row.entry.duration}
         </p>
       </div>
     </div>

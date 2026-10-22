@@ -19,8 +19,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": false,
-    "detectedOffset": 0,
-    "detectedTime": "09:12",
+    "detectedMinutesAgo": 215,
     "dueOffset": 0
   },
   {
@@ -43,8 +42,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": true,
-    "detectedOffset": 0,
-    "detectedTime": "10:48",
+    "detectedMinutesAgo": 150,
     "dueOffset": 1
   },
   {
@@ -66,8 +64,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": true,
-    "detectedOffset": -1,
-    "detectedTime": "16:05",
+    "detectedMinutesAgo": 1150,
     "dueOffset": -1
   },
   {
@@ -89,8 +86,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": true,
-    "detectedOffset": 0,
-    "detectedTime": "14:22",
+    "detectedMinutesAgo": 75,
     "dueOffset": 0
   },
 
@@ -113,8 +109,7 @@
     "contactAllowed": false,
     "contactNote": "ห้ามเปิดเผยกับลูกค้าว่าอยู่ระหว่างตรวจสอบ AML (tipping-off)",
     "dismissible": false,
-    "detectedOffset": -1,
-    "detectedTime": "18:40",
+    "detectedMinutesAgo": 1000,
     "dueOffset": null
   },
   {
@@ -135,8 +130,7 @@
     "contactAllowed": false,
     "contactNote": "ห้ามเปิดเผยกับลูกค้าว่าอยู่ระหว่างตรวจสอบ AML (tipping-off)",
     "dismissible": false,
-    "detectedOffset": -2,
-    "detectedTime": "11:05",
+    "detectedMinutesAgo": 2800,
     "dueOffset": null
   },
   {
@@ -157,8 +151,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": true,
-    "detectedOffset": -3,
-    "detectedTime": "09:30",
+    "detectedMinutesAgo": 4300,
     "dueOffset": null
   },
   {
@@ -180,8 +173,7 @@
     "contactAllowed": false,
     "contactNote": "ห้ามเปิดเผยกับลูกค้าว่าอยู่ระหว่างตรวจสอบ AML (tipping-off)",
     "dismissible": false,
-    "detectedOffset": 0,
-    "detectedTime": "07:55",
+    "detectedMinutesAgo": 320,
     "dueOffset": null
   },
   {
@@ -203,8 +195,7 @@
     "contactAllowed": false,
     "contactNote": "ยังระบุตัวตนลูกค้าไม่ได้ จึงยังไม่มีช่องทางติดต่อ",
     "dismissible": false,
-    "detectedOffset": 0,
-    "detectedTime": "06:30",
+    "detectedMinutesAgo": 400,
     "dueOffset": null
   },
 
@@ -227,8 +218,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": true,
-    "detectedOffset": -2,
-    "detectedTime": "08:15",
+    "detectedMinutesAgo": 2950,
     "dueOffset": null
   },
   {
@@ -249,8 +239,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": true,
-    "detectedOffset": -4,
-    "detectedTime": "09:00",
+    "detectedMinutesAgo": 5700,
     "dueOffset": 5
   },
   {
@@ -272,8 +261,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": true,
-    "detectedOffset": -1,
-    "detectedTime": "08:05",
+    "detectedMinutesAgo": 1500,
     "dueOffset": null
   },
   {
@@ -294,8 +282,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": false,
-    "detectedOffset": 0,
-    "detectedTime": "11:30",
+    "detectedMinutesAgo": 95,
     "dueOffset": 3
   },
 
@@ -317,8 +304,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": true,
-    "detectedOffset": -1,
-    "detectedTime": "17:10",
+    "detectedMinutesAgo": 1080,
     "dueOffset": null
   },
   {
@@ -340,8 +326,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": false,
-    "detectedOffset": -1,
-    "detectedTime": "16:45",
+    "detectedMinutesAgo": 1100,
     "dueOffset": null
   },
   {
@@ -363,8 +348,7 @@
     "contactAllowed": false,
     "contactNote": "อยู่ระหว่างการสอบสวนของฝ่ายกำกับ ห้ามติดต่อลูกค้าเรื่องนี้เอง",
     "dismissible": false,
-    "detectedOffset": 0,
-    "detectedTime": "12:05",
+    "detectedMinutesAgo": 45,
     "dueOffset": null
   },
   {
@@ -384,8 +368,7 @@
     "contactAllowed": true,
     "contactNote": null,
     "dismissible": true,
-    "detectedOffset": -5,
-    "detectedTime": "10:20",
+    "detectedMinutesAgo": 7100,
     "dueOffset": 12
   }
 ]

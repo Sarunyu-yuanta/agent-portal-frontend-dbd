@@ -1,12 +1,16 @@
 /**
- * Risk & compliance findings, with every date stamped from today.
+ * Risk & compliance findings, with every date stamped at import.
  *
- * `risk-alerts.json` carries **day offsets** (`detectedOffset`, `dueOffset`)
- * rather than literal dates, for the reason `campaign-mock-data` and
- * `mockKYCData` both give: authored dates rot, and the urgency bands the UI is
- * built to show — overdue, today, tomorrow, this week — only exist if some row
- * is actually sitting in each one. The spread in the JSON keeps demonstrating
- * them next month as much as today.
+ * `risk-alerts.json` carries **offsets** rather than literal dates, for the
+ * reason `campaign-mock-data` and `mockKYCData` both give: authored dates rot,
+ * and the urgency bands the UI is built to show — overdue, today, tomorrow,
+ * this week — only exist if some row is actually sitting in each one. The
+ * spread in the JSON keeps demonstrating them next month as much as today.
+ *
+ * Two offsets, in two units, because they are two different kinds of fact:
+ * `dueOffset` is in **days** (a deadline is a date someone set), while
+ * `detectedMinutesAgo` is in **elapsed minutes** (a detection is a span). See
+ * {@link timestampFromMinutesAgo} for what that distinction cost to learn.
  *
  * Only the mock inverts it. `dueDate` stays the field of record and `daysLeft`
  * is computed back out of it, so the arithmetic every consumer runs is the
@@ -104,24 +108,37 @@ function daysFromToday(isoDay: string): number {
 }
 
 /**
- * An offset plus a time of day, as a timestamp — **never in the future**.
+ * How long ago a rule fired, as a timestamp.
  *
- * The clamp is the point. A row authored `{ detectedOffset: 0, detectedTime:
- * "17:10" }` is saying "late yesterday afternoon, relative to a working day",
- * and at a nine-in-the-morning demo an unclamped stamp would have the alert
- * detected in six hours' time. Surveillance does not find things in advance.
+ * Authored as **elapsed minutes**, not as a clock time, which is the one unit
+ * that survives being looked at. The rows first carried `{ detectedOffset: 0,
+ * detectedTime: "12:05" }` and a clamp to `now`, so an alert "from midday"
+ * would not read as detected in the future at a nine-in-the-morning demo.
+ *
+ * Both halves of that were wrong:
+ *
+ * - **The clamp was a hydration bug.** It collapsed every still-future row onto
+ *   the same instant, so a server rendering at 08:00 and a client hydrating at
+ *   12:06 disagreed about which findings were newest — enough to reorder the
+ *   card and fail hydration outright.
+ * - **The clock time was the wrong unit.** Dropping the clamp only moved the
+ *   problem: a demo at 08:00 showed two criticals as "เมื่อสักครู่" because
+ *   09:12 and 12:05 had not happened yet. No absolute time fixes that, since
+ *   the demo can run at any hour. What the fixture always meant was "this fired
+ *   about three hours ago", so that is what it now says.
+ *
+ * Unlike `dueDate`, this is deliberately *not* anchored to the calendar day.
+ * A deadline is a date someone set and the arithmetic against it has to match a
+ * real backend's; a detection is an elapsed interval, and the span is the fact
+ * worth keeping stable across a demo that might run at any hour.
+ *
+ * Server and client evaluate this module at different instants, so every stamp
+ * shifts by that delta — but all of them shift by the *same* delta, so the
+ * ordering the sort depends on is identical either side. Only the rendered
+ * label can differ, which is why that span carries `suppressHydrationWarning`.
  */
-function timestampFromOffset(offset: number, time: string): string {
-  const now = new Date();
-  const [hour, minute] = time.split(":").map(Number);
-  const stamped = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + offset,
-    hour,
-    minute,
-  );
-  return new Date(Math.min(stamped.getTime(), now.getTime())).toISOString();
+function timestampFromMinutesAgo(minutes: number): string {
+  return new Date(Date.now() - minutes * 60_000).toISOString();
 }
 
 /** Lookup map — a client's name lives only in `clients.json`. */
@@ -197,7 +214,7 @@ export const mockRiskAlerts: RiskAlert[] = (riskAlertsRaw as RawRiskAlert[]).map
       contactAllowed: raw.contactAllowed,
       contactNote: raw.contactNote,
       dismissible: raw.dismissible,
-      detectedAt: timestampFromOffset(raw.detectedOffset, raw.detectedTime),
+      detectedAt: timestampFromMinutesAgo(raw.detectedMinutesAgo),
       dueDate,
       daysLeft,
       zone: daysLeft === null ? null : zoneForDays(daysLeft),

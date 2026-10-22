@@ -37,13 +37,26 @@ import { useIsoLayoutEffect } from "@/hooks/use-iso-layout-effect";
 export function KycAlertsPanel({
   rows,
   inlineDays,
+  allOpen: allOpenProp,
+  onAllOpenChange,
+  showInline = true,
 }: {
   rows: QueueItem[];
   /** Expiries this many days out or nearer get a row of their own; the rest are
    *  counted by {@link MoreRow}. See `KYC_INLINE_DAYS`. */
   inlineDays: number;
+  /** Controlled open state — the stat tile opens the same sheet as {@link MoreRow}. */
+  allOpen?: boolean;
+  onAllOpenChange?: (open: boolean) => void;
+  /** When false, only the sheet/contact overlays render — inline card hidden. */
+  showInline?: boolean;
 }) {
-  const [allOpen, setAllOpen] = useState(false);
+  const [allOpenInternal, setAllOpenInternal] = useState(false);
+  const allOpen = allOpenProp ?? allOpenInternal;
+  const setAllOpen = (open: boolean) => {
+    onAllOpenChange?.(open);
+    if (allOpenProp === undefined) setAllOpenInternal(open);
+  };
   /** The client whose contact card is open. A row opens the person, not the
    *  record: the row already says what the deadline is, and what it does not
    *  say is how to reach them about it. The KYC tab is a button further on. */
@@ -111,6 +124,7 @@ export function KycAlertsPanel({
   };
 
   if (rows.length === 0) {
+    if (!showInline) return null;
     return (
       <div className="flex flex-col gap-4">
         <Header count={0} />
@@ -140,23 +154,27 @@ export function KycAlertsPanel({
   const hidden = cut === -1 ? [] : rows.slice(cut);
 
   return (
-    <div className="flex flex-col gap-4">
-      <Header count={rows.length} />
+    <>
+      {showInline ? (
+        <div className="flex flex-col gap-4">
+          <Header count={rows.length} />
 
-      {/* One surface with rules inside, matching the Call Log card across the
-          page: the border and fill belong to the list, a row only hovers. */}
-      <div className="overflow-hidden rounded-xl bg-[var(--bg-default-secondary)] divide-y divide-black/[0.05]">
-        {visible.map((row) => (
-          <KycRow key={row.id} row={row} onOpen={() => openContact(row)} />
-        ))}
-        {hidden.length > 0 && (
-          <MoreRow
-            rows={hidden}
-            sole={visible.length === 0}
-            onOpen={() => setAllOpen(true)}
-          />
-        )}
-      </div>
+          {/* One surface with rules inside, matching the Call Log card across the
+              page: the border and fill belong to the list, a row only hovers. */}
+          <div className="overflow-hidden rounded-xl bg-[var(--bg-default-secondary)] divide-y divide-black/[0.05]">
+            {visible.map((row) => (
+              <KycRow key={row.id} row={row} onOpen={() => openContact(row)} />
+            ))}
+            {hidden.length > 0 && (
+              <MoreRow
+                rows={hidden}
+                sole={visible.length === 0}
+                onOpen={() => setAllOpen(true)}
+              />
+            )}
+          </div>
+        </div>
+      ) : null}
 
       {/* Buckets belong here, not in the card. Five rows under three headings in
           a ~350px rail is more chrome than content; a full-height sheet has the
@@ -254,7 +272,7 @@ export function KycAlertsPanel({
           onClose={() => setContact(null)}
         />
       )}
-    </div>
+    </>
   );
 }
 
@@ -283,7 +301,7 @@ function Header({ count }: { count: number }) {
 
 /** The countdown, as the pill on the right of a row. Signed, because "เลยมา 10
  *  วัน" and "อีก 10 วัน" are opposite situations and a bare `10` is neither. */
-function countdownLabel(daysLeft: number): string {
+export function countdownLabel(daysLeft: number): string {
   if (daysLeft === 0) return "วันนี้";
   if (daysLeft < 0) return `เลยมา ${Math.abs(daysLeft)} วัน`;
   return `อีก ${daysLeft} วัน`;
@@ -356,7 +374,16 @@ function MoreRow({
   );
 }
 
-function KycRow({ row, onOpen }: { row: QueueItem; onOpen: () => void }) {
+export function KycRow({
+  row,
+  onOpen,
+  showBadge = true,
+}: {
+  row: QueueItem;
+  onOpen: () => void;
+  /** Off in the Reminders card — the card already says "วันนี้" once up top. */
+  showBadge?: boolean;
+}) {
   const tone = kycCheckpointTone(row.daysLeft);
 
   return (
@@ -385,11 +412,13 @@ function KycRow({ row, onOpen }: { row: QueueItem; onOpen: () => void }) {
         </p>
       </div>
 
-      <span
-        className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${tone}`}
-      >
-        {countdownLabel(row.daysLeft)}
-      </span>
+      {showBadge ? (
+        <span
+          className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${tone}`}
+        >
+          {countdownLabel(row.daysLeft)}
+        </span>
+      ) : null}
     </div>
   );
 }

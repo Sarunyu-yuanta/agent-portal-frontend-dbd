@@ -389,7 +389,7 @@ body > .bg-popover.overflow-clip.p-\[8px\] {
    minimum. */
 @media (min-width: 80rem) {
   .dashboard-split {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 3fr) !important;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) !important;
   }
   .dashboard-rail {
     width: auto !important;

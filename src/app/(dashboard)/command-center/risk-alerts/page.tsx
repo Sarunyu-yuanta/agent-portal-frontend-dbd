@@ -11,7 +11,6 @@ import { useScrollTopOnChange } from "@/hooks/use-scroll-top";
 import { useSectionBack } from "@/hooks/use-section-back";
 import { setQueryState, withQuery } from "@/lib/query-state";
 import type { RiskAlertCategory, RiskSeverity } from "@/types/domain";
-import { CardCount } from "../CardHeader";
 import {
   RISK_ALERTS_TITLE,
   RiskAlertRowItem,
@@ -141,10 +140,11 @@ function RiskAlertsPageInner() {
         {/* `type-h6` here and `type-subtitle-1` on the card is deliberate: this is
             a page title, matching the Call Log and Next Best Actions pages, where
             the card heading matches the cards beside it. */}
+        {/* No count beside the title, matching the card this page is reached
+            from. The strip below already opens with "ทั้งหมด N" and breaks it
+            down by severity; a badge up here was a second, thinner answer to
+            the same question. */}
         <h1 className="type-h6 text-foreground">{RISK_ALERTS_TITLE}</h1>
-        {/* The count follows the filters — a page showing four rows under an
-            "11" reads as though seven went missing. */}
-        {visible.length > 0 && <CardCount value={visible.length} />}
         <span className="flex-1" />
         <Chip
           label="รวมรายการที่รับทราบแล้ว"

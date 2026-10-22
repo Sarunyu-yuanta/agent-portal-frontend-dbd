@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useMemo } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card } from "@sarunyu/system-one";
 import { useClientsResource } from "@/hooks/use-api";
@@ -17,7 +17,6 @@ import { setQueryState, withQuery } from "@/lib/query-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { addMonths, todayDateKey } from "../calendar/calendar-grid";
 import { useDayItemModals } from "../calendar/use-day-item-modals";
-import { CardHeader } from "./CardHeader";
 import { StatTiles, type StatTile } from "./StatTiles";
 import { MiniCalendar } from "./MiniCalendar";
 import { RemindersPanel } from "./RemindersPanel";
@@ -26,8 +25,9 @@ import {
   NbaComingSoonCard,
 } from "./NbaComingSoonCard";
 import { CallLogPanel } from "./CallLogPanel";
+import { AssetSummaryModal } from "./AssetSummaryModal";
+import { ClientListModal } from "./ClientListModal";
 import { KycAlertsPanel } from "./KycAlertsPanel";
-import { AssetSummaryPanel } from "./AssetSummaryPanel";
 import { RiskAlertsPanel } from "./RiskAlertsPanel";
 import { SEVERITY_ORDER } from "./risk-config";
 import type { RiskSeverity } from "@/types/domain";
@@ -39,6 +39,7 @@ import {
   remindersOnDay,
   HIDDEN_QUEUE_IDS_PREF,
   CALL_LOG_ROW_LIMIT,
+  REMINDER_ROW_LIMIT,
   KYC_INLINE_DAYS,
   RISK_ALERT_ROW_FLOOR,
 } from "./dashboard-data";
@@ -116,6 +117,9 @@ function DashboardPageInner() {
   // Reminders tab open, from the one definition. No `pinnedClientId`: this page
   // isn't standing on anyone's profile.
   const { open: openDayItem, modals } = useDayItemModals({ clients });
+  const [kycAllOpen, setKycAllOpen] = useState(false);
+  const [clientsOpen, setClientsOpen] = useState(false);
+  const [assetOpen, setAssetOpen] = useState(false);
 
   // Anchored to the calendar day rather than a fresh `Date`, so the memos below
   // don't recompute on every render. Same pattern as the Overview tab's
@@ -206,22 +210,28 @@ function DashboardPageInner() {
     [live],
   );
 
+  const openKycAll = useCallback(() => setKycAllOpen(true), []);
+  const openClients = useCallback(() => setClientsOpen(true), []);
+  const openAsset = useCallback(() => setAssetOpen(true), []);
+
   const tiles: StatTile[] = useMemo(
     () => [
     {
       id: "clients",
       label: "จำนวน Client",
       value: clients?.length ?? 0,
-      tone: "brand",
+      tone: "violet",
       icon: "users",
+      onClick: openClients,
     },
     {
       id: "aum",
       label: "AUM รวมทั้งหมด",
       value: totalAum,
-      tone: "violet",
+      tone: "green",
       icon: "coins",
       formatValue: formatAumThb,
+      onClick: openAsset,
     },
     {
       id: "kyc",
@@ -229,9 +239,10 @@ function DashboardPageInner() {
       value: kycSoon,
       tone: "warning",
       icon: "kyc",
+      onClick: openKycAll,
     },
     ],
-    [clients, totalAum, kycSoon],
+    [clients, totalAum, kycSoon, openKycAll, openClients, openAsset],
   );
 
   if (isLoading) return <DashboardSkeleton />;
@@ -246,99 +257,72 @@ function DashboardPageInner() {
             fitness-dashboard reference. */}
         <div className="dashboard-split grid grid-cols-1 gap-4 xl:gap-5 xl:items-start">
           <div className="min-w-0 flex flex-col gap-4 xl:gap-5 xl:col-start-1 xl:row-start-1 row-start-2">
-            <Card
-              variant="default"
-              className="relative isolate gap-1 overflow-hidden bg-primary-action-light border-border"
-            >
-              {/* The Yuanta mark as a watermark: far larger than the card and
-                  pushed off its right edge, so only part of it shows and it
-                  reads as texture rather than a logo. Sized to roughly one and a
-                  half times the card's height: bigger than that and the card would only show
-                  an unrecognisable band through the middle of the mark. Painted as a mask over
-                  `bg-primary-action` instead of an <img>, so it takes the theme
-                  colour rather than the SVG's own blue, and the gradient mask on
-                  the wrapper fades it out toward the greeting so text never sits
-                  on the mark's busiest part. Decorative — hidden from AT and
-                  inert to the pointer. */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-y-0 right-0 -z-10 w-2/3 [mask-image:linear-gradient(to_right,transparent,black_55%)]"
-              >
+            {/* Flex, not grid: `system-one` ships an unlayered `.grid-cols-1` that
+                wins over responsive `grid-cols-*` and keeps this row stacked. */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch xl:gap-5">
+              <div className="flex min-h-[96px] min-w-0 flex-[8] flex-col">
+                <Card
+                  variant="default"
+                  className="relative isolate flex h-full min-h-0 flex-1 flex-col justify-center gap-1 overflow-hidden bg-primary-action-light border-border"
+                >
+                {/* The Yuanta mark as a watermark: far larger than the card and
+                    pushed off its right edge, so only part of it shows and it
+                    reads as texture rather than a logo. Sized to roughly one and a
+                    half times the card's height: bigger than that and the card would only show
+                    an unrecognisable band through the middle of the mark. Painted as a mask over
+                    `bg-primary-action` instead of an <img>, so it takes the theme
+                    colour rather than the SVG's own blue, and the gradient mask on
+                    the wrapper fades it out toward the greeting so text never sits
+                    on the mark's busiest part. Decorative — hidden from AT and
+                    inert to the pointer. */}
                 <div
-                  className="absolute -right-4 top-1/2 size-32 -translate-y-1/2 rotate-[-12deg] bg-primary-action opacity-[0.12] sm:-right-6 sm:size-36 xl:-right-8 xl:size-40"
-                  style={{
-                    maskImage: "url(/brand/logo-yuanta.svg)",
-                    WebkitMaskImage: "url(/brand/logo-yuanta.svg)",
-                    maskRepeat: "no-repeat",
-                    WebkitMaskRepeat: "no-repeat",
-                    maskSize: "contain",
-                    WebkitMaskSize: "contain",
-                    maskPosition: "center",
-                    WebkitMaskPosition: "center",
-                  }}
-                />
+                  aria-hidden
+                  className="pointer-events-none absolute inset-y-0 right-0 -z-10 w-2/3 [mask-image:linear-gradient(to_right,transparent,black_55%)]"
+                >
+                  <div
+                    className="absolute -right-4 top-1/2 size-32 -translate-y-1/2 rotate-[-12deg] bg-primary-action opacity-[0.08] sm:-right-6 sm:size-36 xl:-right-8 xl:size-40"
+                    style={{
+                      maskImage: "url(/brand/logo-yuanta.svg)",
+                      WebkitMaskImage: "url(/brand/logo-yuanta.svg)",
+                      maskRepeat: "no-repeat",
+                      WebkitMaskRepeat: "no-repeat",
+                      maskSize: "contain",
+                      WebkitMaskSize: "contain",
+                      maskPosition: "center",
+                      WebkitMaskPosition: "center",
+                    }}
+                  />
+                </div>
+                <h2 className="type-h5 font-bold text-primary-action">
+                  Hello, {NOTE_AUTHOR.split(" ")[0]}
+                </h2>
+                <p className="text-[12.5px] text-primary-action/70">{thaiFullDate(today)}</p>
+                </Card>
               </div>
-              <h2 className="type-h5 font-bold text-primary-action">
-                Hello, {NOTE_AUTHOR}
-              </h2>
-              <p className="text-[12.5px] text-primary-action/70">{thaiFullDate(today)}</p>
-            </Card>
 
-            <StatTiles tiles={tiles} />
+              <div className="flex min-h-[96px] min-w-0 flex-[17] flex-col">
+                <StatTiles tiles={tiles} compact />
+              </div>
+            </div>
 
-            {/* What could go wrong today, before what could go right.
-
-                Above the Next Best Actions card on purpose: an obligation
-                outranks a suggestion at eight in the morning, and that
-                suggestion card is still held behind a blur — a live, actionable
-                list buried under a placeholder reads as the page hiding its
-                working half. The tiles directly above already count KYC
-                expiries, so a strip that counts work handing straight to a list
-                of work is the natural read.
-
-                Full width because its rows carry the figure the rule fired on
-                hard right, which a half-width column would have to drop — and
-                because "is anything on fire" is not a question to answer in a
-                gutter.
-
-                Distinct from the rail's KYC card by construction: no row here
-                is a KYC expiry. See `RiskAlertsPanel`. */}
-            <Card variant="default" className="gap-4">
-              <RiskAlertsPanel
-                rows={riskRows}
-                floor={RISK_ALERT_ROW_FLOOR}
-                acknowledgedCount={riskAcknowledged.length}
-                onAcknowledge={acknowledgeRisk}
-                severity={riskSeverity}
-                onSeverityChange={(next) => updateQuery({ risk: next })}
+            {/* Stacked — each card full width. Flex not grid for the reason the
+                hero row gives about `system-one`'s `.grid-cols-1`. */}
+            <div className="flex flex-col gap-4 xl:gap-5">
+              <NbaComingSoonCard
+                rows={nbaRows}
+                message={NBA_MESSAGE_BOOK}
+                onDismiss={dismissNba}
               />
-            </Card>
 
-            {/* The one card on this page that asks for something gets the row
-                to itself — its rows carry two lines plus a drafted message, and
-                sharing the width cost the draft more than a neighbour gained. */}
-            <NbaComingSoonCard
-              rows={nbaRows}
-              message={NBA_MESSAGE_BOOK}
-              onDismiss={dismissNba}
-            />
-
-            {/* Two halves of "where does the desk stand": what it is holding,
-                and what it has been doing. Neither is a to-do, so they share
-                a row rather than each taking a full-width turn under the card
-                above. Split from `lg`, where the work column is the whole
-                page. */}
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:gap-5">
               <Card variant="default" className="gap-4">
-                <CardHeader
-                  title="ภาพรวมสินทรัพย์"
-                  link={{ href: "/client-hub", label: "ดูทั้งหมด" }}
+                <RiskAlertsPanel
+                  rows={riskRows}
+                  floor={RISK_ALERT_ROW_FLOOR}
+                  acknowledgedCount={riskAcknowledged.length}
+                  onAcknowledge={acknowledgeRisk}
+                  severity={riskSeverity}
+                  onSeverityChange={(next) => updateQuery({ risk: next })}
                 />
-                <AssetSummaryPanel clients={clients ?? []} />
-              </Card>
-
-              <Card variant="default" className="gap-4">
-                <CallLogPanel rows={callLog} limit={CALL_LOG_ROW_LIMIT} />
               </Card>
             </div>
 
@@ -365,45 +349,70 @@ function DashboardPageInner() {
 
               `xl:items-start` on the grid above is what makes this work at all:
               a grid item stretches to the row height by default, and an item as
-              tall as its own track has nowhere to stick to. */}
-          <aside
-            ref={railRef}
-            style={{ top: railTop }}
-            className="dashboard-rail min-w-0 flex w-full flex-col gap-4 xl:gap-5 xl:col-start-2 xl:row-start-1 row-start-1 xl:sticky"
-          >
-            {/* Three dated things in one column, today's first. Reminders are
-                what the day was planned around; the KYC expiries below are the
-                deadlines it has to survive. The month sits under both. */}
-            <Card variant="default" className="gap-4">
-              <RemindersPanel
-                dayItems={dayReminders}
-                kycItems={todayKyc}
-                clientNames={clientNames}
-                onOpen={openDayItem}
-              />
-            </Card>
+              tall as its own track has nowhere to stick to.
 
-            <Card variant="default" className="gap-4">
-              <KycAlertsPanel rows={kycRows} inlineDays={KYC_INLINE_DAYS} />
-            </Card>
+              The wrapper stretches to the work column's height while the aside
+              inside keeps its natural height — so sticky still has a shorter
+              box to pin, and at scroll end the aside's last card lands on the
+              same baseline as the work column's last card. */}
+          <div className="dashboard-rail min-w-0 w-full self-stretch xl:col-start-2 xl:row-start-1 row-start-1">
+            <aside
+              ref={railRef}
+              style={{ top: railTop }}
+              className="flex w-full flex-col gap-4 xl:sticky xl:gap-5"
+            >
+              {/* Today's reminders first, then the month, then call log. */}
+              <Card variant="default" className="gap-4">
+                <RemindersPanel
+                  dayItems={dayReminders}
+                  kycItems={todayKyc}
+                  clientNames={clientNames}
+                  onOpen={openDayItem}
+                />
+              </Card>
 
-            <Card variant="default" className="gap-4">
-              <MiniCalendar
-                viewDate={viewDate}
-                today={today}
-                remindersByDay={monthReminders}
-                clientNames={clientNames}
-                onOpen={openDayItem}
-                onMonthChange={(delta) =>
-                  updateQuery({
-                    month: monthOffset + delta === 0 ? null : String(monthOffset + delta),
-                  })
-                }
-              />
-            </Card>
-          </aside>
+              <Card variant="default" className="gap-4">
+                <MiniCalendar
+                  viewDate={viewDate}
+                  today={today}
+                  remindersByDay={monthReminders}
+                  clientNames={clientNames}
+                  onOpen={openDayItem}
+                  onMonthChange={(delta) =>
+                    updateQuery({
+                      month: monthOffset + delta === 0 ? null : String(monthOffset + delta),
+                    })
+                  }
+                />
+              </Card>
+
+              <Card variant="default" className="gap-4">
+                <CallLogPanel rows={callLog} limit={CALL_LOG_ROW_LIMIT} />
+              </Card>
+            </aside>
+          </div>
         </div>
       </div>
+
+      <KycAlertsPanel
+        rows={kycRows}
+        inlineDays={KYC_INLINE_DAYS}
+        allOpen={kycAllOpen}
+        onAllOpenChange={setKycAllOpen}
+        showInline={false}
+      />
+
+      <ClientListModal
+        open={clientsOpen}
+        clients={clients ?? []}
+        onClose={() => setClientsOpen(false)}
+      />
+
+      <AssetSummaryModal
+        open={assetOpen}
+        clients={clients ?? []}
+        onClose={() => setAssetOpen(false)}
+      />
 
       {modals}
     </>
@@ -430,70 +439,53 @@ function thaiFullDate(day: Date): string {
 function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-4 xl:gap-5">
-      <div className="dashboard-split grid grid-cols-1 gap-4 xl:gap-5">
+      <div className="dashboard-split grid grid-cols-1 gap-4 xl:gap-5 xl:items-start">
         <div className="min-w-0 flex flex-col gap-4 xl:gap-5 xl:col-start-1 xl:row-start-1 row-start-2">
-          <Skeleton className="h-[76px] rounded-2xl" />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-[96px] rounded-2xl" />
-            ))}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch xl:gap-5">
+            <Skeleton className="min-h-[96px] flex-[8] rounded-2xl" />
+            <Skeleton className="min-h-[96px] flex-[17] rounded-2xl" />
           </div>
-          {/* Proactive Compliance Alerts — five rows, matching
-              `RISK_ALERT_ROW_FLOOR`; move the two together or the page jumps
-              when the data lands. */}
-          <Card variant="default" className="gap-4">
-            {/* `w-56` = 224px, which is what "Proactive Compliance Alerts"
-                measures at `CardHeader`'s 16px. Re-measure if either the title
-                or the heading size changes — it was briefly 253px while the
-                heading was still `type-h6`. */}
-            <Skeleton className="h-7 w-56" />
-            <Skeleton className="h-7 w-[300px] rounded-full" />
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-[62px] rounded-xl" />
-            ))}
-          </Card>
-          {/* Next Best Actions */}
-          <Card variant="default" className="gap-4">
-            <Skeleton className="h-7 w-52" />
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-[168px] rounded-xl" />
-            ))}
-          </Card>
-          {/* ภาพรวมสินทรัพย์ | Call Log */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:gap-5">
+          {/* AI Next Best Actions, then Proactive Compliance Alerts */}
+          <div className="flex flex-col gap-4 xl:gap-5">
             <Card variant="default" className="gap-4">
-              <Skeleton className="h-7 w-40" />
-              <Skeleton className="h-[116px] w-[116px] mx-auto rounded-full" />
-              <Skeleton className="h-[176px] rounded-2xl" />
+              <Skeleton className="h-7 w-52" />
+              <Skeleton className="min-h-[400px] rounded-xl" />
             </Card>
             <Card variant="default" className="gap-4">
-              <Skeleton className="h-7 w-32" />
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-[84px] rounded-2xl" />
+              <Skeleton className="h-7 w-56" />
+              <Skeleton className="h-7 w-[300px] rounded-full" />
+              {Array.from({ length: RISK_ALERT_ROW_FLOOR }).map((_, i) => (
+                <Skeleton key={i} className="h-[62px] rounded-xl" />
               ))}
+              <Skeleton className="h-[44px] rounded-xl" />
             </Card>
           </div>
         </div>
-        <aside className="dashboard-rail min-w-0 flex w-full flex-col gap-4 xl:gap-5 xl:col-start-2 xl:row-start-1 row-start-1">
-          {/* Reminders */}
-          <Card variant="default" className="gap-4">
-            <Skeleton className="h-7 w-40" />
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-[74px] rounded-xl" />
-            ))}
-          </Card>
-          {/* KYC ใกล้หมดอายุ */}
-          <Card variant="default" className="gap-4">
-            <Skeleton className="h-7 w-44" />
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-[62px] rounded-xl" />
-            ))}
-          </Card>
-          <Card variant="default" className="gap-4">
-            <Skeleton className="h-7 w-32" />
-            <Skeleton className="h-[248px] rounded-xl" />
-          </Card>
-        </aside>
+        <div className="dashboard-rail min-w-0 w-full self-stretch xl:col-start-2 xl:row-start-1 row-start-1">
+          <aside className="flex w-full flex-col gap-4 xl:gap-5">
+            {/* Reminders */}
+            <Card variant="default" className="gap-4">
+              <Skeleton className="h-7 w-40" />
+              {Array.from({ length: REMINDER_ROW_LIMIT }).map((_, i) => (
+                <Skeleton key={i} className="h-[74px] rounded-xl" />
+              ))}
+              <Skeleton className="h-[44px] rounded-xl" />
+            </Card>
+            {/* Calendar */}
+            <Card variant="default" className="gap-4">
+              <Skeleton className="h-7 w-32" />
+              <Skeleton className="h-[248px] rounded-xl" />
+            </Card>
+            {/* Call Log */}
+            <Card variant="default" className="gap-4">
+              <Skeleton className="h-7 w-32" />
+              {Array.from({ length: CALL_LOG_ROW_LIMIT }).map((_, i) => (
+                <Skeleton key={i} className="h-[84px] rounded-2xl" />
+              ))}
+              <Skeleton className="h-[44px] rounded-xl" />
+            </Card>
+          </aside>
+        </div>
       </div>
     </div>
   );
