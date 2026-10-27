@@ -29,7 +29,7 @@ import { AssetSummaryModal } from "./AssetSummaryModal";
 import { ClientListModal } from "./ClientListModal";
 import { KycAlertsPanel } from "./KycAlertsPanel";
 import { RiskAlertsPanel } from "./RiskAlertsPanel";
-import { SEVERITY_ORDER } from "./risk-config";
+import { parseRiskCategory, SEVERITY_ORDER } from "./risk-config";
 import type { RiskSeverity } from "@/types/domain";
 import { buildCallLog } from "./call-log-feed";
 import {
@@ -137,6 +137,14 @@ function DashboardPageInner() {
       ? (value as RiskSeverity)
       : null;
   }, [searchParams]);
+
+  /** And which rule family, on the same terms. Its own param rather than one
+   *  packed string, so either filter can be linked to without the other.
+   *  `"all"` is the unnarrowed view and is written as an absent param. */
+  const riskCategory = useMemo(
+    () => parseRiskCategory(searchParams.get("riskCat")),
+    [searchParams],
+  );
 
   const monthOffset = Number(searchParams.get("month")) || 0;
   const viewDate = useMemo(() => addMonths(today, monthOffset), [today, monthOffset]);
@@ -320,6 +328,10 @@ function DashboardPageInner() {
                   floor={RISK_ALERT_ROW_FLOOR}
                   acknowledgedCount={riskAcknowledged.length}
                   onAcknowledge={acknowledgeRisk}
+                  category={riskCategory}
+                  onCategoryChange={(next) =>
+                    updateQuery({ riskCat: next === "all" ? null : next })
+                  }
                   severity={riskSeverity}
                   onSeverityChange={(next) => updateQuery({ risk: next })}
                 />

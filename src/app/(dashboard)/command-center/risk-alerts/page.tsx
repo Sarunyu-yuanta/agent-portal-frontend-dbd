@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Button, Card, Chip, TabGroup } from "@sarunyu/system-one";
+import { Button, Card, Chip, Toaster } from "@sarunyu/system-one";
 import { ArrowLeftIcon, ShieldCheckIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FadeIn } from "@/components/ui/fade-in";
@@ -10,29 +10,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useScrollTopOnChange } from "@/hooks/use-scroll-top";
 import { useSectionBack } from "@/hooks/use-section-back";
 import { setQueryState, withQuery } from "@/lib/query-state";
-import type { RiskAlertCategory, RiskSeverity } from "@/types/domain";
+import type { RiskSeverity } from "@/types/domain";
 import {
   RISK_ALERTS_TITLE,
   RiskAlertRowItem,
+  RiskCategoryTabs,
   RiskSeverityStrip,
 } from "../RiskAlertsPanel";
 import { RiskAlertDetail } from "../RiskAlertDetail";
-import {
-  RISK_CATEGORY_META,
-  RISK_CATEGORY_ORDER,
-  SEVERITY_ORDER,
-} from "../risk-config";
+import { parseRiskCategory, SEVERITY_ORDER } from "../risk-config";
 import {
   countRiskByCategory,
   countRiskBySeverity,
   type RiskAlertRow,
 } from "../risk-feed";
 import { useRiskAlertRows } from "../use-risk-alert-rows";
-
-const CATEGORY_TABS: { id: RiskAlertCategory | "all"; title: string }[] = [
-  { id: "all", title: "ทั้งหมด" },
-  ...RISK_CATEGORY_ORDER.map((id) => ({ id, title: RISK_CATEGORY_META[id].label })),
-];
+import { useRiskCta } from "../use-risk-cta";
 
 /**
  * Every risk finding across the book, filtered.
@@ -73,11 +66,12 @@ function RiskAlertsPageInner() {
   useScrollTopOnChange([]);
 
   const [detail, setDetail] = useState<RiskAlertRow | null>(null);
+  /** The same mocked CTA the card's rows fire — one definition, so the button
+   *  does not quietly mean something else once you have clicked through. */
+  const { act, toasts, removeToast } = useRiskCta();
 
   const showAck = searchParams.get("ack") === "1";
-  const categoryParam = searchParams.get("category");
-  const category: RiskAlertCategory | "all" =
-    CATEGORY_TABS.find((t) => t.id === categoryParam)?.id ?? "all";
+  const category = parseRiskCategory(searchParams.get("category"));
   const severityParam = searchParams.get("severity");
   const severity: RiskSeverity | null = SEVERITY_ORDER.includes(
     severityParam as RiskSeverity,
@@ -157,31 +151,14 @@ function RiskAlertsPageInner() {
 
       {/* Category first — it is the *kind of thing*, which is what a tab strip
           is for, and the per-family counts are what makes the handoff from the
-          card worth taking.
-
-          Three classes, all working around `system-one`'s unlayered stylesheet:
-          `scrollable-tabs` keeps five Thai labels from truncating and lets them
-          swipe on a phone; `transparent-tabs` cancels the `bg-background` the
-          component paints over the page's grey; `count-tabs` repaints the
-          `notification` badge from the library's always-red to a quiet grey
-          pill — red here would say every category is on fire. */}
-      <div className="scrollable-tabs transparent-tabs count-tabs">
-        <TabGroup
-          items={CATEGORY_TABS.map((tab) => ({
-            id: tab.id,
-            title: tab.title,
-            // `|| undefined` so a family with nothing open shows no badge at
-            // all rather than a "0" the eye has to read and discard.
-            notification:
-              tab.id === "all"
-                ? pool.length || undefined
-                : categoryCounts[tab.id] || undefined,
-          }))}
-          activeId={category}
-          size="md"
-          onChange={(id) => update({ category: id === "all" ? null : id })}
-        />
-      </div>
+          card worth taking. The same strip the card carries, from one
+          definition, so arriving here from it changes nothing but the scope. */}
+      <RiskCategoryTabs
+        counts={categoryCounts}
+        total={pool.length}
+        value={category}
+        onChange={(next) => update({ category: next === "all" ? null : next })}
+      />
 
       {/* Severity, as the same strip the Command Center card carries — one
           definition of this control, so the two surfaces cannot disagree about
@@ -248,6 +225,7 @@ function RiskAlertsPageInner() {
                     key={row.alert.id}
                     row={row}
                     onOpen={() => setDetail(row)}
+                    onAct={act}
                   />
                 ))}
               </div>
@@ -256,8 +234,11 @@ function RiskAlertsPageInner() {
         )}
       </Card>
 
+      <Toaster items={toasts} onRemove={removeToast} />
+
       <RiskAlertDetail
         row={detail}
+        onAct={act}
         onClose={() => setDetail(null)}
         onAcknowledge={(alert) => {
           setDetail(null);

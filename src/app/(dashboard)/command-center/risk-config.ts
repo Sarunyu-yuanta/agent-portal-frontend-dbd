@@ -13,6 +13,8 @@ import {
   ChartLineDownIcon,
   EyeIcon,
   InfoIcon,
+  PaperPlaneTiltIcon,
+  PhoneCallIcon,
   ShieldWarningIcon,
   UserFocusIcon,
   WarningCircleIcon,
@@ -35,6 +37,17 @@ export const RISK_CATEGORY_ORDER: RiskAlertCategory[] = [
   "suitability",
   "conduct",
 ];
+
+/** A query param read back as a category. Anything unrecognised — a stale
+ *  bookmark, a renamed family — degrades to "ทั้งหมด" rather than filtering the
+ *  list down to nothing. */
+export function parseRiskCategory(
+  value: string | null,
+): RiskAlertCategory | "all" {
+  return RISK_CATEGORY_ORDER.includes(value as RiskAlertCategory)
+    ? (value as RiskAlertCategory)
+    : "all";
+}
 
 /**
  * How bad, as everything that draws it.
@@ -109,6 +122,64 @@ export const RISK_CATEGORY_META: Record<
   conduct: { label: "พฤติกรรมการซื้อขาย", Icon: EyeIcon },
 };
 
+/** What the category strip is made of — "ทั้งหมด" and then the four families.
+ *  Built here rather than in the component so the card and the sub page cannot
+ *  end up offering different tabs. */
+export const RISK_CATEGORY_TABS: {
+  id: RiskAlertCategory | "all";
+  title: string;
+}[] = [
+  { id: "all", title: "ทั้งหมด" },
+  ...RISK_CATEGORY_ORDER.map((id) => ({
+    id,
+    title: RISK_CATEGORY_META[id].label,
+  })),
+];
+
+/**
+ * The one thing to do about a finding, as a button.
+ *
+ * Two outcomes, and they are already decided by the record rather than by a
+ * new field: a finding the IC may raise with the client is a phone call, and
+ * one they may not is Compliance's. `contactAllowed` is exactly that line —
+ * `false` wherever asking would be tipping-off — and every authored
+ * `recommendedAction` in the fixture falls on the side it predicts ("โทรแจ้ง
+ * ลูกค้า…" against "ส่งเรื่องให้ฝ่ายกำกับ…"). A third CTA per rule family would
+ * be a second source of truth for the same decision.
+ *
+ * `clientId === null` is folded into the escalate case: an unattributed
+ * sanctions hit has nobody to ring.
+ *
+ * The prose stays where it is. `recommendedAction` says *what to say* and is
+ * the detail panel's business; this is the verb on the control.
+ */
+export type RiskCta = {
+  kind: "contact" | "escalate";
+  /** The verb on the button, on a row and in the detail panel's footer
+   *  alike — one label, because the two do the same thing and a row that said
+   *  "ติดต่อ" opening a sheet that says "ติดต่อลูกค้า" invites the reader to
+   *  look for the difference. */
+  label: string;
+  Icon: ElementType;
+};
+
+export function riskCtaFor(alert: {
+  clientId: string | null;
+  contactAllowed: boolean;
+}): RiskCta {
+  return alert.contactAllowed && alert.clientId !== null
+    ? {
+        kind: "contact",
+        label: "ติดต่อลูกค้า",
+        Icon: PhoneCallIcon,
+      }
+    : {
+        kind: "escalate",
+        label: "ส่งต่อฝ่ายกำกับ",
+        Icon: PaperPlaneTiltIcon,
+      };
+}
+
 /**
  * The deadline, as a signed phrase.
  *
@@ -121,6 +192,53 @@ export function deadlineLabel(daysLeft: number): string {
   if (daysLeft === 0) return "ครบกำหนดวันนี้";
   if (daysLeft < 0) return `เลยกำหนดมา ${Math.abs(daysLeft)} วัน`;
   return `ต้องดำเนินการใน ${daysLeft} วัน`;
+}
+
+/**
+ * The deadline itself — "27 ต.ค.".
+ *
+ * Split on the string rather than `new Date(isoDay)`, the same way
+ * `daysFromToday` reads one: `dueDate` is a **local** calendar day, and the
+ * Date constructor reads a bare `YYYY-MM-DD` as UTC midnight, which lands on
+ * the day before anywhere west of Greenwich.
+ *
+ * No year. Every deadline this feature carries is within a few weeks, and a
+ * พ.ศ. year on a margin call due Tuesday is three characters that never change
+ * sitting where the eye wants the day.
+ */
+export function dueDayLabel(dueDate: string): string {
+  const [y, m, d] = dueDate.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+/**
+ * The deadline as a row states it: the date, plus how far off it is.
+ *
+ * Both halves, because neither answers on its own. "ครบกำหนดวันนี้" does not
+ * say *which* day to write on a follow-up note, and "27 ต.ค." makes the reader
+ * work out whether that is today — on a list where the whole point is spotting
+ * what is already late.
+ *
+ * The date leads and the countdown trails as a qualifier, which is also the
+ * order that survives being read at a glance: a desk scanning this column is
+ * matching dates against its own diary.
+ *
+ * Falls back to the bare countdown if a finding somehow carries `daysLeft`
+ * without a `dueDate`. The two are derived from one field and should never
+ * disagree, but a missing date must not blank out the urgency with it.
+ */
+export function deadlineDateLabel(
+  daysLeft: number,
+  dueDate: string | null,
+): string {
+  if (dueDate === null) return deadlineLabel(daysLeft);
+  const day = dueDayLabel(dueDate);
+  if (daysLeft === 0) return `ครบกำหนดวันนี้ ${day}`;
+  if (daysLeft < 0) return `เลยกำหนด ${day} · ${Math.abs(daysLeft)} วัน`;
+  return `ครบกำหนด ${day} · อีก ${daysLeft} วัน`;
 }
 
 /**

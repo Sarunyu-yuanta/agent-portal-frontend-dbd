@@ -2,27 +2,35 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Chip, Tag } from "@sarunyu/system-one";
-import { CaretRightIcon, ShieldCheckIcon } from "@phosphor-icons/react";
+import { Button, Chip, Tag, TabGroup, Toaster } from "@sarunyu/system-one";
+import {
+  CaretRightIcon,
+  ClockCountdownIcon,
+  ShieldCheckIcon,
+} from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { withQuery } from "@/lib/query-state";
-import type { RiskAlert, RiskSeverity } from "@/types/domain";
+import type { RiskAlert, RiskAlertCategory, RiskSeverity } from "@/types/domain";
 import { CardHeader, RowIcon } from "./CardHeader";
 import { RiskAlertDetail } from "./RiskAlertDetail";
 import {
-  deadlineLabel,
+  deadlineDateLabel,
   detectedAgoLabel,
   detectedAtLabel,
   RISK_ALERTS_PAGE,
   RISK_CATEGORY_META,
+  RISK_CATEGORY_TABS,
   RISK_SEVERITY_META,
+  riskCtaFor,
   SEVERITY_ORDER,
 } from "./risk-config";
 import {
+  countRiskByCategory,
   countRiskBySeverity,
   inlineRiskAlerts,
   type RiskAlertRow,
 } from "./risk-feed";
+import { useRiskCta } from "./use-risk-cta";
 
 /** The name this feature goes by, shared so the card heading and the sub page
  *  cannot drift apart. */
@@ -66,6 +74,8 @@ export function RiskAlertsPanel({
   floor,
   acknowledgedCount,
   onAcknowledge,
+  category,
+  onCategoryChange,
   severity,
   onSeverityChange,
 }: {
@@ -75,6 +85,10 @@ export function RiskAlertsPanel({
   /** Whether the card can still reach the page when nothing has been cut. */
   acknowledgedCount: number;
   onAcknowledge: (alert: RiskAlert) => void;
+  /** Which rule family the card is narrowed to — `"all"` is ทั้งหมด. Lives in
+   *  the query string beside `severity`, for the same reason. */
+  category: RiskAlertCategory | "all";
+  onCategoryChange: (next: RiskAlertCategory | "all") => void;
   /** `null` is "ทั้งหมด". Held in the page's query string, not in this
    *  component, for the reason `query-state` gives: the dashboard layout never
    *  remounts, so a narrowed card survives a trip to a client and back. */
@@ -86,12 +100,19 @@ export function RiskAlertsPanel({
    *  rest of it plus the figures behind it. The client is a button further on. */
   const [detail, setDetail] = useState<RiskAlertRow | null>(null);
 
-  /** The link out carries the filter, so the page opens on the view the reader
-   *  was already looking at rather than resetting it. */
+  /** The mocked action behind every CTA on this card — on the rows and in the
+   *  sheet they open, from one definition. */
+  const { act, toasts, removeToast } = useRiskCta();
+
+  /** The link out carries both filters, so the page opens on the view the
+   *  reader was already looking at rather than resetting it. Same param names
+   *  the sub page reads — `withQuery` drops the `null`s, so an unnarrowed card
+   *  still links to the bare path. */
   const seeAll = {
-    href: severity
-      ? withQuery(RISK_ALERTS_PAGE, "", { severity })
-      : RISK_ALERTS_PAGE,
+    href: withQuery(RISK_ALERTS_PAGE, "", {
+      category: category === "all" ? null : category,
+      severity,
+    }),
     label: "ดูทั้งหมด",
   };
 
@@ -119,13 +140,22 @@ export function RiskAlertsPanel({
     );
   }
 
-  /** Counted off the *whole* list, never the filtered one: a chip has to keep
-   *  saying how many there are of a severity you are not currently looking at,
-   *  or picking one would blank out the other three. */
-  const counts = countRiskBySeverity(rows);
+  /** Family counts come off the *whole* list — a tab has to keep saying how
+   *  many AML findings there are while you are reading the margin ones, or
+   *  picking one would blank out the other three. */
+  const categoryCounts = countRiskByCategory(rows);
+  /** Severity counts follow the chosen family, so the chips under the tabs
+   *  describe the list the reader is actually looking at. The same arrangement
+   *  the sub page uses, and the reason the tabs sit above the chips: family is
+   *  the coarser cut, severity refines inside it. */
+  const inCategory =
+    category === "all"
+      ? rows
+      : rows.filter((row) => row.alert.category === category);
+  const counts = countRiskBySeverity(inCategory);
   const visible = severity
-    ? rows.filter((row) => row.alert.severity === severity)
-    : rows;
+    ? inCategory.filter((row) => row.alert.severity === severity)
+    : inCategory;
   const { shown, hiddenCount } = inlineRiskAlerts(visible, floor);
 
   return (
@@ -137,16 +167,28 @@ export function RiskAlertsPanel({
           where the strip gives the total *and* what it is made of. */}
       <CardHeader title={RISK_ALERTS_TITLE} link={seeAll} />
 
+      {/* Family first, level second — the pair the sub page carries, in the
+          same order. The tabs answer "what kind of exposure is this", which is
+          the coarser question, and the chips under them then say how bad the
+          findings inside that family are. */}
+      <RiskCategoryTabs
+        counts={categoryCounts}
+        total={rows.length}
+        value={category}
+        onChange={onCategoryChange}
+      />
+
       <RiskSeverityStrip
         counts={counts}
-        total={rows.length}
+        total={inCategory.length}
         value={severity}
         onChange={onSeverityChange}
       />
 
       {visible.length === 0 ? (
-        /* Only reachable by acknowledging every finding at one severity, which
-           is a result worth stating rather than showing an empty box. */
+        /* Reachable by picking a family with nothing open in it, or by
+           acknowledging every finding at one severity — either way a result
+           worth stating rather than showing an empty box. */
         <EmptyState
           icon={
             <ShieldCheckIcon
@@ -155,8 +197,10 @@ export function RiskAlertsPanel({
               className="text-[var(--text-default-placeholder)]"
             />
           }
-          title="ไม่มีรายการในระดับนี้"
-          body="เลือก “ทั้งหมด” เพื่อดูรายการความเสี่ยงระดับอื่น"
+          title={
+            severity ? "ไม่มีรายการในระดับนี้" : "ไม่มีรายการในหมวดนี้"
+          }
+          body="เลือก “ทั้งหมด” เพื่อดูรายการความเสี่ยงอื่น"
         />
       ) : (
         /* One surface with rules inside it, matching the Call Log and KYC
@@ -168,6 +212,7 @@ export function RiskAlertsPanel({
               key={row.alert.id}
               row={row}
               onOpen={() => setDetail(row)}
+              onAct={act}
             />
           ))}
           {hiddenCount > 0 && (
@@ -176,13 +221,71 @@ export function RiskAlertsPanel({
         </div>
       )}
 
+      {/* Fixed-position, so it does not matter that it is declared inside a
+          card halfway down the column — same placement `MiniCalendar` uses. */}
+      <Toaster items={toasts} onRemove={removeToast} />
+
       <RiskAlertDetail
         row={detail}
+        onAct={act}
         onClose={() => setDetail(null)}
         onAcknowledge={(alert) => {
           setDetail(null);
           onAcknowledge(alert);
         }}
+      />
+    </div>
+  );
+}
+
+/**
+ * Which rule family, as a tab strip with per-family counts.
+ *
+ * Lives here rather than on the sub page that first had it, so the card and
+ * the page offer the same five tabs with the same numbers — the argument
+ * {@link RiskSeverityStrip} already makes for the row below it.
+ *
+ * Tabs rather than a second row of chips: family and severity are different
+ * questions, and two identical chip rows stacked read as one long filter bar
+ * where the reader has to work out which half does what. A tab strip is also
+ * what the reader meets on the page this card links into, so the handoff
+ * keeps its shape.
+ *
+ * Three classes, all working around `system-one`'s unlayered stylesheet:
+ * `scrollable-tabs` keeps five Thai labels from truncating and lets them swipe
+ * on a phone; `transparent-tabs` cancels the `bg-background` the component
+ * paints over whatever surface it sits on; `count-tabs` repaints the
+ * `notification` badge from the library's always-red to a quiet grey pill —
+ * red here would say every category is on fire.
+ */
+export function RiskCategoryTabs({
+  counts,
+  total,
+  value,
+  onChange,
+}: {
+  counts: Record<RiskAlertCategory, number>;
+  /** The "ทั้งหมด" figure. Passed rather than summed, for the same reason the
+   *  severity strip takes one: it has to stay the number the surface around it
+   *  is counting. */
+  total: number;
+  value: RiskAlertCategory | "all";
+  onChange: (next: RiskAlertCategory | "all") => void;
+}) {
+  return (
+    <div className="scrollable-tabs transparent-tabs count-tabs">
+      <TabGroup
+        items={RISK_CATEGORY_TABS.map((tab) => ({
+          id: tab.id,
+          title: tab.title,
+          // `|| undefined` so a family with nothing open shows no badge at all
+          // rather than a "0" the eye has to read and discard.
+          notification:
+            (tab.id === "all" ? total : counts[tab.id]) || undefined,
+        }))}
+        activeId={value}
+        size="md"
+        onChange={(id) => onChange(id as RiskAlertCategory | "all")}
       />
     </div>
   );
@@ -271,14 +374,19 @@ export function RiskSeverityStrip({
 export function RiskAlertRowItem({
   row,
   onOpen,
+  onAct,
 }: {
   row: RiskAlertRow;
   onOpen: () => void;
+  /** Fires the row's one action without opening it — see `useRiskCta`. */
+  onAct: (row: RiskAlertRow) => void;
 }) {
   const { alert, acknowledged } = row;
   const severity = RISK_SEVERITY_META[alert.severity];
   const category = RISK_CATEGORY_META[alert.category];
   const CategoryIcon = category.Icon;
+  const cta = riskCtaFor(alert);
+  const CtaIcon = cta.Icon;
 
   return (
     <div
@@ -299,10 +407,30 @@ export function RiskAlertRowItem({
         <CategoryIcon size={18} weight="duotone" />
       </RowIcon>
 
+      {/* Two lines, each a left half and a right half — so the row reads as a
+          small 2×2 rather than as a stack with things hung off it:
+
+              who + how bad          │   since when
+              what + where           │   by when
+
+          Both times live on the right, which is where they are looked for, but
+          on *fixed lines* rather than stacked in one box. That stacking is what
+          made the column unreadable: with no deadline the detection time rode
+          up to the first line, with one it sat on the second, so neither figure
+          was ever in the same place twice and the eye had to identify each one
+          before it could use it. Pinned to a line apiece they can be read
+          straight down the card, and a row with no deadline leaves a gap where
+          the answer would have been instead of shuffling the other figure into
+          its place.
+
+          The deadline takes the lower line even though it outranks the stamp
+          above it. Reading a row ends at the bottom-right — it is the last
+          thing seen before moving to the next finding, and the one worth
+          leaving with. Weight carries the ranking instead of position: bold and
+          in the severity's colour, against muted grey. */}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        {/* Line one is **who**, and how bad — with elapsed time top-right so
-            line two can use the full width and is not squeezed beside it. */}
-        <div className="flex min-w-0 items-start gap-2">
+        {/* Line one: **who**, how bad — and, hard right, since when. */}
+        <div className="flex min-w-0 items-center gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <p className="truncate text-[14px] font-bold text-foreground">
             {row.displayName}
@@ -328,58 +456,106 @@ export function RiskAlertRowItem({
               className="shrink-0"
             />
           )}
-          {/* The deadline sits with the severity, because "how bad" and "by
-              when" are the same question asked twice, and only some rules carry
-              one. It used to share the right-hand column with the elapsed time,
-              which put *by when* and *since when* — opposite directions in
-              time — in one slot, so the column read differently row to row.
-
-              Coloured text rather than a second `Tag`: two filled chips side by
-              side merge into one block, and this is a qualifier on the tag
-              beside it, not a second label. */}
-          {alert.daysLeft !== null && (
-            <span
-              className={`shrink-0 text-[11px] font-semibold ${severity.text}`}
-            >
-              {deadlineLabel(alert.daysLeft)}
-            </span>
-          )}
           </div>
 
-          {/* Elapsed time sits top-right — see comment on line two below. */}
+          {/* **Since when** — the quiet one, up beside the name where a list
+              expects to find a timestamp, and left there on every row whether
+              or not a deadline follows below it. */}
           <span
             suppressHydrationWarning
             title={detectedAtLabel(alert.detectedAt, new Date())}
-            className="shrink-0 pt-0.5 text-[12px] leading-none tabular-nums text-muted-foreground"
+            className="shrink-0 text-[12px] tabular-nums text-muted-foreground"
           >
             {detectedAgoLabel(alert.detectedAt, new Date())}
           </span>
         </div>
 
-        {/* Line two is **what**, and where. The finding keeps `text-foreground`
-            rather than dropping to muted — demoted from the headline, but still
-            the sentence the row is about, where the category and the account
-            behind it are context. One run, so `truncate` drops them
-            right-to-left: exactly the order they matter least in. */}
-        <p
-          className="min-w-0 max-w-[80%] truncate text-[12px] text-foreground"
-          title={alert.title}
-        >
+        {/* Line two: **what** and where, the full width of the row. The
+            finding keeps `text-foreground` rather than dropping to muted —
+            demoted from the headline, but still the sentence the row is about,
+            where the category and the account behind it are context. One run,
+            so `truncate` drops them right-to-left: exactly the order they
+            matter least in. */}
+        <p className="min-w-0 truncate text-[12px] text-foreground" title={alert.title}>
           {alert.title}
           <span className="text-muted-foreground">
             {` · ${category.label}`}
             {alert.accountLabel && ` · ${alert.accountLabel}`}
           </span>
         </p>
-      </div>
 
-      {/* Nothing follows. Acknowledging happens in the detail panel, not from a
-          tick out here. A row carried one briefly, revealed on hover, to save
-          opening a sheet for a finding the desk already recognised. It went
-          because clearing a compliance alert is not a thing to do in passing:
-          the panel is where the figures and the rule behind it are, and a
-          control that disposes of one from a list you are only skimming invites
-          exactly the reflex it should not. */}
+        {/* Line three: what to do about it, and **by when** — one pair, on one
+            line.
+
+            Flush left, under the finding it belongs to. Every row's button
+            then starts at the same x as the name and the sentence above it, so
+            the control is in one place down the whole list rather than
+            wherever that row's label length happened to leave it — and the
+            eye, having read left-to-right across line two, does not have to
+            travel back out to the right margin to act.
+
+            The deadline rides immediately beside the button rather than on the
+            line above, because the two are one sentence: *due today →
+            therefore ring them*. Split across lines they were two separate
+            right-aligned things the reader had to join back up.
+
+            It also buys line two its full width back — the Margin Call row had
+            been losing its account number to truncation to make room for a
+            deadline it did not need to share a line with.
+
+            Not the tick this row used to carry. That one *disposed* of a
+            finding — acknowledging a compliance alert from a list you are
+            skimming is exactly the reflex to design against, and it still
+            lives behind the detail panel where the figures and the rule are.
+            This one *starts* the work the finding is asking for: ring the
+            client, or hand it to Compliance. Getting that wrong costs a phone
+            call; getting the other one wrong closes a margin call nobody
+            looked at.
+
+            `primary`, the same variant the detail panel's footer wears: a list
+            whose only filled control is the one that starts the work is a list
+            that says what to do with it. The severities keep their own voice —
+            tints behind a glyph and inside a small Tag, never solid blue — so
+            the two read as different registers rather than competing.
+
+            `stopPropagation` because the row around it is itself a button: a
+            click here must not also open the sheet behind the toast. */}
+        {/* `mt-2` on top of the column's `gap-1`. The action is a different
+            kind of thing from the two lines of reading above it, and at the
+            4px the column gives everything it looked like a third line of the
+            same sentence. The extra space is what separates "here is the
+            finding" from "here is what you do". */}
+        <div className="mt-2 flex items-center gap-3">
+          <Button
+            variant="primary"
+            size="sm"
+            className="shrink-0"
+            leftIcon={<CtaIcon size={14} weight="bold" />}
+            aria-label={`${cta.label} — ${row.displayName}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAct(row);
+            }}
+          >
+            {cta.label}
+          </Button>
+          {/* Coloured text rather than a `Tag` or a tinted pill: the row
+              already carries a filled severity chip beside the name, a tinted
+              square at its left edge and now a solid button right next to it,
+              and a fourth filled block would leave the eye nothing to rank.
+              The countdown glyph does the work a tint would — it marks the
+              figure as a *deadline* at a glance, which is what keeps it from
+              being read as a second timestamp. */}
+          {alert.daysLeft !== null && (
+            <span
+              className={`inline-flex min-w-0 items-center gap-1 truncate text-[12px] font-bold ${severity.text}`}
+            >
+              <ClockCountdownIcon size={13} weight="bold" className="shrink-0" />
+              {deadlineDateLabel(alert.daysLeft, alert.dueDate)}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
