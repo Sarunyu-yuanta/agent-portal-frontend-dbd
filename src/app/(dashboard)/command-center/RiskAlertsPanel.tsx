@@ -1,13 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Button, Chip, Tag, TabGroup, Toaster } from "@sarunyu/system-one";
-import {
-  CaretRightIcon,
-  ClockCountdownIcon,
-  ShieldCheckIcon,
-} from "@phosphor-icons/react";
+import { ClockCountdownIcon, ShieldCheckIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { withQuery } from "@/lib/query-state";
 import type { RiskAlert, RiskAlertCategory, RiskSeverity } from "@/types/domain";
@@ -15,19 +10,19 @@ import { CardHeader, RowIcon } from "./CardHeader";
 import { RiskAlertDetail } from "./RiskAlertDetail";
 import {
   deadlineDateLabel,
+  deadlineToneClass,
   detectedAgoLabel,
   detectedAtLabel,
   RISK_ALERTS_PAGE,
   RISK_CATEGORY_META,
   RISK_CATEGORY_TABS,
+  RISK_CTA_LABEL,
   RISK_SEVERITY_META,
-  riskCtaFor,
   SEVERITY_ORDER,
 } from "./risk-config";
 import {
   countRiskByCategory,
   countRiskBySeverity,
-  inlineRiskAlerts,
   type RiskAlertRow,
 } from "./risk-feed";
 import { useRiskCta } from "./use-risk-cta";
@@ -35,17 +30,6 @@ import { useRiskCta } from "./use-risk-cta";
 /** The name this feature goes by, shared so the card heading and the sub page
  *  cannot drift apart. */
 export const RISK_ALERTS_TITLE = "Proactive Compliance Alerts";
-
-/**
- * The way out to the full list.
- *
- * Shown whenever the page has anything to show, not only when the card has been
- * cut short — which is where `CallLogPanel` draws the line. The difference is
- * that this page is also the archive of what has been acknowledged, and the
- * only place either filter exists, so it is worth reaching with three alerts on
- * screen and nothing hidden.
- */
-const SEE_ALL = { href: RISK_ALERTS_PAGE, label: "ดูทั้งหมด" };
 
 /**
  * What the book is exposed to right now: margin, AML, suitability and market
@@ -71,19 +55,15 @@ const SEE_ALL = { href: RISK_ALERTS_PAGE, label: "ดูทั้งหมด" }
  */
 export function RiskAlertsPanel({
   rows,
-  floor,
-  acknowledgedCount,
   onAcknowledge,
   category,
   onCategoryChange,
   severity,
   onSeverityChange,
 }: {
-  /** Pre-ranked by `buildRiskAlertRows` — the cut below depends on it. */
+  /** Pre-ranked by `buildRiskAlertRows`: worst first, which is the order the
+   *  scrolling list below reads in. */
   rows: RiskAlertRow[];
-  floor: number;
-  /** Whether the card can still reach the page when nothing has been cut. */
-  acknowledgedCount: number;
   onAcknowledge: (alert: RiskAlert) => void;
   /** Which rule family the card is narrowed to — `"all"` is ทั้งหมด. Lives in
    *  the query string beside `severity`, for the same reason. */
@@ -119,12 +99,10 @@ export function RiskAlertsPanel({
   if (rows.length === 0) {
     return (
       <div className="flex flex-col gap-4">
-        <CardHeader
-          title={RISK_ALERTS_TITLE}
-          /* Nothing open, but the page still holds whatever has been
-             acknowledged — worth reaching only when there is something there. */
-          link={acknowledgedCount > 0 ? SEE_ALL : undefined}
-        />
+        {/* No link out. The sub page no longer keeps an archive of
+            acknowledged findings — it lists the same open rows this card
+            does — so with nothing open there is nothing there to reach. */}
+        <CardHeader title={RISK_ALERTS_TITLE} />
         <EmptyState
           icon={
             <ShieldCheckIcon
@@ -156,7 +134,6 @@ export function RiskAlertsPanel({
   const visible = severity
     ? inCategory.filter((row) => row.alert.severity === severity)
     : inCategory;
-  const { shown, hiddenCount } = inlineRiskAlerts(visible, floor);
 
   return (
     <div className="flex flex-col gap-4">
@@ -205,9 +182,24 @@ export function RiskAlertsPanel({
       ) : (
         /* One surface with rules inside it, matching the Call Log and KYC
            cards: the fill and the radius belong to the list, a row only
-           hovers. */
-        <div className="overflow-hidden rounded-2xl bg-[var(--bg-default-secondary)] divide-y divide-black/[0.05]">
-          {shown.map((row) => (
+           hovers.
+
+           **Every finding, behind a scroll** — no inline cut and no "ดูอีก N
+           รายการ" row. The cut was costing the card the thing it is for: with
+           five rows shown and twelve hidden, a desk could not tell whether the
+           quiet two thirds held anything worth a look without leaving for the
+           sub page. A scroll answers that in a flick, and the rows it reveals
+           are the same rows with the same button, so nothing is lost by not
+           going.
+
+           `max-h`, not a fixed height, so a filter that leaves two rows draws
+           a two-row card rather than a box of whitespace. The value is five
+           rows plus a sliver: an exactly-5-row window looks like the end of
+           the list, and the half row showing under the fold is what says there
+           is more. "ดูทั้งหมด" in the header still goes to the page — that is
+           where the acknowledged archive lives, which this list never shows. */
+        <div className="max-h-[560px] overflow-y-auto rounded-2xl bg-[var(--bg-default-secondary)] divide-y divide-black/[0.05]">
+          {visible.map((row) => (
             <RiskAlertRowItem
               key={row.alert.id}
               row={row}
@@ -215,9 +207,6 @@ export function RiskAlertsPanel({
               onAct={act}
             />
           ))}
-          {hiddenCount > 0 && (
-            <MoreRow count={hiddenCount} href={seeAll.href} severity={severity} />
-          )}
         </div>
       )}
 
@@ -385,8 +374,6 @@ export function RiskAlertRowItem({
   const severity = RISK_SEVERITY_META[alert.severity];
   const category = RISK_CATEGORY_META[alert.category];
   const CategoryIcon = category.Icon;
-  const cta = riskCtaFor(alert);
-  const CtaIcon = cta.Icon;
 
   return (
     <div
@@ -525,30 +512,50 @@ export function RiskAlertRowItem({
             4px the column gives everything it looked like a third line of the
             same sentence. The extra space is what separates "here is the
             finding" from "here is what you do". */}
-        <div className="mt-2 flex items-center gap-3">
+        <div className="mt-2 flex items-center justify-between gap-3">
           <Button
             variant="primary"
             size="sm"
             className="shrink-0"
-            leftIcon={<CtaIcon size={14} weight="bold" />}
-            aria-label={`${cta.label} — ${row.displayName}`}
+            aria-label={`${RISK_CTA_LABEL} — ${row.displayName}`}
             onClick={(e) => {
               e.stopPropagation();
               onAct(row);
             }}
           >
-            {cta.label}
+            {RISK_CTA_LABEL}
           </Button>
-          {/* Coloured text rather than a `Tag` or a tinted pill: the row
-              already carries a filled severity chip beside the name, a tinted
-              square at its left edge and now a solid button right next to it,
-              and a fourth filled block would leave the eye nothing to rank.
-              The countdown glyph does the work a tint would — it marks the
-              figure as a *deadline* at a glance, which is what keeps it from
-              being read as a second timestamp. */}
+          {/* The deadline closes the row, wedged into its bottom-right corner
+              — the corner being where a row is left, and a filled shape being
+              what stops it reading as a third line of text after the finding
+              above it.
+
+              `translate-*`, not negative margins, to reach past the row's
+              `p-3`. A margin would take those twelve pixels out of the row's
+              height, so every row carrying a deadline would come out shorter
+              than its neighbours; a transform moves the painted box and leaves
+              the layout alone. It also keeps the pill a real flex item, so the
+              button can never grow under it the way it could if this were
+              positioned absolutely.
+
+              Square but for the top-left: the two edges that meet the row's
+              own edges stay flat, which is what makes it read as set into the
+              corner rather than floating near it.
+
+              The tint is `deadlineToneClass`'s business and answers *how
+              close*, not how bad: red for today, amber for everything else,
+              whatever the finding's severity is. The countdown glyph rides
+              inside it, marking the figure as a deadline rather than another
+              timestamp. */}
           {alert.daysLeft !== null && (
             <span
-              className={`inline-flex min-w-0 items-center gap-1 truncate text-[12px] font-bold ${severity.text}`}
+              /* `h-7` — the `sm` Button's own height to the pixel. Left to
+                 its padding the pill came out 30px against the button's 28
+                 and quietly made every row with a deadline two pixels deeper
+                 than the rest. */
+              className={`inline-flex h-7 min-w-0 shrink translate-x-3 translate-y-3 items-center gap-1 truncate rounded-tl-xl px-3 text-[12px] font-bold ${deadlineToneClass(
+                alert.daysLeft,
+              )}`}
             >
               <ClockCountdownIcon size={13} weight="bold" className="shrink-0" />
               {deadlineDateLabel(alert.daysLeft, alert.dueDate)}
@@ -557,51 +564,5 @@ export function RiskAlertRowItem({
         </div>
       </div>
     </div>
-  );
-}
-
-/**
- * The last row, when the floor cut something off.
- *
- * A row rather than relying on the header's count, and in the list rather than
- * under it, because this is where the reader arrives: they read down the
- * findings, reach the bottom, and the question they have at that moment is "is
- * that all?". The same argument `KycAlertsPanel`'s `MoreRow` makes.
- *
- * It is a `<Link>`, not a button — unlike the KYC card's, which opens a sheet,
- * this one leaves for a page, and leaving for a page has to survive ⌘-click.
- * One line and no tinted square: what marks this row is that it is *unlike* the
- * findings above it.
- */
-function MoreRow({
-  count,
-  href,
-  severity,
-}: {
-  count: number;
-  href: string;
-  /** What the hidden rows are, said in words. With a severity picked they are
-   *  simply more of it; unfiltered, the criticals are all on screen by
-   *  construction, so what is left is the two quieter tiers. */
-  severity: RiskSeverity | null;
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex w-full items-center gap-2 p-3 text-left no-underline transition-colors hover:bg-[var(--fill-p1-100)]"
-    >
-      <p className="min-w-0 flex-1 truncate text-[13px] text-foreground">
-        <span className="font-bold">ดูอีก {count} รายการ</span>
-        <span className="text-muted-foreground">
-          {severity
-            ? ` · ระดับ${RISK_SEVERITY_META[severity].label}`
-            : " · ระดับเฝ้าระวังและข้อสังเกต"}
-        </span>
-      </p>
-      <CaretRightIcon
-        size={16}
-        className="shrink-0 text-[var(--text-default-placeholder)]"
-      />
-    </Link>
   );
 }

@@ -123,6 +123,51 @@
   }
 }
 
+/* Product Catalog's "Product Trending" tab: the one tab that cuts across every
+   asset class, so it is the one tab that doesn't look like the rest. The label
+   is painted with a warm gradient and a brighter band sweeps along it every few
+   seconds — enough to catch the eye on arrival without the tab bar ever
+   becoming a moving object.
+
+   Written here rather than as utility classes because it styles a node inside
+   the design system's `Tab`: the title is a plain `span` the component renders
+   itself, and `TabItem.title` only takes a string. `span:not([aria-hidden])`
+   is that title — the icon span and the underline div are both aria-hidden —
+   and the selector outranks the component's own `text-muted-foreground`
+   without needing `!important`. */
+.tab-shimmer > span:not([aria-hidden="true"]) {
+  background-image: linear-gradient(
+    100deg,
+    #f54a00 0%,
+    #f54a00 40%,
+    #ffb86a 50%,
+    #f54a00 60%,
+    #f54a00 100%
+  );
+  background-size: 300% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: tab-shimmer-sweep 4s linear infinite;
+}
+
+@keyframes tab-shimmer-sweep {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+/* The gradient is the tab's identity; only the sweep is decoration. */
+@media (prefers-reduced-motion: reduce) {
+  .tab-shimmer > span:not([aria-hidden="true"]) {
+    animation: none;
+    background-position: 50% 0;
+  }
+}
+
 /* Same always-visible scrollbar treatment as .table-scroll, but for a
    vertical scroll container that IS the scroller (no wrapper div). */
 .visible-scrollbar {

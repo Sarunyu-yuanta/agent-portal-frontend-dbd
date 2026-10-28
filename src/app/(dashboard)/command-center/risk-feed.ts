@@ -165,28 +165,3 @@ export function countRiskByCategory(
   for (const row of rows) out[row.alert.category] += 1;
   return out;
 }
-
-/**
- * The rows the Command Center card names, and how many are behind them.
- *
- * Every open `critical` is named first; quieter severities fill up to `floor`
- * when there are fewer criticals. The result is capped at `floor` — the card
- * is a preview, and the full list lives on `/command-center/risk-alerts`.
- */
-export function inlineRiskAlerts(
-  rows: RiskAlertRow[],
-  floor: number,
-): { shown: RiskAlertRow[]; hiddenCount: number } {
-  const criticals = rows.filter((row) => row.alert.severity === "critical");
-  const shown = (
-    criticals.length >= floor
-      ? criticals
-      : [
-          ...criticals,
-          ...rows
-            .filter((row) => row.alert.severity !== "critical")
-            .slice(0, floor - criticals.length),
-        ]
-  ).slice(0, floor);
-  return { shown, hiddenCount: rows.length - shown.length };
-}

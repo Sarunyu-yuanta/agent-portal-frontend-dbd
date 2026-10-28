@@ -1,15 +1,15 @@
 "use client";
 
 import { useToasts } from "@/hooks/use-toasts";
-import { riskCtaFor } from "./risk-config";
 import type { RiskAlertRow } from "./risk-feed";
 
 /**
  * What the CTA on a risk finding does — mocked, and in one place.
  *
- * **This is a stand-in.** Nothing is sent: "ติดต่อลูกค้า" does not open a
- * dialler and "ส่งต่อฝ่ายกำกับ" does not file anything. Both confirm with a
- * toast and stop there, which is the honest shape for this app — the data
+ * **This is a stand-in**, and so is the button that fires it — see
+ * `RISK_CTA_LABEL`, which is Lorem Ipsum until somebody decides what a desk
+ * can actually do from an alert. Pressing it raises a toast and stops there,
+ * which is the honest shape for this app — the data
  * layer is local fixtures (`risk-mock-data`) and there is no case to file
  * against. When a backend exists, this hook is the one file that changes: both
  * surfaces already call `act(row)` and neither knows what it does.
@@ -29,17 +29,18 @@ export function useRiskCta() {
   const { toasts, addToast, removeToast } = useToasts();
 
   /** Fires the finding's one action. Takes the row, not the alert, so the
-   *  confirmation can name the client the way the list does — masked when
-   *  privacy mode is on. */
+   *  confirmation can still name what it was fired on — the rule code and the
+   *  client as the list shows them, masked when privacy mode is on.
+   *
+   *  The message is placeholder prose to match `RISK_CTA_LABEL`. It names the
+   *  finding so the button is visibly wired to the row under it, and says
+   *  nothing about what happened, because nothing did and nobody has decided
+   *  what should. */
   const act = (row: RiskAlertRow) => {
-    const cta = riskCtaFor(row.alert);
     addToast({
-      status: "success",
+      status: "information",
       multiline: true,
-      message:
-        cta.kind === "contact"
-          ? `บันทึกการติดต่อ ${row.displayName} แล้ว`
-          : `ส่งเรื่อง ${row.alert.ruleCode} — ${row.displayName} ให้ฝ่ายกำกับแล้ว`,
+      message: `Lorem ipsum — ${row.alert.ruleCode} · ${row.displayName}`,
     });
   };
 

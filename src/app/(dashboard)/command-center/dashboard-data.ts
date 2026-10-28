@@ -545,17 +545,16 @@ export const REMINDER_ROW_LIMIT = 3;
 export const KYC_INLINE_DAYS = 14;
 
 /**
- * How many risk alerts the Command Center section names before handing the rest
- * to `/command-center/risk-alerts`.
+ * How many risk alert rows fit in the Command Center card before it scrolls.
  *
- * Criticals are named first; quieter severities fill in when there are fewer
- * open criticals. Capped here — the card is a preview, not the full queue.
- *
- * Four — the card names the most pressing findings and hands the rest to
- * `/command-center/risk-alerts`. Criticals are named first; quieter severities
- * fill in only when fewer criticals are open, up to this cap.
+ * No longer a *cut*: the card lists every open finding and puts the overflow
+ * behind a scroll rather than behind a "ดูอีก N รายการ" row, so this figure
+ * only decides where the fold falls — and, here, how many skeleton rows the
+ * loading state draws so the card does not resize when the real list arrives.
+ * The window itself is set in `RiskAlertsPanel` (`max-h`), which has to know
+ * the row height; the two are kept in step by hand.
  */
-export const RISK_ALERT_ROW_FLOOR = 5;
+export const RISK_ALERT_ROWS_BEFORE_SCROLL = 5;
 
 // ── House view, and what it points at ───────────────────────────────────────
 

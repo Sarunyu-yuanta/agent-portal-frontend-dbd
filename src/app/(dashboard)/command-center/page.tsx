@@ -41,7 +41,7 @@ import {
   CALL_LOG_ROW_LIMIT,
   REMINDER_ROW_LIMIT,
   KYC_INLINE_DAYS,
-  RISK_ALERT_ROW_FLOOR,
+  RISK_ALERT_ROWS_BEFORE_SCROLL,
 } from "./dashboard-data";
 import { useNbaRows } from "./use-nba-rows";
 import { useRiskAlertRows } from "./use-risk-alert-rows";
@@ -107,11 +107,7 @@ function DashboardPageInner() {
     isQueueId,
   );
   const { rows: nbaRows, dismiss: dismissNba } = useNbaRows();
-  const {
-    rows: riskRows,
-    acknowledgedRows: riskAcknowledged,
-    acknowledge: acknowledgeRisk,
-  } = useRiskAlertRows();
+  const { rows: riskRows, acknowledge: acknowledgeRisk } = useRiskAlertRows();
 
   // The modals a queue row opens — the same pair the bell and a client's
   // Reminders tab open, from the one definition. No `pinnedClientId`: this page
@@ -325,8 +321,6 @@ function DashboardPageInner() {
               <Card variant="default" className="gap-4">
                 <RiskAlertsPanel
                   rows={riskRows}
-                  floor={RISK_ALERT_ROW_FLOOR}
-                  acknowledgedCount={riskAcknowledged.length}
                   onAcknowledge={acknowledgeRisk}
                   category={riskCategory}
                   onCategoryChange={(next) =>
@@ -466,10 +460,11 @@ function DashboardSkeleton() {
             <Card variant="default" className="gap-4">
               <Skeleton className="h-7 w-56" />
               <Skeleton className="h-7 w-[300px] rounded-full" />
-              {Array.from({ length: RISK_ALERT_ROW_FLOOR }).map((_, i) => (
-                <Skeleton key={i} className="h-[62px] rounded-xl" />
+              {/* A row is three lines and a button now — 108px — and there
+                  is no "ดูอีก N รายการ" row under them any more. */}
+              {Array.from({ length: RISK_ALERT_ROWS_BEFORE_SCROLL }).map((_, i) => (
+                <Skeleton key={i} className="h-[108px] rounded-xl" />
               ))}
-              <Skeleton className="h-[44px] rounded-xl" />
             </Card>
           </div>
         </div>

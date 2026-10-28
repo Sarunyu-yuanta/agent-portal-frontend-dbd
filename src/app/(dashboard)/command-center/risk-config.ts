@@ -13,8 +13,6 @@ import {
   ChartLineDownIcon,
   EyeIcon,
   InfoIcon,
-  PaperPlaneTiltIcon,
-  PhoneCallIcon,
   ShieldWarningIcon,
   UserFocusIcon,
   WarningCircleIcon,
@@ -137,48 +135,27 @@ export const RISK_CATEGORY_TABS: {
 ];
 
 /**
- * The one thing to do about a finding, as a button.
+ * The label on a finding's one action — **a placeholder**.
  *
- * Two outcomes, and they are already decided by the record rather than by a
- * new field: a finding the IC may raise with the client is a phone call, and
- * one they may not is Compliance's. `contactAllowed` is exactly that line —
- * `false` wherever asking would be tipping-off — and every authored
- * `recommendedAction` in the fixture falls on the side it predicts ("โทรแจ้ง
- * ลูกค้า…" against "ส่งเรื่องให้ฝ่ายกำกับ…"). A third CTA per rule family would
- * be a second source of truth for the same decision.
+ * "Lorem ipsum" on purpose: which actions this desk can actually fire from an
+ * alert is still an open question, and a plausible-looking Thai verb is the
+ * worst thing to put on a button that does nothing. A reviewer reads "ติดต่อ
+ * ลูกค้า" as a decision already taken; they read this as the question it
+ * still is.
  *
- * `clientId === null` is folded into the escalate case: an unattributed
- * sanctions hit has nobody to ring.
+ * What it replaced, for whenever the answer arrives: the CTA used to be
+ * derived two ways from the record rather than authored per rule — a finding
+ * the IC may raise with the client (`contactAllowed && clientId`) got "ติดต่อ
+ * ลูกค้า", and one they may not — tipping-off under พ.ร.บ. ปปง., or a
+ * sanctions hit nobody is attributed to yet — got "ส่งต่อฝ่ายกำกับ". Every
+ * authored `recommendedAction` in the fixture falls on the side that split
+ * predicts, so it is the shape to come back to.
  *
- * The prose stays where it is. `recommendedAction` says *what to say* and is
- * the detail panel's business; this is the verb on the control.
+ * One label for every row, and no icon. Two placeholders with different
+ * glyphs would be guessing at the very distinction this is here to avoid
+ * claiming.
  */
-export type RiskCta = {
-  kind: "contact" | "escalate";
-  /** The verb on the button, on a row and in the detail panel's footer
-   *  alike — one label, because the two do the same thing and a row that said
-   *  "ติดต่อ" opening a sheet that says "ติดต่อลูกค้า" invites the reader to
-   *  look for the difference. */
-  label: string;
-  Icon: ElementType;
-};
-
-export function riskCtaFor(alert: {
-  clientId: string | null;
-  contactAllowed: boolean;
-}): RiskCta {
-  return alert.contactAllowed && alert.clientId !== null
-    ? {
-        kind: "contact",
-        label: "ติดต่อลูกค้า",
-        Icon: PhoneCallIcon,
-      }
-    : {
-        kind: "escalate",
-        label: "ส่งต่อฝ่ายกำกับ",
-        Icon: PaperPlaneTiltIcon,
-      };
-}
+export const RISK_CTA_LABEL = "Lorem ipsum";
 
 /**
  * The deadline, as a signed phrase.
@@ -212,6 +189,34 @@ export function dueDayLabel(dueDate: string): string {
     day: "numeric",
     month: "short",
   });
+}
+
+/**
+ * How a deadline is painted on a row — a tinted pill, background and text.
+ *
+ * **Two colours, and they answer "how close", not "how bad".** Red is today.
+ * Amber is everything else.
+ *
+ * Severity used to pick this tint and it was the wrong fact to colour by: two
+ * rows both reading "ครบกำหนดวันนี้ 28 ต.ค." came out red on one and amber on
+ * the other because one finding was วิกฤต and the other เฝ้าระวัง — the same
+ * sentence in two colours, which reads as a difference in the deadline rather
+ * than in the rule behind it. Severity is already stated twice on every row,
+ * by the tinted square and by the Tag; this slot is the only one that can say
+ * *when*, so it says only that.
+ *
+ * Deliberately not a gradient of nearness. Three days out and twelve days out
+ * are the same answer — "not today" — and shading between them would restate
+ * the number that is written inside the pill anyway.
+ *
+ * The `--fill-*` pairs are the ones `RISK_SEVERITY_META` uses for `critical`
+ * and `warning`, so a red pill matches a red row-icon exactly rather than
+ * approximately.
+ */
+export function deadlineToneClass(daysLeft: number): string {
+  return daysLeft === 0
+    ? "bg-[var(--fill-red-100)] text-[var(--fill-red-600)]"
+    : "bg-[var(--fill-amber-100)] text-[var(--fill-amber-600)]";
 }
 
 /**

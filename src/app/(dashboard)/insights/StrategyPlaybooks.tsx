@@ -2,7 +2,7 @@
 
 import { useState, Fragment } from "react";
 import { Chip, Button, BottomSheet, Modal } from "@sarunyu/system-one";
-import { ArrowRightIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon, FilePdfIcon, XIcon } from "@phosphor-icons/react";
 import { mockHouseViewStrategies } from "@/lib/mock-data";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { FadeIn } from "@/components/ui/fade-in";
@@ -36,6 +36,9 @@ export function normalizeAssetFilter(
 
 const GRID_LIMIT = 4;
 
+/** Same placeholder the Research tab serves — the app has no real report files. */
+const FULL_REPORT_PDF_URL = "/mock-reports/sample-report.pdf";
+
 type Strategy = (typeof mockHouseViewStrategies)[number];
 type PeriodGroup = { period: string; periodLabel: string; items: Strategy[] };
 type ModalGroup = PeriodGroup | null;
@@ -65,6 +68,35 @@ function periodBadgeLabel(period: string) {
 
 function modalTitle(group: PeriodGroup) {
   return `${periodBadgeLabel(group.period)} — ${group.periodLabel}`;
+}
+
+/** `House-View-Weekly-22–26-มิถุนายน-2569.pdf` — one file per period group. */
+function reportFileName(group: PeriodGroup) {
+  const label = group.periodLabel.trim().replace(/\s+/g, "-");
+  return `House-View-${periodBadgeLabel(group.period)}-${label}.pdf`;
+}
+
+function downloadFullReport(group: PeriodGroup) {
+  const a = document.createElement("a");
+  a.href = FULL_REPORT_PDF_URL;
+  a.download = reportFileName(group);
+  a.click();
+}
+
+/** Shared by the period header and both "ดูทั้งหมด" surfaces. */
+function FullReportButton({ group }: { group: PeriodGroup }) {
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      leftIcon={<FilePdfIcon size={14} />}
+      onClick={() => downloadFullReport(group)}
+      className="shrink-0"
+    >
+      ดาวน์โหลด PDF
+      <span className="hidden sm:inline">&nbsp;ฉบับเต็ม</span>
+    </Button>
+  );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -116,18 +148,21 @@ export function StrategyPlaybooks({
                       {periodBadgeLabel(group.period)}
                     </span>
                     <p className="type-subtitle-1 font-bold text-foreground">{group.periodLabel}</p>
+                    <FullReportButton group={group} />
                   </div>
-                  {(hasMore && !isFirstMonthly) || isFirstMonthly ? (
-                    <Button
-                      size="sm"
-                      variant="plain"
-                      rightIcon={<ArrowRightIcon size={12} />}
-                      onClick={() => setModalGroup(group)}
-                      className={isFirstMonthly ? "lg:hidden" : ""}
-                    >
-                      ดูทั้งหมด
-                    </Button>
-                  ) : null}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {(hasMore && !isFirstMonthly) || isFirstMonthly ? (
+                      <Button
+                        size="sm"
+                        variant="plain"
+                        rightIcon={<ArrowRightIcon size={12} />}
+                        onClick={() => setModalGroup(group)}
+                        className={isFirstMonthly ? "lg:hidden" : ""}
+                      >
+                        ดูทั้งหมด
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
 
                 {isFirstMonthly ? (
@@ -178,7 +213,9 @@ export function StrategyPlaybooks({
         title={modalGroup ? modalTitle(modalGroup) : ""}
         showHandle
         showHeader
-        rightSide="none"
+        rightSide="action"
+        actionLabel="ดาวน์โหลด PDF"
+        onActionClick={() => { if (modalGroup) downloadFullReport(modalGroup); }}
         contentClassName="overflow-y-auto"
       >
         <div className="flex flex-col gap-3 pb-8">
@@ -199,15 +236,37 @@ export function StrategyPlaybooks({
           <div onClick={(e) => e.stopPropagation()}>
             <Modal
               variant="content"
-              title={modalTitle(modalGroup)}
-              showClose
+              title=""
+              showClose={false}
               onClose={() => setModalGroup(null)}
               className="w-[calc(100vw-2rem)] max-w-[720px]"
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto hide-scrollbar py-1">
-                {modalGroup.items.map((s) => (
-                  <PlaybookCardCompact key={s.id} strategy={s} />
-                ))}
+              <div className="flex flex-col gap-4">
+                {/* Modal's own `title`/`showClose` header only takes a string,
+                    so the header is rebuilt here to seat the PDF button beside
+                    the title. `-mt-4` collapses the now-empty native header. */}
+                <div className="-mt-4 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <p className="text-[18px] leading-7 font-bold text-foreground truncate">
+                      {modalTitle(modalGroup)}
+                    </p>
+                    <FullReportButton group={modalGroup} />
+                  </div>
+                  <Button
+                    aria-label="Close dialog"
+                    className="h-5 w-5 shrink-0 rounded-none text-subtle-text"
+                    onClick={() => setModalGroup(null)}
+                    size="icon-xs"
+                    variant="plain-black"
+                  >
+                    <XIcon size={20} />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto hide-scrollbar py-1">
+                  {modalGroup.items.map((s) => (
+                    <PlaybookCardCompact key={s.id} strategy={s} />
+                  ))}
+                </div>
               </div>
             </Modal>
           </div>

@@ -34,13 +34,24 @@ import {
  * record, and when it lands this is the file that changes.
  */
 export function useRiskAlertRows(): {
-  /** Not yet acknowledged. What the card and the page's default view show. */
+  /** Not yet acknowledged. The only set either surface draws — the Command
+   *  Center card and `/command-center/risk-alerts` now show the same rows. */
   rows: RiskAlertRow[];
-  /** Acknowledged, same ranking. The page's "รวมรายการที่รับทราบแล้ว" toggle. */
+  /**
+   * Acknowledged, same ranking. **Nothing renders these right now.**
+   *
+   * The sub page used to fold them back in behind a "รวมรายการที่รับทราบแล้ว"
+   * toggle and that toggle is gone. Kept here with {@link unacknowledge}
+   * because the pair is what any undo would be built on — a restored archive,
+   * or an action on the toast that confirms the acknowledgement — and because
+   * reconstructing them means re-deriving `riskAckId`, which is the part with
+   * the subtlety in it.
+   */
   acknowledgedRows: RiskAlertRow[];
   isLoading: boolean;
   /** A no-op on a finding the IC may not close — see `RiskAlert.dismissible`. */
   acknowledge: (alert: RiskAlert) => void;
+  /** The way back. Also unused at the moment — see `acknowledgedRows`. */
   unacknowledge: (alert: RiskAlert) => void;
 } {
   const { data: alerts, isLoading } = useRiskAlertsResource();

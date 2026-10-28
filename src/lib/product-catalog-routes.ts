@@ -8,7 +8,13 @@
  * The tab is carried in the URL as `?category=<id>`.
  */
 export const PRODUCT_CATEGORIES = [
+  // `product-trending` and `tfex` are shipped as tabs before they have any
+  // content — see `EMPTY_CATALOG_TABS` in `ProductCatalogTab`. Both are
+  // deliberately absent from `CATEGORY_BY_PATH` below: neither owns a detail
+  // route yet.
+  { id: "product-trending", title: "Product Trending" },
   { id: "stock",           title: "Stock" },
+  { id: "tfex",            title: "TFEX" },
   { id: "mutual-fund",     title: "Mutual Fund" },
   { id: "fixed-income",    title: "Fixed Income" },
   { id: "thai-structured", title: "Thai Structured Product" },
@@ -19,11 +25,20 @@ export const PRODUCT_CATEGORIES = [
 
 export const CATALOG_PATH = "/product-catalog";
 
-/** Coerces a URL `?category=` value to a real tab id, falling back to the first. */
+/**
+ * Where a catalog URL with no (or an unknown) `?category=` lands.
+ *
+ * Named rather than taken from `PRODUCT_CATEGORIES[0]` as it used to be: tab
+ * *order* is a layout decision and now starts with a tab that has no content
+ * yet, which is no reason to greet every visitor with an empty state.
+ */
+export const DEFAULT_PRODUCT_CATEGORY = "stock";
+
+/** Coerces a URL `?category=` value to a real tab id, falling back to the default. */
 export function normalizeProductCategory(value: string | null | undefined): string {
   return PRODUCT_CATEGORIES.some((c) => c.id === value)
     ? value!
-    : PRODUCT_CATEGORIES[0].id;
+    : DEFAULT_PRODUCT_CATEGORY;
 }
 
 /** Display title for a tab id, or `null` when the id isn't a real tab. */

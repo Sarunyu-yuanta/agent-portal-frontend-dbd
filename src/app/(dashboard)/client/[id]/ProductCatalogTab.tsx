@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
-import { Chip, SearchInput, Tag, TabGroup } from "@sarunyu/system-one";
-import { ArrowUpLeftIcon } from "@phosphor-icons/react";
+import { Chip, SearchInput, Tab, Tag } from "@sarunyu/system-one";
+import { ArrowUpLeftIcon, ChartLineUpIcon, FireIcon } from "@phosphor-icons/react";
 import { ChipScroller } from "@/components/ui/chip-scroller";
+import { EmptyState } from "@/components/ui/empty-state";
 import { FixedIncomeTab } from "./FixedIncomeTab";
 import { FixedIncomeDetail } from "./FixedIncomeDetail";
 import { FixedIncomeCompanyDetail } from "./FixedIncomeCompanyDetail";
@@ -11,6 +12,7 @@ import type { FixedIncomeBond } from "./fixed-income-data";
 import { GlobalBondTab } from "./GlobalBondTab";
 import { MutualFundTab } from "./MutualFundTab";
 import { StockTab } from "./StockTab";
+import { ProductTrendingTab } from "./ProductTrendingTab";
 import { RoboAdvisoryTab } from "./RoboAdvisoryTab";
 import { MutualFundDetail } from "./MutualFundDetail";
 import {
@@ -57,6 +59,65 @@ import {
 
 const SEARCH_MODAL_PADDING = 12;
 const MAX_SEARCH_RESULTS = 20;
+
+/**
+ * Tabs whose nav shape shipped ahead of their content — the catalog reads as
+ * complete while the data behind them is still being built, the same bargain
+ * the coming-soon sidebar pages make. Each renders nothing but an empty state;
+ * drop the entry here once the tab has a real view to show.
+ */
+const EMPTY_CATALOG_TABS: Record<
+  string,
+  { icon: ReactNode; title: string; body: string }
+> = {
+  tfex: {
+    icon: <ChartLineUpIcon size={40} className="text-[var(--text-default-placeholder)]" />,
+    title: "TFEX",
+    body: "Futures and options on the Thailand Futures Exchange will live here. Not built yet — check back soon.",
+  },
+};
+
+/** The one tab that spans every asset class instead of naming one — and so the
+ *  one tab that doesn't look like the rest. See `.tab-shimmer` in `globals.css`. */
+const TRENDING_TAB_ID = "product-trending";
+
+/**
+ * The catalog's tab bar: `TabGroup`'s own `role="tablist"` + `Tab` children,
+ * spelled out here rather than delegated to it.
+ *
+ * `TabGroup` renders every item identically and `TabItem.title` is a plain
+ * string, so there is no per-item hook to hang the Product Trending treatment
+ * on. Mapping the items here is the smallest way to get one: same `Tab`
+ * component, same order, same spacing — one of them carries an icon and a
+ * class the others don't. (Rendering that tab beside a `TabGroup` holding the
+ * rest would nest two tablists, which is worse than not using `TabGroup`.)
+ */
+function CatalogTabBar({
+  activeId,
+  onChange,
+}: {
+  activeId: string;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <div role="tablist" className="flex w-max">
+      {PRODUCT_CATEGORIES.map((category) => {
+        const isTrending = category.id === TRENDING_TAB_ID;
+        return (
+          <Tab
+            key={category.id}
+            title={category.title}
+            size="md"
+            active={activeId === category.id}
+            onClick={() => onChange(category.id)}
+            icon={isTrending ? <FireIcon size={16} weight="fill" color="#f54a00" /> : undefined}
+            className={isTrending ? "tab-shimmer" : undefined}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 /** "All categories" plus the catalog's own tabs, reused as the search modal's filter chips. */
 const SEARCH_FILTER_CHIPS = [
@@ -516,13 +577,7 @@ export function ProductCatalogTab({
             ["--bg-default-primary" as string]: "transparent",
           }}
         >
-          <TabGroup
-            items={PRODUCT_CATEGORIES}
-            activeId={activeProductTab}
-            onChange={handleProductTabChange}
-            size="md"
-            className="w-max"
-          />
+          <CatalogTabBar activeId={activeProductTab} onChange={handleProductTabChange} />
         </div>
       </div>
 
@@ -552,13 +607,7 @@ export function ProductCatalogTab({
           className={`max-w-[1280px] mx-auto w-full px-4 lg:px-6 overflow-x-auto [--bg-default-primary:transparent] transition-[padding] duration-300 ease-out ${mobileScrolled ? "pt-6" : ""}`}
           style={{ scrollbarWidth: "none" }}
         >
-          <TabGroup
-            items={PRODUCT_CATEGORIES}
-            activeId={activeProductTab}
-            onChange={handleProductTabChange}
-            size="md"
-            className="w-max"
-          />
+          <CatalogTabBar activeId={activeProductTab} onChange={handleProductTabChange} />
         </div>
       </div>
 
@@ -687,6 +736,17 @@ export function ProductCatalogTab({
             past the catalog's shared loading skeleton. */}
         {activeProductTab === "stock" ? (
           <StockTab />
+        ) : activeProductTab === "product-trending" ? (
+          /* Mock sales over the other tabs' real products — nothing fetched,
+             so it skips the skeleton alongside Stock. */
+          <ProductTrendingTab nav={nav} />
+        ) : EMPTY_CATALOG_TABS[activeProductTab] ? (
+          /* Sits in the no-skeleton branch because there is nothing to wait for. */
+          <div className="w-full bg-white">
+            <div className="max-w-[1280px] mx-auto w-full px-4 lg:px-6 py-12">
+              <EmptyState {...EMPTY_CATALOG_TABS[activeProductTab]} />
+            </div>
+          </div>
         ) : activeProductTab === "robo-advisory" ? (
           <RoboAdvisoryTab
             onRoboAdvisorySelect={nav.onRoboAdvisorySelect}

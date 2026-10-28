@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Button, Card, Chip, Toaster } from "@sarunyu/system-one";
+import { Button, Card, Toaster } from "@sarunyu/system-one";
 import { ArrowLeftIcon, ShieldCheckIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FadeIn } from "@/components/ui/fade-in";
@@ -57,8 +57,7 @@ export default function RiskAlertsPage() {
 function RiskAlertsPageInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { rows, acknowledgedRows, isLoading, acknowledge, unacknowledge } =
-    useRiskAlertRows();
+  const { rows, isLoading, acknowledge } = useRiskAlertRows();
   // Falls back to the Command Center on a cold entry — a pasted link, or a
   // session restored straight onto this page with no trail to walk up.
   const goBack = useSectionBack(() => "/command-center");
@@ -70,7 +69,6 @@ function RiskAlertsPageInner() {
    *  does not quietly mean something else once you have clicked through. */
   const { act, toasts, removeToast } = useRiskCta();
 
-  const showAck = searchParams.get("ack") === "1";
   const category = parseRiskCategory(searchParams.get("category"));
   const severityParam = searchParams.get("severity");
   const severity: RiskSeverity | null = SEVERITY_ORDER.includes(
@@ -85,12 +83,11 @@ function RiskAlertsPageInner() {
   const update = (patch: Record<string, string | null>) =>
     setQueryState(withQuery(pathname, searchParams, patch), "replace");
 
-  /** The pool every count is taken from, so a tab's number and the list under
-   *  it are the same objects and cannot drift. */
-  const pool = useMemo(
-    () => (showAck ? [...rows, ...acknowledgedRows] : rows),
-    [rows, acknowledgedRows, showAck],
-  );
+  /** Open findings only. A "รวมรายการที่รับทราบแล้ว" toggle used to fold the
+   *  acknowledged ones back in from a second list; it is gone, and with it the
+   *  `ack` param, so this page and the card it is reached from now show the
+   *  same set of rows and differ only in how many of them fit. */
+  const pool = rows;
 
   const visible = useMemo(
     () =>
@@ -139,14 +136,6 @@ function RiskAlertsPageInner() {
             down by severity; a badge up here was a second, thinner answer to
             the same question. */}
         <h1 className="type-h6 text-foreground">{RISK_ALERTS_TITLE}</h1>
-        <span className="flex-1" />
-        <Chip
-          label="รวมรายการที่รับทราบแล้ว"
-          type="multiple"
-          size="small"
-          selected={showAck}
-          onClick={() => update({ ack: showAck ? null : "1" })}
-        />
       </div>
 
       {/* Category first — it is the *kind of thing*, which is what a tab strip
@@ -196,9 +185,7 @@ function RiskAlertsPageInner() {
             title={
               filtered
                 ? "ไม่พบรายการตามตัวกรอง"
-                : showAck
-                  ? "ยังไม่มีรายการที่รับทราบ"
-                  : "ไม่มีรายการความเสี่ยงค้างอยู่"
+                : "ไม่มีรายการความเสี่ยงค้างอยู่"
             }
             body={
               filtered
@@ -218,7 +205,7 @@ function RiskAlertsPageInner() {
           <>
             {/* Keyed on the filters, so switching either replays the fade — the
                 rows change completely in both cases. Same as `orders`. */}
-            <FadeIn key={`${category}|${severity}|${showAck}`}>
+            <FadeIn key={`${category}|${severity}`}>
               <div className="overflow-hidden rounded-2xl bg-[var(--bg-default-secondary)] divide-y divide-black/[0.05]">
                 {visible.map((row) => (
                   <RiskAlertRowItem
@@ -243,10 +230,6 @@ function RiskAlertsPageInner() {
         onAcknowledge={(alert) => {
           setDetail(null);
           acknowledge(alert);
-        }}
-        onUnacknowledge={(alert) => {
-          setDetail(null);
-          unacknowledge(alert);
         }}
       />
     </div>

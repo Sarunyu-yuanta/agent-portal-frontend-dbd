@@ -11,8 +11,8 @@ import {
   detectedAtLabel,
   dueDayLabel,
   RISK_CATEGORY_META,
+  RISK_CTA_LABEL,
   RISK_SEVERITY_META,
-  riskCtaFor,
 } from "./risk-config";
 import type { RiskAlertRow } from "./risk-feed";
 
@@ -57,7 +57,6 @@ export function RiskAlertDetail({
   onClose,
   onAct,
   onAcknowledge,
-  onUnacknowledge,
 }: {
   row: RiskAlertRow | null;
   onClose: () => void;
@@ -66,9 +65,6 @@ export function RiskAlertDetail({
    *  pressing it there cannot come to mean different things. */
   onAct: (row: RiskAlertRow) => void;
   onAcknowledge: (alert: RiskAlert) => void;
-  /** Only the full list shows acknowledged findings, so only it can undo one.
-   *  The Command Center card filters them out and never passes this. */
-  onUnacknowledge?: (alert: RiskAlert) => void;
 }) {
   if (!row) return null;
 
@@ -77,17 +73,17 @@ export function RiskAlertDetail({
    *  see `RiskAlert.contactAllowed`, which is `false` wherever asking would be
    *  tipping-off. */
   const showContact = Boolean(alert.clientId) && alert.contactAllowed;
-  /** What the footer can offer, resolved once. The CTA is always one of them —
-   *  every finding either gets a phone call or gets handed on — so unlike
-   *  before, the strip is never empty and the `showFooter` gate is gone. What
-   *  varies is the control beside it: clear the row, put it back, or neither
-   *  on a finding this IC may not close. */
-  const canUnacknowledge =
-    alert.dismissible && row.acknowledged && Boolean(onUnacknowledge);
+  /** What the footer can offer. The CTA is always there, so the strip is never
+   *  empty; what varies is whether "รับทราบ" sits beside it.
+   *
+   *  There is no "นำกลับเข้ารายการ" any more. It existed for a finding opened
+   *  out of the sub page's acknowledged archive, and that archive is gone — no
+   *  surface lists an acknowledged row, so nothing could ever open one to press
+   *  it. `useRiskAlertRows` still exports `unacknowledge`, so putting the undo
+   *  back (in this footer, or as an action on the confirming toast) is a small
+   *  change rather than a rewrite. */
   const canAcknowledge = alert.dismissible && !row.acknowledged;
 
-  const cta = riskCtaFor(alert);
-  const CtaIcon = cta.Icon;
   const severity = RISK_SEVERITY_META[alert.severity];
   const category = RISK_CATEGORY_META[alert.category];
   const CategoryIcon = category.Icon;
@@ -306,23 +302,14 @@ export function RiskAlertDetail({
           </Section>
         )}
 
-        {/* What to do, in the words the rule was authored with.
-            `recommendedAction` has been on the record since this feature
-            existed and nothing rendered it, which left the panel answering two
-            of the three questions its own docstring promises — and left the
-            footer's button to carry "what next" on its own in two words.
-
-            Directly above the contact rules and the footer, because those are
-            what it is about: the sentence says to ring the client or to hand
-            the finding on, and the controls for both are immediately under
-            it. */}
-        <Section title="สิ่งที่ควรทำต่อไป">
-          <div className={`${INFO_BOX} p-4`}>
-            <p className="type-body-2 leading-relaxed text-foreground">
-              {alert.recommendedAction}
-            </p>
-          </div>
-        </Section>
+        {/* `recommendedAction` is deliberately *not* drawn. It briefly had a
+            "สิ่งที่ควรทำต่อไป" box here and it earned nothing: the panel
+            already states the rule, the figures that tripped it and the
+            deadline, and the footer's button names the one action in two
+            words. A paragraph restating that in prose is a second place for
+            the same instruction to be read — and the first to go stale if the
+            button's wording and the fixture's sentence ever disagree. The
+            field stays on the record for a backend that may want it. */}
 
         {/* Why the contact button is missing. Said out loud rather than left to
             a disabled control: "ห้ามถาม" is a rule an IC has to know, and an
@@ -375,31 +362,25 @@ export function RiskAlertDetail({
           label says exactly what "รับทราบ" does, while the CTA's icon is the
           thing that distinguishes a phone call from a referral at a glance —
           the same mark the list rows carry. */}
-      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-border px-4 py-3">
-        {canUnacknowledge && (
-          /* The only way back. The row used to carry a tick that toggled both
-             ways; with that gone, an acknowledged finding opened from the
-             archive would otherwise be a one-way door. */
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onUnacknowledge?.(alert)}
-          >
-            นำกลับเข้ารายการ
-          </Button>
-        )}
+      {/* No rule above it. A divider is what you draw when a footer is pinned
+          and the content scrolls *under* it — this sheet is short enough that
+          the line mostly landed in open space, boxing off two buttons from the
+          panel they belong to. `pt-1` against the content's own `py-4` keeps
+          them from crowding the block above without a border to do it. */}
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 px-4 pb-4 pt-1">
+        {/* `xl`, the top of the scale, where the list rows wear `sm`. A row's
+            button is one of five on a card and has to sit inside 108px; this
+            one is the single thing the sheet was opened to press, with a whole
+            footer to itself. Both buttons take the same size — a shorter
+            "รับทราบ" beside a tall CTA reads as a disabled control rather than
+            the alternative it is. */}
         {canAcknowledge && (
-          <Button variant="outline" size="sm" onClick={() => onAcknowledge(alert)}>
+          <Button variant="outline" size="xl" onClick={() => onAcknowledge(alert)}>
             รับทราบ
           </Button>
         )}
-        <Button
-          variant="primary"
-          size="sm"
-          leftIcon={<CtaIcon size={16} weight="bold" />}
-          onClick={() => onAct(row)}
-        >
-          {cta.label}
+        <Button variant="primary" size="xl" onClick={() => onAct(row)}>
+          {RISK_CTA_LABEL}
         </Button>
       </div>
     </ResponsiveBottomSheetModal>
