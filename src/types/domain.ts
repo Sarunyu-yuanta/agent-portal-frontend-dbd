@@ -221,7 +221,9 @@ export type OrderLogEntry = {
 };
 
 /**
- * Which step a product is at — the steps Order Management filters by, in order:
+ * Which step a basket product is at, in order. Drives what the book page
+ * offers the IC; on the lists a book reads only as open or closed
+ * (`bookAvailability` in `orders/order-book.ts`):
  *
  * 1. `collecting` — ยืนยันการจองซื้อ: bookings coming in, target not met.
  * 2. `checking` — รอตรวจสอบวงเงิน: target met, but not every booking has
@@ -246,13 +248,19 @@ export type OrderBook = {
   productName: string;
   productType: string;
   /**
-   * Which desk wrote the deal — "Global Structured" or "Thai Structured".
+   * Which desk wrote the deal — "Global Structured", "Thai Structured",
+   * "Fixed Income" or "Global Bond".
    *
-   * On the book rather than derived at each call site: Order Management lists
-   * both desks in one list, and a row has to say which one it came from without
-   * the reader having to recognise an id prefix.
+   * On the book rather than derived at each call site: a row has to say which
+   * desk it came from without the reader having to recognise an id prefix.
    */
   desk: string;
+  /**
+   * How the desk takes bookings — see `BookingMode` in `orders/bookable-products`.
+   * `basket` books fill {@link OrderBook.targetAmount} and send once; `quota`
+   * books send each booking on its own until the quota is used.
+   */
+  mode: "basket" | "quota";
   /**
    * The underlyings' logos, copied from the product.
    *
@@ -262,8 +270,18 @@ export type OrderBook = {
    */
   logos: string[];
   currency: string;
-  /** Notional that has to be filled before the order can go downstream. */
+  /**
+   * Basket: notional that has to be filled before the order can go downstream.
+   * Quota: the product's issue quota — the most that can ever be booked.
+   */
   targetAmount: number;
+  /**
+   * Quota books: live bookings whose order has not been rejected — what has
+   * been taken out of the quota. Basket books carry it too, unused.
+   */
+  quotaUsed: number;
+  /** `targetAmount - quotaUsed`, floored at zero. */
+  quotaRemaining: number;
   /** The product's minimum ticket — the floor on a single client's booking. */
   minTicket: number;
   /** Live bookings — cancelled ones are only in `allBookings`. */
@@ -302,6 +320,41 @@ export type OrderBook = {
   submissions: OrderSubmission[];
   /** Newest first. */
   logs: OrderLogEntry[];
+};
+
+// ── Client transactions ──────────────────────────────────────────────────────
+//
+// Listed products a client trades themselves — stock, TFEX, mutual funds.
+// Nothing is booked for these; Order Management lists the trades as they came
+// through each platform.
+
+export type TransactionAsset = "stock" | "tfex" | "mutual-fund";
+
+/** `switch` is a mutual fund's สับเปลี่ยน; stock and TFEX only buy and sell. */
+export type TransactionSide = "buy" | "sell" | "switch";
+
+export type TransactionStatus = "matched" | "partial" | "pending" | "cancelled";
+
+export type ClientTransaction = {
+  id: string;
+  /** ISO timestamp the order was placed. */
+  at: string;
+  clientId: string;
+  clientName: string;
+  asset: TransactionAsset;
+  symbol: string;
+  name: string;
+  side: TransactionSide;
+  /** Shares, contracts or fund units. */
+  quantity: number;
+  /** Per share / point / NAV, in `currency`. */
+  price: number;
+  /** What the trade is worth, in `currency` — for TFEX, the contract value. */
+  amount: number;
+  currency: string;
+  /** The platform the client placed it through. */
+  channel: string;
+  status: TransactionStatus;
 };
 
 // ── Promotions & events ──────────────────────────────────────────────────────

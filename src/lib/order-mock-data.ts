@@ -55,7 +55,7 @@ const nameById = Object.fromEntries(mockClients.map((c) => [c.id, c.name]));
  * The derivation only has to be stable and spread out, not meaningful: it lands
  * inside office hours (09:00–17:59) so a seeded log reads like a working day.
  */
-function stampFromDaysAgo(daysAgo: number, id: string): string {
+export function stampFromDaysAgo(daysAgo: number, id: string): string {
   const seed = [...id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
   const now = new Date();
   const at = new Date(

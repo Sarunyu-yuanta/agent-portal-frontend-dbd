@@ -14,6 +14,9 @@ import {
 } from "./global-bond-data";
 import { GlobalBondAllAccordion } from "./GlobalBondAllAccordion";
 import { GlobalBondAllTable } from "./GlobalBondAllTable";
+import { GlobalBondBookingContext } from "./GlobalBondDetailBondList";
+import { useQuotaBooking } from "@/app/(dashboard)/orders/useQuotaBooking";
+import { ORDER_BOOKING_ENABLED } from "@/lib/feature-flags";
 import {
   COUPON_OPTIONS,
   FilterDropdown,
@@ -54,6 +57,7 @@ function formatUpdatedAtTablet(dateStr: string): string {
 }
 
 export function GlobalBondAllPage({ onBack }: { onBack: () => void }) {
+  const booking = useQuotaBooking();
   const { data: allBonds, isLoading } = useOverseasBonds();
   const [tickerFilter, setTickerFilter] = useState<TickerFilter>("all");
   const [couponFilter, setCouponFilter] = useState<CouponFilter>("all");
@@ -133,6 +137,8 @@ export function GlobalBondAllPage({ onBack }: { onBack: () => void }) {
   if (isLoading) return <GlobalBondAllPageSkeleton />;
 
   return (
+    <GlobalBondBookingContext.Provider value={ORDER_BOOKING_ENABLED ? booking.book : null}>
+    {booking.ui}
     <div className="flex flex-col items-stretch w-full pt-4 pb-10 px-4 md:pt-6 md:pb-20 md:px-8 lg:px-20 bg-gradient-to-b from-white from-[43.451%] to-transparent">
       <div className="flex md:hidden w-full items-center gap-2 border-b border-[rgba(0,0,0,0.1)] -mx-4 px-4 py-3 mb-4">
         <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
@@ -311,5 +317,6 @@ export function GlobalBondAllPage({ onBack }: { onBack: () => void }) {
         </div>
       </div>
     </div>
+    </GlobalBondBookingContext.Provider>
   );
 }

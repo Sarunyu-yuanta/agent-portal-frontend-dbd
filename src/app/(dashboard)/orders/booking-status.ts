@@ -30,7 +30,9 @@ export function dealStatus(booking: Booking, book: OrderBook): BookingStatusTag 
   const credit = creditOf(booking);
   if (credit === "pending") return { text: "รอตรวจสอบวงเงิน", variant: "yellow" };
   if (credit === "insufficient") return { text: "วงเงินไม่เพียงพอ", variant: "red" };
-  return book.status === "ready"
+  // A quota booking is its own order, so once funded it is waiting on nobody
+  // but the IC; a basket booking waits for the rest of the deal.
+  return book.mode === "quota" || book.status === "ready"
     ? { text: "รอส่งคำสั่งซื้อ", variant: "lime" }
     : { text: "มีวงเงินเพียงพอ", variant: "green" };
 }

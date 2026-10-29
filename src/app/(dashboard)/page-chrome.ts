@@ -110,6 +110,7 @@ const PAGE_ICONS = {
  * route; keep them in step.
  */
 const WHITE_CONTENT_TOP = [
+  /^\/product-catalog\/product-trending\//, // ProductTrendingAllTable
   /^\/product-catalog\/top-idea(\/|$)/, // TopIdeaAllPage, TopIdeaDetail
   /^\/product-catalog\/investment-solution\//, // InvestmentSolutionDetail
   /^\/product-catalog\/global-bond(\/|$)/, // GlobalBondAllPage, GlobalBondDetail

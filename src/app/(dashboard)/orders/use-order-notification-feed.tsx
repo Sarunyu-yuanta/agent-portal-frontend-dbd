@@ -22,6 +22,7 @@
  */
 
 import { useMemo } from "react";
+import { orderBookHref } from "./bookable-products";
 import {
   CheckCircleIcon,
   IdentificationCardIcon,
@@ -94,7 +95,7 @@ export function useOrderNotificationFeed() {
       add(
         `order-req-${request.id}`,
         daysSince(request.completedAt),
-        `/orders/${encodeURIComponent(request.productId)}`,
+        orderBookHref(request.productId),
         {
           title: request.clientName,
           // "ตรวจสอบได้" rather than "จองซื้อได้". What came back is the forms
@@ -116,7 +117,7 @@ export function useOrderNotificationFeed() {
         add(
           `order-sub-${submission.id}`,
           daysSince(submission.settledAt),
-          `/orders/${encodeURIComponent(book.productId)}`,
+          orderBookHref(book.productId),
           {
             title: ok ? "คำสั่งซื้อสำเร็จ" : "คำสั่งซื้อถูกปฏิเสธ",
             description: `${book.productName} · ${submission.backendRef}`,
@@ -129,7 +130,9 @@ export function useOrderNotificationFeed() {
       }
 
       // ── 3. The book is full and the order is the IC's to send ─────────────
-      if (book.status !== "ready") continue;
+      // Basket books only: a quota book has no basket to fill, and its
+      // cleared-but-unsent orders are on its card instead.
+      if (book.mode !== "basket" || book.status !== "ready") continue;
       // The id counts submissions rather than naming the amount: a book that
       // fills, is sent, and fills again is genuinely two announcements, while
       // one extra booking on an already-full book is not — an id carrying the
@@ -139,7 +142,7 @@ export function useOrderNotificationFeed() {
         // A standing state, not an event: it is true now, so it rings today
         // and keeps the "วันนี้" heading until it stops being true.
         0,
-        `/orders/${encodeURIComponent(book.productId)}`,
+        orderBookHref(book.productId),
         {
           title: `${book.productName} มีวงเงินเพียงพอ`,
           description: `จองครบ ${formatOrderAmount(book.bookedAmount, book.currency)} และวงเงินผ่านครบทุกราย — ส่งคำสั่งซื้อได้`,

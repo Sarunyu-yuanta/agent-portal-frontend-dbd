@@ -8,10 +8,9 @@
  * The tab is carried in the URL as `?category=<id>`.
  */
 export const PRODUCT_CATEGORIES = [
-  // `product-trending` and `tfex` are shipped as tabs before they have any
-  // content — see `EMPTY_CATALOG_TABS` in `ProductCatalogTab`. Both are
-  // deliberately absent from `CATEGORY_BY_PATH` below: neither owns a detail
-  // route yet.
+  // `tfex` is shipped as a tab before it has any content — see
+  // `EMPTY_CATALOG_TABS` in `ProductCatalogTab` — and so is deliberately absent
+  // from `CATEGORY_BY_PATH` below: it owns no detail route yet.
   { id: "product-trending", title: "Product Trending" },
   { id: "stock",           title: "Stock" },
   { id: "tfex",            title: "TFEX" },
@@ -73,6 +72,7 @@ export function categoryOfUrl(url: string): string | null {
  * the navigation trail, and guessing would be worse than saying nothing.
  */
 const CATEGORY_BY_PATH: [RegExp, string][] = [
+  [/^\/product-catalog\/product-trending\//, "product-trending"],
   [/^\/product-catalog\/fixed-income\//, "fixed-income"],
   [/^\/product-catalog\/global-bond(\/|$)/, "global-bond"],
   [/^\/product-catalog\/thai-structured\//, "thai-structured"],

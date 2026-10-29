@@ -1,13 +1,9 @@
 "use client";
 
 /**
- * The same books as {@link OrderBookCard}, one per row.
- *
- * The card view is for scanning a handful of deals; this one is for comparing
- * them. Every column holds one of the card's lines, so nothing an IC relies on
- * disappears when they switch — the difference is that here the amounts, the
- * percentages and the statuses line up, which is what makes "which book is
- * furthest from its target" a glance instead of a read.
+ * A basket desk's books, one per row — the only layout Order Management lists
+ * them in. Amounts, percentages and statuses line up in columns, which is what
+ * makes "which book is furthest from its target" a glance instead of a read.
  */
 
 import { useMemo, useState } from "react";
@@ -26,13 +22,15 @@ import { UsersThreeIcon } from "@phosphor-icons/react";
 import { TableRowsSkeleton } from "@/components/ui/skeleton";
 import type { OrderBook, OrderBookStatus } from "@/types/domain";
 import {
-  BOOK_STATUS_LABEL_TH,
-  BOOK_STATUS_VARIANT,
+  BOOK_AVAILABILITY_LABEL,
+  BOOK_AVAILABILITY_VARIANT,
+  bookAvailability,
   USD_THB,
   formatLogTime,
   headlineRound,
 } from "./order-book";
 import { AmountOfTarget } from "./AmountOfTarget";
+import { orderBookHref } from "./bookable-products";
 
 const COLUMNS = 5;
 
@@ -154,8 +152,7 @@ export function OrderBookTable({
             <TableRowsSkeleton columns={COLUMNS} />
           ) : (
             rows.map((book) => {
-              // Same three figures the card shows, from the same helper — see
-              // `headlineRound` for which round they describe.
+              // See `headlineRound` for which round these figures describe.
               const round = headlineRound(book);
               const holders = new Set(round.bookings.map((b) => b.clientId)).size;
               const latest = book.logs[0];
@@ -168,12 +165,12 @@ export function OrderBookTable({
                   key={book.productId}
                   hoverable
                   className="cursor-pointer transition-colors active:bg-[var(--bg-default-pressed)]"
-                  onClick={() => router.push(`/orders/${encodeURIComponent(book.productId)}`)}
+                  onClick={() => router.push(orderBookHref(book.productId))}
                 >
                   <TableCell>
-                    {/* No logo strip here, unlike the card: a row is scanned
-                        down a column of names, and a 20px thumbnail per row
-                        only pushed every name in by the same amount. */}
+                    {/* No logo strip: a row is scanned down a column of names,
+                        and a 20px thumbnail per row only pushed every name in
+                        by the same amount. */}
                     <div className="flex min-w-0 flex-col gap-0.5">
                       <p className="type-body-2 truncate !font-semibold text-foreground">
                         {book.productName}
@@ -181,8 +178,7 @@ export function OrderBookTable({
                       <p className="type-caption truncate text-muted-foreground">
                         {book.desk} · {book.productType} · {book.currency}
                       </p>
-                      {/* Same line the card carries — whether the amount in
-                          the next column has gone out yet. */}
+                      {/* Whether the amount in the next column has gone out yet. */}
                       <p className="type-caption truncate text-muted-foreground">
                         {round.previousRef
                           ? `ส่งแล้ว (${round.previousRef})`
@@ -217,8 +213,8 @@ export function OrderBookTable({
                   <TableCell>
                     <div className="flex min-w-0 flex-col items-start gap-1">
                       <Tag
-                        text={BOOK_STATUS_LABEL_TH[book.status]}
-                        variant={BOOK_STATUS_VARIANT[book.status]}
+                        text={BOOK_AVAILABILITY_LABEL[bookAvailability(book)]}
+                        variant={BOOK_AVAILABILITY_VARIANT[bookAvailability(book)]}
                         size="small"
                       />
                       {/* The tag is the open round's. An order still with the
@@ -234,8 +230,8 @@ export function OrderBookTable({
                   </TableCell>
 
                   <TableCell>
-                    {/* When, and nothing else — the same line the card carries.
-                        The log's own sentence used to lead here, which named
+                    {/* When, and nothing else. The log's own sentence used to
+                        lead here, which named
                         one client out of several and repeated an amount the
                         ยอดจอง column already holds. */}
                     <p className="type-caption whitespace-nowrap tabular-nums text-muted-foreground">

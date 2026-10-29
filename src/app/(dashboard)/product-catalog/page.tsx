@@ -13,6 +13,7 @@ import {
   CATALOG_PATH,
   normalizeProductCategory,
 } from "@/lib/product-catalog-routes";
+import { trendingGroupHref } from "../client/[id]/product-trending-data";
 import { useSetHeaderSlot } from "../header-slot-context";
 import { useScrollThreshold } from "../client/[id]/use-scroll-threshold";
 import { rememberCatalogList } from "@/lib/nav-memory";
@@ -101,6 +102,7 @@ function ProductCatalogPageInner() {
       router.push(advisoryDetailHref("/product-catalog/robo-advisory", clientId)),
     onDefinitSelect: (clientId) =>
       router.push(advisoryDetailHref("/product-catalog/definit", clientId)),
+    onTrendingSeeAll: (groupId, sort) => router.push(trendingGroupHref(groupId, sort)),
   };
 
   return (

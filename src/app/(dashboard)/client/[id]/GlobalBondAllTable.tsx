@@ -8,12 +8,12 @@ import {
   TABLE_CARD_STYLE,
   BondLogo,
   FactsheetButton,
-  InvestButton,
   TopPickTag,
   cellBorderStyle,
   headerBorderStyle,
 } from "./fixed-income-shared";
 import { useSyncedTableScroll } from "./use-synced-table-scroll";
+import { GlobalBondListCta } from "./GlobalBondDetailBondList";
 
 const BONDS_COL_MIN_CLS = "min-w-[400px]";
 const INVEST_URL = "https://placeholder.example.com/create-order";
@@ -127,7 +127,7 @@ export function GlobalBondAllTable({ bonds }: { bonds: GlobalBondRow[] }) {
                   <FactsheetButton />
                 </div>
                 <div className="flex items-center justify-center w-[138px] shrink-0 px-4 py-3 h-[65px]" style={border}>
-                  <InvestButton href={INVEST_URL} />
+                  <GlobalBondListCta row={row} href={INVEST_URL} />
                 </div>
               </div>
             );

@@ -127,7 +127,8 @@
    asset class, so it is the one tab that doesn't look like the rest. The label
    is painted with a warm gradient and a brighter band sweeps along it every few
    seconds — enough to catch the eye on arrival without the tab bar ever
-   becoming a moving object.
+   becoming a moving object. Only while unselected — the active tab drops the
+   class and takes the design system's normal active colour.
 
    Written here rather than as utility classes because it styles a node inside
    the design system's `Tab`: the title is a plain `span` the component renders

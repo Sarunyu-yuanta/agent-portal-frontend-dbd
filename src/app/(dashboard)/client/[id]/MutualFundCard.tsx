@@ -75,11 +75,16 @@ export function TagFilterChip({
   label,
   active,
   onClick,
+  selectedBadge = true,
 }: {
-  icon: string;
+  /** An image URL, or a ready-made 16px icon for chips with no artwork. */
+  icon: string | React.ReactNode;
   label: string;
   active: boolean;
   onClick: () => void;
+  /** The check overlaid on the icon while active. Off where the chips act as
+   *  a pick-one switch and the blue outline already says which is on. */
+  selectedBadge?: boolean;
 }) {
   return (
     <button
@@ -93,13 +98,17 @@ export function TagFilterChip({
       }`}
     >
       <span className="relative size-4 shrink-0 overflow-hidden rounded-full">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={icon} alt="" className="absolute inset-0 block size-full max-w-none" />
+        {typeof icon === "string" ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={icon} alt="" className="absolute inset-0 block size-full max-w-none" />
+        ) : (
+          icon
+        )}
       </span>
       <span className={`text-xs leading-4 whitespace-nowrap ${active ? "text-[#0a6ee7]" : "text-[#4a5565]"}`}>
         {label}
       </span>
-      {active ? (
+      {active && selectedBadge ? (
         <span className="pointer-events-none absolute left-[-1px] top-1/2 size-[28px] -translate-y-1/2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

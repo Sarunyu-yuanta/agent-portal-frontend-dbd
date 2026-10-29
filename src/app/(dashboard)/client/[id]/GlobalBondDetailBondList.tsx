@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { Button } from "@sarunyu/system-one";
 import { CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react";
-import type { GlobalBondRow } from "./global-bond-data";
+import {
+  findBookableGlobalBond,
+  globalBondToBookableProduct,
+  type GlobalBondRow,
+} from "./global-bond-data";
+import type { BookableProduct } from "@/app/(dashboard)/orders/bookable-products";
+import { QuotaBookButton } from "@/app/(dashboard)/orders/useQuotaBooking";
 import {
   BORDER_COLOR,
   HEADER_TEXT_CLS as HEADER_CLS,
   TABLE_SHADOW,
   DetailRow,
   FactsheetButton,
+  InvestButton as CreateOrderButton,
   TopPickTag,
 } from "./fixed-income-shared";
 
@@ -42,10 +49,32 @@ function IssuerLogo({ src }: { src: string }) {
 }
 
 /**
- * Detail-page "สนใจลงทุน" CTA — captures interest rather than placing an order,
- * so the label differs from the shared `InvestButton` in fixed-income-shared.
+ * Where a bond row's CTA books from — provided by the page that owns the
+ * booking modal (`useQuotaBooking`). Without a provider the row keeps its old
+ * "สนใจลงทุน" interest button.
  */
-function InvestButton({ fullWidth }: { fullWidth?: boolean }) {
+export const GlobalBondBookingContext = createContext<
+  ((product: BookableProduct) => void) | null
+>(null);
+
+/**
+ * Detail-page CTA. Books the bond straight in when the page provides a
+ * booking flow and the row is one of an issuer's own bonds; otherwise the
+ * "สนใจลงทุน" interest button, which places nothing.
+ */
+function InvestButton({ row, fullWidth }: { row: GlobalBondRow; fullWidth?: boolean }) {
+  const onBook = useContext(GlobalBondBookingContext);
+  const match = onBook ? findBookableGlobalBond(row) : undefined;
+  if (onBook && match) {
+    return (
+      <QuotaBookButton
+        product={globalBondToBookableProduct(match.issuer, match.row)}
+        onBook={onBook}
+        size={fullWidth ? "lg" : "xs"}
+        className={fullWidth ? "w-full max-w-[343px]" : undefined}
+      />
+    );
+  }
   return (
     <Button
       variant="primary"
@@ -56,6 +85,36 @@ function InvestButton({ fullWidth }: { fullWidth?: boolean }) {
       สนใจลงทุน
     </Button>
   );
+}
+
+/**
+ * The catalogue lists' CTA (Top Pick, All Overseas Bonds): books the bond when
+ * the page provides a booking flow and the row resolves to an issuer's bond,
+ * otherwise the old "สร้างคำสั่งซื้อ" link.
+ */
+export function GlobalBondListCta({
+  row,
+  fullWidth,
+  href,
+}: {
+  row: GlobalBondRow;
+  fullWidth?: boolean;
+  href?: string;
+}) {
+  const onBook = useContext(GlobalBondBookingContext);
+  const match = onBook ? findBookableGlobalBond(row) : undefined;
+  if (onBook && match) {
+    return (
+      <QuotaBookButton
+        product={globalBondToBookableProduct(match.issuer, match.row)}
+        onBook={onBook}
+        size={fullWidth ? "xl" : "xs"}
+        className={fullWidth ? "w-full max-w-[343px]" : undefined}
+        label="สร้างคำสั่งซื้อ"
+      />
+    );
+  }
+  return <CreateOrderButton fullWidth={fullWidth} href={href} />;
 }
 
 function EmptyBondsCard() {
@@ -134,7 +193,7 @@ export function GlobalBondDetailAccordion({ bonds }: { bonds: GlobalBondRow[] })
                   <DetailRow label="วันครบกำหนด" value={row.maturity} />
                   <DetailRow label="ระยะเวลา (ปี)" value={row.duration} />
                 </div>
-                <InvestButton fullWidth />
+                <InvestButton row={row} fullWidth />
               </div>
             )}
           </div>
@@ -343,7 +402,7 @@ export function GlobalBondDetailTable({ bonds }: { bonds: GlobalBondRow[] }) {
                 className="flex flex-1 items-center justify-center px-4 py-[11px] min-h-[52px]"
                 style={cellBorder({ bottom: isLastRow(i) })}
               >
-                <InvestButton />
+                <InvestButton row={row} />
               </div>
             ))}
           </div>

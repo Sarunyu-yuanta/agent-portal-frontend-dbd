@@ -11,8 +11,8 @@ import {
   BondLogo,
   TopPickTag,
   FactsheetButton,
-  InvestButton,
 } from "./fixed-income-shared";
+import { GlobalBondListCta } from "./GlobalBondDetailBondList";
 
 const ROW_CELL_CLS = "cursor-pointer transition-colors";
 
@@ -177,9 +177,9 @@ export function GlobalBondTopPickTable({
             <div className="flex h-11 items-center justify-center px-3" style={headerBorderStyle({ right: false })}>
               <span className={`${HEADER_TEXT_CLS} whitespace-nowrap`}>คำสั่งซื้อ</span>
             </div>
-            {TOP_PICK_ROWS.map((_row, i) => (
+            {TOP_PICK_ROWS.map((row, i) => (
               <div key={i} className={`flex flex-1 items-center justify-center px-3 py-[11px] min-h-[52px] ${ROW_CELL_CLS}`} {...rowCellProps(i, isLastRow(i))}>
-                <InvestButton />
+                <GlobalBondListCta row={row} />
               </div>
             ))}
           </div>

@@ -5,6 +5,9 @@ import { Button } from "@sarunyu/system-one";
 import { ArrowLeftIcon, CaretDoubleRightIcon, FileTextIcon } from "@phosphor-icons/react";
 import { BOND_LOGOS, type FixedIncomeBond } from "./fixed-income-data";
 import { BORDER_COLOR, ACTION_LABELS, StatusTag, BondLogo } from "./fixed-income-shared";
+import { fixedIncomeToBookableProduct } from "./fixed-income-data";
+import { ORDER_BOOKING_ENABLED } from "@/lib/feature-flags";
+import { QuotaBookButton, useQuotaBooking } from "@/app/(dashboard)/orders/useQuotaBooking";
 
 function DetailTable({ bond }: { bond: FixedIncomeBond }) {
   const rows: {
@@ -79,6 +82,7 @@ export function FixedIncomeDetail({
   onCompanySelect?: (companyId: string) => void;
 }) {
   const isFollowed = bond.action === "followed";
+  const booking = useQuotaBooking();
 
   useEffect(() => {
     const main = document.querySelector("main");
@@ -147,15 +151,28 @@ export function FixedIncomeDetail({
         </div>
 
         <div className="flex flex-col gap-3 items-center w-full">
-          <Button
-            variant="primary"
-            size="xl"
-            disabled={isFollowed}
-            className="w-full max-w-[343px]"
-          >
-            {ACTION_LABELS[bond.action]}
-          </Button>
+          {/* Open for subscription: book a client straight in (see
+              `useQuotaBooking`). Otherwise the follow action, as before. */}
+          {ORDER_BOOKING_ENABLED && bond.action === "invest" ? (
+            <QuotaBookButton
+              product={fixedIncomeToBookableProduct(bond)}
+              onBook={booking.book}
+              size="xl"
+              className="w-full max-w-[343px]"
+              label={ACTION_LABELS[bond.action]}
+            />
+          ) : (
+            <Button
+              variant="primary"
+              size="xl"
+              disabled={isFollowed}
+              className="w-full max-w-[343px]"
+            >
+              {ACTION_LABELS[bond.action]}
+            </Button>
+          )}
         </div>
+        {booking.ui}
       </div>
     </div>
   );

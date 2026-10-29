@@ -18,9 +18,13 @@ import { useOrders } from "@/contexts/orders-context";
 import type { Resource } from "@/hooks/use-api";
 import type { ClientReadiness, OrderBook, RequirementRequest } from "@/types/domain";
 import type { Client } from "@/types/domain";
-import { assembleOrderBook } from "./order-book";
+import { assembleOrderBook, isBookClosed } from "./order-book";
 import { clientReadiness } from "./order-requirements";
-import { findBookableProduct, type BookableProduct } from "./bookable-products";
+import {
+  bookingModeForId,
+  findBookableProduct,
+  type BookableProduct,
+} from "./bookable-products";
 
 /** One product's book, or `null` when the id resolves to no product. */
 export function useOrderBook(productId: string): Resource<OrderBook | null> {
@@ -86,20 +90,40 @@ export function useOrderBooks(): Resource<OrderBook[]> {
 }
 
 /**
- * The products whose order the back office has answered — gone from the
- * catalogue. One still processing stays listed (not bookable, see
- * `isBookingOpen`).
+ * The products gone from the catalogue. Same rule as `isBookClosed`:
  *
- * Read off the submissions directly rather than by assembling every book: the
- * catalogue only needs the ids, and it renders on pages that never show a book.
- * Same rule as `isBookClosed`.
+ * - basket: the back office has answered the product's order. One still
+ *   processing stays listed (not bookable, see `isBookingOpen`).
+ * - quota: the issue quota is used up. Orders sent along the way close nothing.
+ *
+ * Basket ids are read off the submissions directly rather than by assembling
+ * every book: the catalogue only needs the ids, and it renders on pages that
+ * never show a book. Quota needs the product's quota, so those few are assembled.
  */
 export function useClosedProductIds(): Set<string> {
-  const { submissions } = useOrders();
-  return useMemo(
-    () => new Set(submissions.filter((s) => s.status !== "processing").map((s) => s.productId)),
-    [submissions],
-  );
+  const { bookings, submissions } = useOrders();
+  return useMemo(() => {
+    const closed = new Set(
+      submissions
+        .filter((s) => s.status !== "processing" && bookingModeForId(s.productId) === "basket")
+        .map((s) => s.productId),
+    );
+    const quotaIds = new Set(
+      bookings.map((b) => b.productId).filter((id) => bookingModeForId(id) === "quota"),
+    );
+    for (const id of quotaIds) {
+      const product = findBookableProduct(id);
+      if (!product) continue;
+      const book = assembleOrderBook(
+        product,
+        bookings.filter((b) => b.productId === id),
+        submissions.filter((s) => s.productId === id),
+        [],
+      );
+      if (isBookClosed(book)) closed.add(id);
+    }
+    return closed;
+  }, [bookings, submissions]);
 }
 
 /**
@@ -110,7 +134,14 @@ export function useClosedProductIds(): Set<string> {
 export function useProcessingProductIds(): Set<string> {
   const { submissions } = useOrders();
   return useMemo(
-    () => new Set(submissions.filter((s) => s.status === "processing").map((s) => s.productId)),
+    () =>
+      new Set(
+        submissions
+          // A quota product sends orders all the time and stays bookable
+          // throughout, so "an order is out" says nothing about it.
+          .filter((s) => s.status === "processing" && bookingModeForId(s.productId) === "basket")
+          .map((s) => s.productId),
+      ),
     [submissions],
   );
 }

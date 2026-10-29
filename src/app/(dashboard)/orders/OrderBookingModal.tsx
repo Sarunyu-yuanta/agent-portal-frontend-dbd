@@ -60,6 +60,7 @@ import {
   cashInCurrency,
   clientCashThb,
   formatOrderAmount,
+  bookingRemaining,
   isBookClosed,
   isBookingOpen,
   minTicketFor,
@@ -1047,7 +1048,7 @@ function AmountSection({
   const minTicket = minTicketFor(product);
   const target = book?.targetAmount ?? 0;
   const sent = book ? !isBookingOpen(book) : false;
-  const remaining = sent ? 0 : Math.max(0, target - (book?.bookedAmount ?? 0));
+  const remaining = book ? bookingRemaining(book) : 0;
 
   const cashThb = clientCashThb(client);
   const cashHere = cashInCurrency(cashThb, currency);
@@ -1097,7 +1098,9 @@ function AmountSection({
         <Alert
           status="information"
           message={
-            !sent
+            book?.mode === "quota"
+              ? `${product.underlying} เต็มโควตาแล้ว — ไม่สามารถจองเพิ่มได้`
+              : !sent
               ? `ครบยอด ${formatOrderAmount(target, currency)} แล้ว — ไม่สามารถจองเพิ่มได้`
               : book && isBookClosed(book)
                 ? `ส่งคำสั่งซื้อของ ${product.underlying} แล้ว — สินค้านี้ปิดรับจอง`
@@ -1194,10 +1197,7 @@ function Footer({
   onBooked: (amount: number) => void;
 }) {
   const { data: book } = useOrderBook(product.id);
-  const remaining =
-    book && !isBookingOpen(book)
-      ? 0
-      : Math.max(0, (book?.targetAmount ?? 0) - (book?.bookedAmount ?? 0));
+  const remaining = book ? bookingRemaining(book) : 0;
   const { amount, ok } = amountCheck(product, remaining, raw);
 
   // `ready` is checked here as well as on the amount section: a check can

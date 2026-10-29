@@ -17,7 +17,7 @@ import type {
   RequirementRequest,
 } from "@/types/domain";
 import { REQUIREMENT_CATALOG } from "./order-requirements";
-import { deskLabelFor, type BookableProduct } from "./bookable-products";
+import { bookingModeFor, deskLabelFor, type BookableProduct } from "./bookable-products";
 
 /**
  * A mock FX rate, used only to say what a client's THB cash is worth against a
@@ -229,14 +229,24 @@ export function assembleOrderBook(
 
   const ordered = [...submissions].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
 
+  // A rejected order hands its amount back to the quota; everything else live
+  // — waiting, sent or completed — has taken its share.
+  const rejectedIds = new Set(
+    submissions.filter((s) => s.status === "rejected").flatMap((s) => s.bookingIds),
+  );
+  const quotaUsed = sum(live.filter((b) => !rejectedIds.has(b.id)));
+
   return {
     productId: product.id,
     productName: product.underlying,
     productType: product.productName,
     desk: deskLabelFor(product),
+    mode: bookingModeFor(product),
     logos: product.logos,
     currency: product.currency,
     targetAmount: target,
+    quotaUsed,
+    quotaRemaining: Math.max(0, target - quotaUsed),
     minTicket: minTicketFor(product),
     bookings: live,
     openBookings: open,
@@ -252,48 +262,45 @@ export function assembleOrderBook(
 
 // ── Presentation ─────────────────────────────────────────────────────────────
 
-/** The steps, in the order a product moves through them — the page's filter chips. */
-export const BOOK_STEPS: OrderBookStatus[] = [
-  "collecting",
-  "checking",
-  "ready",
-  "processing",
-  "completed",
-  "rejected",
-];
-
-export const BOOK_STATUS_LABEL_TH: Record<OrderBookStatus, string> = {
-  collecting: "ยืนยันการจองซื้อ",
-  checking: "รอตรวจสอบวงเงิน",
-  ready: "มีวงเงินเพียงพอ",
-  processing: "ยืนยันรับคำสั่งซื้อ",
-  completed: "รับคำสั่งซื้อสำเร็จ",
-  rejected: "ยกเลิก",
-};
-
 /**
- * The design system's `Tag` variant for each state.
+ * Where one booking — one client's line in a book — stands, in the four words
+ * the book page's chips filter by:
  *
- * `ready` is green rather than blue: it is the one state that asks the IC to do
- * something, and it earns the colour that says "go" over the one every neutral
- * chip in this app already uses.
+ * - `offer` — the client took the offer: booked, funds cleared, waiting for
+ *   the order to go in (a basket to fill, or the IC to send a quota booking).
+ * - `review` — being checked: the funds check is pending or failed, or the
+ *   order is with the back office.
+ * - `completed` — the back office accepted the order.
+ * - `cancelled` — the booking was cancelled, or its order rejected.
+ *
+ * Coarser than `dealStatus`, which the table's Deal Status column still shows:
+ * the chips sort a long list into a few piles, the tag says exactly which step.
  */
-export const BOOK_STATUS_VARIANT: Record<
-  OrderBookStatus,
-  "blue" | "green" | "yellow" | "red" | "gray"
-> = {
-  collecting: "gray",
-  checking: "yellow",
-  ready: "green",
-  processing: "blue",
-  completed: "green",
-  rejected: "red",
+export type BookingPhase = "offer" | "review" | "completed" | "cancelled";
+
+export function bookingPhase(booking: Booking, book: OrderBook): BookingPhase {
+  if (booking.status === "cancelled") return "cancelled";
+  const submission = book.submissions.find((s) => s.bookingIds.includes(booking.id));
+  if (submission?.status === "completed") return "completed";
+  if (submission?.status === "rejected") return "cancelled";
+  if (submission?.status === "processing") return "review";
+  return creditOf(booking) === "sufficient" ? "offer" : "review";
+}
+
+/** In the order a booking moves through them — the chips' order. */
+export const BOOKING_PHASES: BookingPhase[] = ["offer", "review", "completed", "cancelled"];
+
+export const BOOKING_PHASE_LABEL: Record<BookingPhase, string> = {
+  offer: "Offer",
+  review: "ตรวจสอบ",
+  completed: "รับคำสั่งซื้อสำเร็จ",
+  cancelled: "ยกเลิก",
 };
 
 /**
  * How one sent order reads, wherever it is listed.
  *
- * Deliberately shorter than {@link BOOK_STATUS_LABEL_TH}: a book's tag has to
+ * Deliberately shorter than {@link BOOK_PHASE_LABEL}: a book's tag has to
  * name the whole state ("ครบยอด รอส่งคำสั่งซื้อ"), while an order sits beside
  * its own reference and round, so "สำเร็จ" is unambiguous.
  */
@@ -309,13 +316,27 @@ export const SUBMISSION_TAG: Record<
 /**
  * Whether the product still takes bookings.
  *
- * A product is booked once: filled and sent as one order. From the moment that
- * order goes downstream nothing more can be booked — while the back office is
- * still working on it the product reads "กำลังดำเนินการ", and once it answers
- * the book is {@link isBookClosed closed}.
+ * Basket: a product is booked once, filled and sent as one order. From the
+ * moment that order goes downstream nothing more can be booked — while the back
+ * office is still working on it the product reads "กำลังดำเนินการ", and once it
+ * answers the book is {@link isBookClosed closed}.
+ *
+ * Quota: open while at least one minimum ticket of quota is left; orders sent
+ * along the way don't close it.
  */
-export function isBookingOpen(book: Pick<OrderBook, "submissions">): boolean {
+export function isBookingOpen(
+  book: Pick<OrderBook, "mode" | "submissions" | "quotaRemaining" | "minTicket">,
+): boolean {
+  if (book.mode === "quota") return book.quotaRemaining >= book.minTicket;
   return book.submissions.length === 0;
+}
+
+/** How much more can be booked right now — the cap on the next booking's amount. */
+export function bookingRemaining(book: OrderBook): number {
+  if (!isBookingOpen(book)) return 0;
+  return book.mode === "quota"
+    ? book.quotaRemaining
+    : Math.max(0, book.targetAmount - book.bookedAmount);
 }
 
 /**
@@ -327,8 +348,70 @@ export function isBookingOpen(book: Pick<OrderBook, "submissions">): boolean {
  * this deal, and re-opening it would bring back the repeat booking this rule
  * replaced.
  */
-export function isBookClosed(book: Pick<OrderBook, "submissions">): boolean {
+export function isBookClosed(
+  book: Pick<OrderBook, "mode" | "submissions" | "quotaRemaining" | "minTicket">,
+): boolean {
+  // A quota book is done when its quota is, not when an order is answered.
+  if (book.mode === "quota") return !isBookingOpen(book);
   return book.submissions.some((s) => s.status !== "processing");
+}
+
+/**
+ * Whether a book still takes bookings, in the two words every booking tab's
+ * list filters by and tags its rows with. See `isBookingOpen` for what closes
+ * each kind: a basket's order being sent, a quota being used up.
+ */
+export type BookAvailability = "open" | "closed";
+
+export function bookAvailability(book: OrderBook): BookAvailability {
+  return isBookingOpen(book) ? "open" : "closed";
+}
+
+export const BOOK_AVAILABILITY_LABEL: Record<BookAvailability, string> = {
+  open: "เปิดจอง",
+  closed: "ปิด",
+};
+
+export const BOOK_AVAILABILITY_VARIANT: Record<BookAvailability, "green" | "gray"> = {
+  open: "green",
+  closed: "gray",
+};
+
+/** The list's filter chips, shared by the basket and quota tabs. */
+export const BOOK_AVAILABILITY_STEPS: { id: BookAvailability | "all"; label: string; empty: string }[] = [
+  { id: "all", label: "All", empty: "ยังไม่มีรายการจองซื้อ" },
+  { id: "open", label: BOOK_AVAILABILITY_LABEL.open, empty: "ไม่มีสินค้าที่ยังเปิดจอง" },
+  { id: "closed", label: BOOK_AVAILABILITY_LABEL.closed, empty: "ไม่มีสินค้าที่ปิดแล้ว" },
+];
+
+/** How full a quota book is, capped at 100. */
+export function quotaUsedPct(book: OrderBook): number {
+  if (book.targetAmount <= 0) return 0;
+  return Math.min(100, (book.quotaUsed / book.targetAmount) * 100);
+}
+
+/**
+ * A quota book's bookings sorted by where their order is — waiting to be sent
+ * (funds cleared), waiting on the funds check, with the back office, done.
+ */
+export function quotaOrderCounts(book: OrderBook): {
+  toSend: number;
+  checking: number;
+  processing: number;
+  completed: number;
+} {
+  const sentIds = new Set(book.submissions.flatMap((s) => s.bookingIds));
+  const bySub = (status: OrderSubmission["status"]) =>
+    new Set(book.submissions.filter((s) => s.status === status).flatMap((s) => s.bookingIds));
+  const processing = bySub("processing");
+  const completed = bySub("completed");
+  const unsent = book.bookings.filter((b) => !sentIds.has(b.id));
+  return {
+    toSend: unsent.filter((b) => creditOf(b) === "sufficient").length,
+    checking: unsent.filter((b) => creditOf(b) === "pending").length,
+    processing: book.bookings.filter((b) => processing.has(b.id)).length,
+    completed: book.bookings.filter((b) => completed.has(b.id)).length,
+  };
 }
 
 /** How full the book is, capped at 100 so an over-subscribed bar stays a bar. */

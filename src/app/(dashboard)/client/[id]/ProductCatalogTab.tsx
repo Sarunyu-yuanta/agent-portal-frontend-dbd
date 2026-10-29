@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Chip, SearchInput, Tab, Tag } from "@sarunyu/system-one";
-import { ArrowUpLeftIcon, ChartLineUpIcon, FireIcon } from "@phosphor-icons/react";
+import { ArrowUpLeftIcon, ChartLineUpIcon } from "@phosphor-icons/react";
 import { ChipScroller } from "@/components/ui/chip-scroller";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FixedIncomeTab } from "./FixedIncomeTab";
@@ -13,6 +13,7 @@ import { GlobalBondTab } from "./GlobalBondTab";
 import { MutualFundTab } from "./MutualFundTab";
 import { StockTab } from "./StockTab";
 import { ProductTrendingTab } from "./ProductTrendingTab";
+import { trendingGroupHref, type TrendingSort } from "./product-trending-data";
 import { RoboAdvisoryTab } from "./RoboAdvisoryTab";
 import { MutualFundDetail } from "./MutualFundDetail";
 import {
@@ -102,16 +103,18 @@ function CatalogTabBar({
   return (
     <div role="tablist" className="flex w-max">
       {PRODUCT_CATEGORIES.map((category) => {
-        const isTrending = category.id === TRENDING_TAB_ID;
+        const isActive = activeId === category.id;
+        // Once selected it reads like any other active tab; the shimmer is
+        // only there to draw the eye while it isn't.
+        const shimmer = category.id === TRENDING_TAB_ID && !isActive;
         return (
           <Tab
             key={category.id}
             title={category.title}
             size="md"
-            active={activeId === category.id}
+            active={isActive}
             onClick={() => onChange(category.id)}
-            icon={isTrending ? <FireIcon size={16} weight="fill" color="#f54a00" /> : undefined}
-            className={isTrending ? "tab-shimmer" : undefined}
+            className={shimmer ? "tab-shimmer" : undefined}
           />
         );
       })}
@@ -166,6 +169,7 @@ export type CatalogNavigation = {
   onMutualFundThemeSeeAll: (themeId: MutualFundThemeId) => void;
   onRoboAdvisorySelect: (clientId: string) => void;
   onDefinitSelect: (clientId: string) => void;
+  onTrendingSeeAll: (groupId: string, sort: TrendingSort) => void;
 };
 
 export function ProductCatalogTab({
@@ -357,6 +361,10 @@ export function ProductCatalogTab({
     onMutualFundThemeSeeAll:
       navigation?.onMutualFundThemeSeeAll ??
       ((themeId: MutualFundThemeId) => router.push(mutualFundThemeHref(themeId))),
+    onTrendingSeeAll:
+      navigation?.onTrendingSeeAll ??
+      ((groupId: string, sort: TrendingSort) =>
+        router.push(trendingGroupHref(groupId, sort))),
     onRoboAdvisorySelect:
       navigation?.onRoboAdvisorySelect ??
       ((clientId) => router.push(advisoryDetailHref("/product-catalog/robo-advisory", clientId))),

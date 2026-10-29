@@ -43,6 +43,7 @@ import {
   seedRequirementRequests,
   seedSubmissions,
 } from "@/lib/order-mock-data";
+import { bookingModeForId } from "@/app/(dashboard)/orders/bookable-products";
 import type {
   Booking,
   CreditStatus,
@@ -157,10 +158,15 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   }, [settleCredit]);
 
   const bookOrder = useCallback(async (draft: BookingDraft) => {
-    // One order per product: once it has been sent the product is closed, and
-    // every surface already hides its จองซื้อ. Held here as well because this is
-    // where the endpoint will enforce it.
-    if (submissions.some((s) => s.productId === draft.productId)) {
+    // Basket desks take one order per product: once it has been sent the
+    // product is closed, and every surface already hides its จองซื้อ. Held here
+    // as well because this is where the endpoint will enforce it. Quota desks
+    // send every booking on its own, so a sent order closes nothing; their cap
+    // is the quota, which the booking modal holds the amount to.
+    if (
+      bookingModeForId(draft.productId) === "basket" &&
+      submissions.some((s) => s.productId === draft.productId)
+    ) {
       throw new Error("This product's order has already been sent; it takes no more bookings.");
     }
     const booking: Booking = {

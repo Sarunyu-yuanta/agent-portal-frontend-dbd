@@ -2,22 +2,25 @@
  * Which products can be booked, and how an id turns back into one.
  *
  * ─── Scope ───────────────────────────────────────────────────────────────────
- * Two desks, and only two: **Global Structured** (`/product-catalog/product/:id`)
- * and **Thai Structured** (`/product-catalog/thai-structured/:theme`). Mutual
- * funds, stocks, bonds and the rest of the catalogue are deliberately out —
- * each has its own ticket conventions, its own required documents, and in most
- * cases its own downstream system, so adding one is a decision rather than a
- * loop over a longer list.
+ * Four desks, in two booking modes (see {@link BookingMode}):
  *
- * Adding a third desk later is this file plus a CTA on that desk's detail page.
- * Nothing in `order-book.ts`, the booking modal or `/orders` knows which desk a
- * book came from.
+ * - **basket** — Global Structured (`/product-catalog/product/:id`) and Thai
+ *   Structured (`/product-catalog/thai-structured/:theme`). Bookings fill a
+ *   notional target and go downstream as one order; the product is then done.
+ * - **quota** — Fixed Income (`fi-`) and Global Bond (`gb-`). Each booking is
+ *   sent as its own order straight away; the product closes when its issue
+ *   quota is used up.
+ *
+ * Stocks, TFEX and mutual funds are not booked at all — Order Management shows
+ * their client transactions instead (`use-transactions.ts`).
+ *
+ * Adding a desk is this file plus a CTA on that desk's detail page.
  *
  * ─── One namespace ───────────────────────────────────────────────────────────
- * `/orders/:id` is a single route for both desks, so their ids have to be
+ * `/orders/:id` is a single route for every desk, so their ids have to be
  * distinguishable. The global desk's are authored (`ko-wmt`,
- * `sp-nvda-amzn-axp`); the Thai desk's are derived from the theme and carry a
- * `thai-` prefix, which is what {@link findBookableProduct} splits on.
+ * `sp-nvda-amzn-axp`); the others are derived and carry a prefix — `thai-`,
+ * `fi-`, `gb-` — which is what {@link findBookableProduct} splits on.
  */
 
 import {
@@ -29,6 +32,15 @@ import {
   thaiBookableId,
   toBookableProduct,
 } from "../client/[id]/thai-structured-data";
+import {
+  FIXED_INCOME_BONDS,
+  fixedIncomeBookableId,
+  fixedIncomeToBookableProduct,
+} from "../client/[id]/fixed-income-data";
+import {
+  getBookableGlobalBond,
+  globalBondIssuerIdForBookable,
+} from "../client/[id]/global-bond-data";
 
 /**
  * What the order machinery needs of a product: a name, a currency, a minimum
@@ -41,6 +53,14 @@ import {
  * currency" to be answered.
  */
 export type BookableProduct = StructuredProduct;
+
+/** The `?tab=` each desk's books are listed under on `/orders` — see `order-tabs.ts`. */
+const ORDER_TAB_BY_DESK: Record<Desk, string> = {
+  "Global Structured": "structured",
+  "Thai Structured": "thai-structured",
+  "Fixed Income": "fixed-income",
+  "Global Bond": "global-bond",
+};
 
 const THAI_BY_ID = new Map<string, StructuredProduct>(
   THAI_STRUCTURED_PRODUCTS.map((p) => [thaiBookableId(p.theme), toBookableProduct(p)]),
@@ -55,15 +75,62 @@ const THAI_BY_ID = new Map<string, StructuredProduct>(
  * one that no longer resolves is a broken fixture, not a row anyone can act on.
  * `/orders` drops those and `/orders/:id` shows "ไม่พบรายการจองนี้".
  */
+const FIXED_INCOME_BY_ID = new Map<string, StructuredProduct>(
+  FIXED_INCOME_BONDS.map((b) => [fixedIncomeBookableId(b), fixedIncomeToBookableProduct(b)]),
+);
+
+export type Desk = "Global Structured" | "Thai Structured" | "Fixed Income" | "Global Bond";
+
+/**
+ * How a desk takes bookings.
+ *
+ * `basket`: bookings fill a notional target, then go downstream together as the
+ * product's one order. `quota`: each booking is its own order, sent as soon as
+ * its funds check clears, until the product's issue quota is used up.
+ */
+export type BookingMode = "basket" | "quota";
+
+/** Which desk an id belongs to — read off its prefix, so it needs no lookup. */
+export function deskForId(id: string): Desk {
+  if (id.startsWith("thai-")) return "Thai Structured";
+  if (id.startsWith("fi-")) return "Fixed Income";
+  if (id.startsWith("gb-")) return "Global Bond";
+  return "Global Structured";
+}
+
+export function bookingModeForId(id: string): BookingMode {
+  const desk = deskForId(id);
+  return desk === "Fixed Income" || desk === "Global Bond" ? "quota" : "basket";
+}
+
+export function bookingModeFor(product: Pick<BookableProduct, "id">): BookingMode {
+  return bookingModeForId(product.id);
+}
+
 export function findBookableProduct(id: string): BookableProduct | undefined {
-  // The prefix check first, so a Thai theme can never be shadowed by a global
+  // The prefix checks first, so a derived id can never be shadowed by a global
   // product that happens to share its slug.
-  if (id.startsWith("thai-")) return THAI_BY_ID.get(id);
-  return findProductById(id);
+  switch (deskForId(id)) {
+    case "Thai Structured":
+      return THAI_BY_ID.get(id);
+    case "Fixed Income":
+      return FIXED_INCOME_BY_ID.get(id);
+    case "Global Bond":
+      return getBookableGlobalBond(id);
+    case "Global Structured":
+      return findProductById(id);
+  }
 }
 
 /** Where a book's product sits in the catalogue — the "ดูรายละเอียดสินค้า" link. */
 export function catalogHrefFor(product: BookableProduct): string {
+  if (deskForId(product.id) === "Fixed Income") {
+    return `/product-catalog/fixed-income/bond/${encodeURIComponent(product.id.slice("fi-".length))}`;
+  }
+  if (deskForId(product.id) === "Global Bond") {
+    const issuerId = globalBondIssuerIdForBookable(product.id);
+    return issuerId ? `/product-catalog/global-bond/${issuerId}` : "/product-catalog";
+  }
   if (product.id.startsWith("thai-")) {
     const theme = THAI_STRUCTURED_PRODUCTS.find(
       (p) => thaiBookableId(p.theme) === product.id,
@@ -76,6 +143,19 @@ export function catalogHrefFor(product: BookableProduct): string {
 }
 
 /** Which desk wrote this deal — printed beside the product type on a book. */
-export function deskLabelFor(product: BookableProduct): string {
-  return product.id.startsWith("thai-") ? "Thai Structured" : "Global Structured";
+export function deskLabelFor(product: BookableProduct): Desk {
+  return deskForId(product.id);
+}
+
+/** The Order Management tab a product's desk is listed under. */
+export function ordersListHref(productId: string): string {
+  return `/orders?tab=${ORDER_TAB_BY_DESK[deskForId(productId)]}`;
+}
+
+/**
+ * A book's page, on the Order Management tab its desk lives under — so the
+ * page's back button returns to that tab rather than the default one.
+ */
+export function orderBookHref(productId: string): string {
+  return `/orders/${encodeURIComponent(productId)}?tab=${ORDER_TAB_BY_DESK[deskForId(productId)]}`;
 }

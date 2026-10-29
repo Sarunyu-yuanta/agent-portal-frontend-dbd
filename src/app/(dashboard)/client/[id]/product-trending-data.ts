@@ -19,6 +19,7 @@ import {
 } from "./global-bond-data";
 import { getTopPerformers } from "./mutual-fund-data";
 import { STOCK_TOP_PICK, type Trend } from "./stock-data";
+import { getSectorStockBatch } from "./stock-industry-sector-data";
 import {
   STRUCTURED_PRODUCTS,
   TOP_PICKS,
@@ -50,6 +51,10 @@ export type TrendingItem = {
   /** Week-on-week change in sales, pre-formatted with its sign. */
   changePct: string;
   trend: Trend;
+  /** Mock: picked by Yuanta's desk — rises to the top under "Yuanta Highlight". */
+  highlight: boolean;
+  /** Mock: in line with the CIO's house view — rises to the top under "CIO View". */
+  cioView: boolean;
   target: TrendingTarget;
 };
 
@@ -57,10 +62,27 @@ export type TrendingGroup = {
   /** A `PRODUCT_CATEGORIES` id — the tab this group's products live under. */
   id: string;
   title: string;
+  /** Every product in the class, ranked. The card shows the first
+   *  `TRENDING_CARD_ROWS`; "ดูทั้งหมด" opens the whole list as a table. */
   items: TrendingItem[];
-  /** Sum of the group's rows, for the card header and the group ordering. */
-  totalSalesThb: number;
 };
+
+/**
+ * Whether a group's rows show their order count.
+ *
+ * Not for the booked desks — structured products and bonds open once and close
+ * (on a full basket or a used-up quota), so "how many orders" is a count of one
+ * round's clients, not a measure of how well it sells. Stock and mutual funds
+ * trade continuously, where the count does say something.
+ */
+const SINGLE_ROUND_GROUPS = new Set(["structured", "thai-structured", "global-bond", "fixed-income"]);
+
+export function showsOrderCount(groupId: string): boolean {
+  return !SINGLE_ROUND_GROUPS.has(groupId);
+}
+
+/** How many of a group's rows its card shows before "ดูทั้งหมด". */
+export const TRENDING_CARD_ROWS = 5;
 
 export const PRODUCT_TRENDING_UPDATED_AT =
   "ยอดขาย 7 วันล่าสุด | Latest update: 30 Apr 2025 - 09:22";
@@ -116,7 +138,35 @@ const SALES_LADDER: Record<string, [salesThb: number, orders: number, changePct:
   ],
 };
 
-const ROWS_PER_GROUP = 5;
+/**
+ * Rungs past the hand-written five, for the full table: each one a step down
+ * from the last written rung, so the ranking still reads top-down. The
+ * week-on-week figures cycle through a fixed list — deterministic, so the
+ * table doesn't reshuffle between renders.
+ */
+const TAIL_DECAY = 0.86;
+const TAIL_CHANGES: [changePct: string, trend: Trend][] = [
+  ["+3.2%", "up"],
+  ["-1.8%", "down"],
+  ["+0.9%", "up"],
+  ["0.0%", "flat"],
+  ["-4.1%", "down"],
+  ["+5.6%", "up"],
+  ["-0.7%", "down"],
+];
+
+function rung(ladder: (typeof SALES_LADDER)[string], i: number) {
+  if (i < ladder.length) return ladder[i];
+  const [lastSales, lastOrders] = ladder[ladder.length - 1];
+  const factor = TAIL_DECAY ** (i - ladder.length + 1);
+  const [changePct, trend] = TAIL_CHANGES[(i - ladder.length) % TAIL_CHANGES.length];
+  return [
+    Math.round((lastSales * factor) / 1_000_000) * 1_000_000,
+    Math.max(1, Math.round(lastOrders * factor)),
+    changePct,
+    trend,
+  ] as const;
+}
 
 function dedupeBy<T>(items: T[], keyOf: (item: T) => string): T[] {
   const seen = new Map<string, T>();
@@ -135,21 +185,32 @@ function group<T>(
   row: (item: T) => { title: string; subtitle: string; target: TrendingTarget },
 ): TrendingGroup {
   const ladder = SALES_LADDER[id];
-  const items = source.slice(0, ROWS_PER_GROUP).map((item, i) => {
-    const [salesThb, orders, changePct, trend] = ladder[i];
-    return { rank: i + 1, salesThb, orders, changePct, trend, ...row(item) };
+  const items = source.map((item, i) => {
+    const [salesThb, orders, changePct, trend] = rung(ladder, i);
+    return {
+      rank: i + 1,
+      salesThb,
+      orders,
+      changePct,
+      trend,
+      // Invented like the sales: a fixed pattern, so the two editorial sorts
+      // don't lift the same rows.
+      highlight: i % 2 === 0,
+      cioView: i % 3 !== 1,
+      ...row(item),
+    };
   });
-  return {
-    id,
-    title,
-    items,
-    totalSalesThb: items.reduce((sum, item) => sum + item.salesThb, 0),
-  };
+  return { id, title, items };
 }
 
 const globalBondRows = dedupeBy(
   ALL_OVERSEAS_BONDS.filter((bond) => getIssuerIdForBondRow(bond) !== undefined),
   (bond) => bond.name,
+);
+
+const stockRows = dedupeBy(
+  [...STOCK_TOP_PICK, ...getSectorStockBatch(0, 10)],
+  (row) => row.symbol,
 );
 
 const structuredRows = dedupeBy([...TOP_PICKS, ...STRUCTURED_PRODUCTS], (p) => p.id);
@@ -179,7 +240,10 @@ function orderOf(id: string): number {
 
 /** Every asset class that sells units, each ranked internally by sales. */
 export const PRODUCT_TRENDING_GROUPS: TrendingGroup[] = [
-  group("stock", "Stock", STOCK_TOP_PICK, (row) => ({
+  // Top picks lead (they are the card's five); the SET sector stocks follow so
+  // the full table has more than the card. Both resolve on `stockProductHref`
+  // — `getStockProductDetail` searches the same sector batch.
+  group("stock", "Stock", stockRows, (row) => ({
     title: row.symbol,
     subtitle: row.name,
     target: { kind: "stock", symbol: row.symbol },
@@ -222,3 +286,50 @@ export const PRODUCT_TRENDING_GROUPS: TrendingGroup[] = [
     target: { kind: "global-bond", issuerId: getIssuerIdForBondRow(bond)! },
   })),
 ].sort((a, b) => orderOf(a.id) - orderOf(b.id));
+
+export function getTrendingGroup(id: string): TrendingGroup | undefined {
+  return PRODUCT_TRENDING_GROUPS.find((g) => g.id === id);
+}
+
+/** `?sort=` — omitted from the URL while it holds its default value. */
+export const TRENDING_SORT_PARAM = "sort";
+
+export type TrendingSort = "best-seller" | "highlight" | "cio-view";
+
+export const DEFAULT_TRENDING_SORT: TrendingSort = "best-seller";
+
+export const TRENDING_SORTS: { id: TrendingSort; label: string }[] = [
+  { id: "best-seller", label: "รายการขายดี" },
+  { id: "highlight", label: "Yuanta Highlight" },
+  { id: "cio-view", label: "CIO View" },
+];
+
+export function normalizeTrendingSort(value: string | null | undefined): TrendingSort {
+  return TRENDING_SORTS.some((f) => f.id === value)
+    ? (value as TrendingSort)
+    : DEFAULT_TRENDING_SORT;
+}
+
+/**
+ * A group's rows in the order a sort asks for, re-ranked 1..n so the podium
+ * follows it.
+ *
+ * Reorders, never drops: this tab is the IC's full shelf — everything the desk
+ * can sell, not the narrower set a client sees in the asset tabs beside it.
+ * The editorial sorts lift their picks to the top (by sales among themselves)
+ * and leave the rest below, still by sales.
+ */
+export function sortTrendingItems(items: TrendingItem[], sort: TrendingSort): TrendingItem[] {
+  if (sort === "best-seller") return items;
+  const picked = sort === "highlight" ? (i: TrendingItem) => i.highlight : (i: TrendingItem) => i.cioView;
+  return [...items.filter(picked), ...items.filter((i) => !picked(i))].map((item, i) => ({
+    ...item,
+    rank: i + 1,
+  }));
+}
+
+/** A group's full ranking — the sub-page its card's "ดูทั้งหมด" opens. */
+export function trendingGroupHref(id: string, sort: TrendingSort = DEFAULT_TRENDING_SORT): string {
+  const path = `/product-catalog/product-trending/${encodeURIComponent(id)}`;
+  return sort === DEFAULT_TRENDING_SORT ? path : `${path}?${TRENDING_SORT_PARAM}=${sort}`;
+}

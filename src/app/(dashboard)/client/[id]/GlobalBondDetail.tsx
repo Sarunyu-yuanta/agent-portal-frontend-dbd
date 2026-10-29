@@ -5,18 +5,26 @@ import { Button } from "@sarunyu/system-one";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import {
   filterGlobalBonds,
+  globalBondBookableId,
   type GlobalBondIssuerId,
   type MaturityFilter,
   type YieldFilter,
 } from "./global-bond-data";
 import { GlobalBondDetailHero } from "./GlobalBondDetailHero";
 import {
+  GlobalBondBookingContext,
   GlobalBondDetailAccordion,
   GlobalBondDetailTable,
 } from "./GlobalBondDetailBondList";
+import { useOpenProducts } from "@/app/(dashboard)/orders/use-order-books";
+import { useQuotaBooking } from "@/app/(dashboard)/orders/useQuotaBooking";
+import { ORDER_BOOKING_ENABLED } from "@/lib/feature-flags";
 import { GlobalBondDetailRecommended } from "./GlobalBondDetailRecommended";
 import { useGlobalBondIssuer } from "@/hooks/use-catalog";
 import { GlobalBondDetailSkeleton } from "./ProductDetailSkeletons";
+
+/** Stable empty list, so `useOpenProducts` doesn't recompute while loading. */
+const NO_BONDS: never[] = [];
 
 export function GlobalBondDetail({
   issuerId,
@@ -34,12 +42,12 @@ export function GlobalBondDetail({
   const [yieldFilter, setYieldFilter] = useState<YieldFilter>("all");
   const [maturityFilter, setMaturityFilter] = useState<MaturityFilter>("all");
 
+  const booking = useQuotaBooking();
+  // A bond whose quota is used up has nothing left to sell — off the list.
+  const openBonds = useOpenProducts(issuer?.bonds ?? NO_BONDS, globalBondBookableId);
   const filteredBonds = useMemo(
-    () =>
-      issuer
-        ? filterGlobalBonds(issuer.bonds, yieldFilter, maturityFilter)
-        : [],
-    [issuer, yieldFilter, maturityFilter],
+    () => filterGlobalBonds(openBonds, yieldFilter, maturityFilter),
+    [openBonds, yieldFilter, maturityFilter],
   );
 
   useEffect(() => {
@@ -125,18 +133,23 @@ export function GlobalBondDetail({
                 </span>
               </span>
             </div>
-            <div className="lg:hidden">
-              <GlobalBondDetailAccordion bonds={filteredBonds} />
-            </div>
-            <div className="hidden lg:block">
-              <GlobalBondDetailTable bonds={filteredBonds} />
-            </div>
+            <GlobalBondBookingContext.Provider
+              value={ORDER_BOOKING_ENABLED ? booking.book : null}
+            >
+              <div className="lg:hidden">
+                <GlobalBondDetailAccordion bonds={filteredBonds} />
+              </div>
+              <div className="hidden lg:block">
+                <GlobalBondDetailTable bonds={filteredBonds} />
+              </div>
+            </GlobalBondBookingContext.Provider>
           </div>
 
           <GlobalBondDetailRecommended
             issuerId={issuerId}
             onIssuerSelect={onIssuerSelect}
           />
+          {booking.ui}
         </div>
       </div>
     </div>

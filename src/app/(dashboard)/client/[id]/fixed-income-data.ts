@@ -1,4 +1,5 @@
 import fixedIncomeRaw from "@/data/fixed-income.json";
+import type { StructuredProduct } from "./structured-product-data";
 
 export type FixedIncomeStatus = "open" | "upcoming" | "soon";
 export type FixedIncomeAction = "invest" | "follow" | "followed";
@@ -95,6 +96,66 @@ export function getCompanySecondaryBonds(companyId: string): FixedIncomeBond[] {
 
 export function getFixedIncomeBond(id: string): FixedIncomeBond | undefined {
   return allBonds().find((b) => b.id === id);
+}
+
+/**
+ * The id a bond is booked and routed under in Order Management.
+ *
+ * Prefixed because `/orders/:id` is one namespace shared with every bookable
+ * desk; `findBookableProduct` splits on the prefix.
+ */
+export function fixedIncomeBookableId(bond: Pick<FixedIncomeBond, "id">): string {
+  return `fi-${bond.id}`;
+}
+
+/**
+ * Mock issue quota per bond, in THB — the most the desk can place before the
+ * bond is sold out. Not in the catalogue data yet; picked from a fixed ladder by
+ * the bond's id so it is stable across renders and between server and browser.
+ */
+const FI_QUOTA_LADDER_THB = [5_000_000, 8_000_000, 10_000_000, 15_000_000, 20_000_000, 30_000_000];
+
+export function fixedIncomeQuotaThb(bond: Pick<FixedIncomeBond, "id">): number {
+  const seed = [...bond.id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  return FI_QUOTA_LADDER_THB[seed % FI_QUOTA_LADDER_THB.length];
+}
+
+/** The company's minimum subscription, e.g. `"100,000 บาท | ทวีคูณ…"` → `"100,000 THB"`. */
+function minSubscriptionThb(bond: FixedIncomeBond): string {
+  const text = resolveFixedIncomeCompany(bond.companyName)?.minSubscription ?? "";
+  const digits = text.split("|")[0].replace(/[^0-9,]/g, "");
+  return `${digits || "100,000"} THB`;
+}
+
+/**
+ * A bond in the shape the order machinery reads a product in — the same
+ * conversion `toBookableProduct` does for the Thai structured desk. Barrier
+ * fields have no meaning for a bond and read "-".
+ */
+export function fixedIncomeToBookableProduct(bond: FixedIncomeBond): StructuredProduct {
+  return {
+    id: fixedIncomeBookableId(bond),
+    underlying: bond.symbol,
+    coupon: bond.couponRate,
+    tenor: bond.tenor,
+    ko: "-",
+    strike: "-",
+    ki: "-",
+    tags: [],
+    logos: BOND_LOGOS[bond.logoIdx] ? [BOND_LOGOS[bond.logoIdx]] : [],
+    offerDate: bond.subscriptionPeriod,
+    couponPeriod: bond.couponPeriod,
+    detailTenor: bond.tenor,
+    productName: `${bond.bondCategory} · ${bond.companyName}`,
+    productType: bond.bondCategory,
+    currency: "THB",
+    minInvestment: minSubscriptionThb(bond),
+    // Only the denominator is read (see `orderTargetFor`): for a bond it is the
+    // quota rather than a basket to fill.
+    requestNotionalSize: `0 / ${fixedIncomeQuotaThb(bond).toLocaleString("en-US")}`,
+    issuer: bond.fullCompanyName,
+    updatedAt: bond.updatedAt,
+  };
 }
 
 export function getBookingLabel(bond: FixedIncomeBond): string {

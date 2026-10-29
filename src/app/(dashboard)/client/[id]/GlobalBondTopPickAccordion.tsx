@@ -7,9 +7,9 @@ import {
   BORDER_COLOR,
   BondLogo,
   DetailRow,
-  InvestButton,
   TopPickTag,
 } from "./fixed-income-shared";
+import { GlobalBondListCta } from "./GlobalBondDetailBondList";
 
 export function GlobalBondTopPickAccordion() {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(0);
@@ -67,7 +67,7 @@ export function GlobalBondTopPickAccordion() {
                     </button>
                   </div>
                 </div>
-                <InvestButton fullWidth />
+                <GlobalBondListCta row={row} fullWidth />
               </div>
             )}
           </div>

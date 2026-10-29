@@ -14,11 +14,12 @@ import {
   FIXED_INCOME_BONDS,
   countFixedIncomeFilters,
   filterFixedIncomeBonds,
+  fixedIncomeBookableId,
+  fixedIncomeToBookableProduct,
   getBookingLabel,
   getFixedIncomeFilterChips,
   getRiskNumber,
   removeFixedIncomeFilterChip,
-  type FixedIncomeAction,
   type FixedIncomeBond,
   type FixedIncomeFilters,
 } from "./fixed-income-data";
@@ -35,6 +36,16 @@ import {
   BondLogo,
 } from "./fixed-income-shared";
 import { FixedIncomeFilterModal } from "./FixedIncomeFilterModal";
+import { ORDER_BOOKING_ENABLED } from "@/lib/feature-flags";
+import type { BookableProduct } from "@/app/(dashboard)/orders/bookable-products";
+import { useOpenProducts } from "@/app/(dashboard)/orders/use-order-books";
+import { QuotaBookButton, useQuotaBooking } from "@/app/(dashboard)/orders/useQuotaBooking";
+
+/** Opens the booking modal for a bond — see `useQuotaBooking`. */
+type OnBook = (product: BookableProduct) => void;
+
+/** Only a bond open for subscription can be booked; the rest keep their follow action. */
+const bookable = (bond: FixedIncomeBond) => ORDER_BOOKING_ENABLED && bond.action === "invest";
 import { FixedIncomeAppliedFilterChips } from "./FixedIncomeAppliedFilterChips";
 
 function offerTypeVariant(type: string): TagVariant {
@@ -117,7 +128,16 @@ function MarketSwitcher({
   );
 }
 
-function ActionButton({ action: _action }: { action: FixedIncomeAction }) {
+function ActionButton({ bond, onBook }: { bond: FixedIncomeBond; onBook: OnBook }) {
+  if (bookable(bond)) {
+    return (
+      <QuotaBookButton
+        product={fixedIncomeToBookableProduct(bond)}
+        onBook={onBook}
+        label="สร้างคำสั่งซื้อ"
+      />
+    );
+  }
   return (
     <button
       type="button"
@@ -130,7 +150,19 @@ function ActionButton({ action: _action }: { action: FixedIncomeAction }) {
   );
 }
 
-function CardActionButton({ action }: { action: FixedIncomeAction }) {
+function CardActionButton({ bond, onBook }: { bond: FixedIncomeBond; onBook: OnBook }) {
+  const action = bond.action;
+  if (bookable(bond)) {
+    return (
+      <QuotaBookButton
+        product={fixedIncomeToBookableProduct(bond)}
+        onBook={onBook}
+        size="lg"
+        className="shrink-0 max-w-[343px]"
+        label={ACTION_LABELS[action]}
+      />
+    );
+  }
   const isFollowed = action === "followed";
   return (
     <Button
@@ -148,9 +180,11 @@ function CardActionButton({ action }: { action: FixedIncomeAction }) {
 function FixedIncomeCard({
   bond,
   onSelect,
+  onBook,
 }: {
   bond: FixedIncomeBond;
   onSelect: (bond: FixedIncomeBond) => void;
+  onBook: OnBook;
 }) {
   return (
     <div
@@ -214,7 +248,7 @@ function FixedIncomeCard({
             {bond.bondRating} / Risk {getRiskNumber(bond.risk)}
           </span>
         </div>
-        <CardActionButton action={bond.action} />
+        <CardActionButton bond={bond} onBook={onBook} />
       </div>
     </div>
   );
@@ -326,10 +360,12 @@ function BondTableRow({
   bond,
   isLast,
   onSelect,
+  onBook,
 }: {
   bond: FixedIncomeBond;
   isLast?: boolean;
   onSelect: (bond: FixedIncomeBond) => void;
+  onBook: OnBook;
 }) {
   const border = () => cellBorderStyle({ bottom: !isLast });
 
@@ -415,7 +451,7 @@ function BondTableRow({
         className="flex w-[92px] items-center justify-center px-3 py-[11px]"
         style={border()}
       >
-        <ActionButton action={bond.action} />
+        <ActionButton bond={bond} onBook={onBook} />
       </div>
     </div>
   );
@@ -443,9 +479,13 @@ export function FixedIncomeTab({
     return () => clearTimeout(t);
   }, []);
 
+  const booking = useQuotaBooking();
+  // A bond whose quota is used up has nothing left to sell — gone from the list,
+  // the same way a structured product leaves once its order is answered.
+  const openBonds = useOpenProducts(FIXED_INCOME_BONDS, fixedIncomeBookableId);
   const filteredBonds = useMemo(
-    () => filterFixedIncomeBonds(FIXED_INCOME_BONDS, appliedFilters),
-    [appliedFilters],
+    () => filterFixedIncomeBonds(openBonds, appliedFilters),
+    [openBonds, appliedFilters],
   );
 
   const total = filteredBonds.length;
@@ -534,7 +574,12 @@ export function FixedIncomeTab({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full lg:hidden">
         {pagedBonds.map((bond) => (
-          <FixedIncomeCard key={bond.id} bond={bond} onSelect={onBondSelect} />
+          <FixedIncomeCard
+            key={bond.id}
+            bond={bond}
+            onSelect={onBondSelect}
+            onBook={booking.book}
+          />
         ))}
       </div>
 
@@ -569,6 +614,7 @@ export function FixedIncomeTab({
                 bond={bond}
                 isLast={i === pagedBonds.length - 1}
                 onSelect={onBondSelect}
+                onBook={booking.book}
               />
             ))}
           </div>
@@ -622,6 +668,8 @@ export function FixedIncomeTab({
           </span>
         </div>
       )}
+
+      {booking.ui}
 
       <FixedIncomeFilterModal
         open={filtersOpen}

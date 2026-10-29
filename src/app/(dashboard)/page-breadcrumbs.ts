@@ -28,6 +28,7 @@ import {
   resolveFixedIncomeCompany,
 } from "./client/[id]/fixed-income-data";
 import { getGlobalBondIssuer } from "./client/[id]/global-bond-data";
+import { getTrendingGroup } from "./client/[id]/product-trending-data";
 import {
   getMutualFundSymbol,
   MUTUAL_FUND_CATEGORIES,
@@ -332,12 +333,16 @@ const MUTUAL_FUND_INSIGHTS = /^\/product-catalog\/mutual-fund\/insights(\/|$)/;
 const MUTUAL_FUND = /^\/product-catalog\/mutual-fund\/(.+)$/;
 const STOCK_SECTOR = /^\/product-catalog\/stock\/([^/]+)$/;
 const STOCK_SECTOR_STATIC = new Set(["dr", "etf"]);
+const TRENDING_GROUP = /^\/product-catalog\/product-trending\/(.+)$/;
 
 function catalogLabel(pathname: string): string | null {
   const segment = (re: RegExp) => {
     const found = re.exec(pathname);
     return found ? decodeURIComponent(found[1]) : null;
   };
+
+  const trendingGroupId = segment(TRENDING_GROUP);
+  if (trendingGroupId) return getTrendingGroup(trendingGroupId)?.title ?? "Product Trending";
 
   const productId = segment(PRODUCT);
   if (productId) {

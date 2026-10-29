@@ -1,4 +1,5 @@
 import globalBondsRaw from "@/data/global-bonds.json";
+import type { StructuredProduct } from "./structured-product-data";
 
 export type GlobalBondIssuerId =
   | "apple"
@@ -185,4 +186,88 @@ export function filterAllOverseasBonds(
       (maturityFilter === "long" && bond.durationYears > 3);
     return tickerMatch && couponMatch && yieldMatch && maturityMatch;
   });
+}
+
+// ── Booking ──────────────────────────────────────────────────────────────────
+
+/**
+ * The id a bond is booked and routed under in Order Management.
+ *
+ * Keyed on the issuer page's own bond row (`a1`, `m1`, …) — the one list where
+ * every bond is distinct. The top-pick and all-overseas lists repeat rows and
+ * ISINs freely, so they resolve to a bookable bond by name instead; see
+ * {@link findBookableGlobalBond}.
+ */
+export function globalBondBookableId(row: Pick<GlobalBondRow, "id">): string {
+  return `gb-${row.id}`;
+}
+
+const ISSUER_BONDS: { issuer: GlobalBondIssuer; row: GlobalBondRow }[] = Object.values(
+  GLOBAL_BOND_ISSUERS,
+).flatMap((issuer) => issuer.bonds.map((row) => ({ issuer, row })));
+
+/** The issuer bond a row from any list stands for, or `undefined` when none matches. */
+export function findBookableGlobalBond(row: Pick<GlobalBondRow, "id" | "name">) {
+  return (
+    ISSUER_BONDS.find((b) => b.row.id === row.id) ??
+    ISSUER_BONDS.find((b) => b.row.name === row.name)
+  );
+}
+
+/**
+ * Mock issue quota per bond, in USD — not in the catalogue data yet. Picked from
+ * a fixed ladder by the row id, so it is stable across renders.
+ */
+const GB_QUOTA_LADDER_USD = [1_000_000, 1_500_000, 2_000_000, 3_000_000];
+
+/** Global bonds trade in round lots; 200,000 is the desk's usual minimum. */
+const GB_MIN_TICKET = "200,000 USD";
+
+export function globalBondQuotaUsd(row: Pick<GlobalBondRow, "id">): number {
+  const seed = [...row.id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  return GB_QUOTA_LADDER_USD[seed % GB_QUOTA_LADDER_USD.length];
+}
+
+/** An issuer bond in the shape the order machinery reads a product in. */
+export function globalBondToBookableProduct(
+  issuer: GlobalBondIssuer,
+  row: GlobalBondRow,
+): StructuredProduct {
+  return {
+    id: globalBondBookableId(row),
+    underlying: row.name,
+    coupon: row.couponRate,
+    tenor: row.duration,
+    ko: "-",
+    strike: "-",
+    ki: "-",
+    tags: [],
+    logos: [row.logo],
+    offerDate: "-",
+    couponPeriod: "-",
+    detailTenor: row.duration,
+    productName: `${issuer.title} · ${row.isin}`,
+    productType: "Global Bond",
+    currency: row.currency,
+    minInvestment: GB_MIN_TICKET,
+    requestNotionalSize: `0 / ${globalBondQuotaUsd(row).toLocaleString("en-US")}`,
+    issuer: issuer.fullName,
+    updatedAt: issuer.updatedAt,
+  };
+}
+
+const BOOKABLE_BY_ID = new Map(
+  ISSUER_BONDS.map(({ issuer, row }) => [
+    globalBondBookableId(row),
+    globalBondToBookableProduct(issuer, row),
+  ]),
+);
+
+export function getBookableGlobalBond(id: string): StructuredProduct | undefined {
+  return BOOKABLE_BY_ID.get(id);
+}
+
+/** The issuer page a bookable bond lives on. */
+export function globalBondIssuerIdForBookable(id: string): GlobalBondIssuerId | undefined {
+  return ISSUER_BONDS.find(({ row }) => globalBondBookableId(row) === id)?.issuer.id;
 }

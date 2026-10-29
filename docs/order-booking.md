@@ -7,23 +7,56 @@
 ปิดแล้วหน้าสินค้ากลับไปเป็นลิงก์ "สร้างคำสั่งซื้อ" ภายนอกเหมือนเดิม และ `/orders` redirect
 ไป `/product-catalog`
 
-## ⚠️ ขอบเขต — สองโต๊ะเท่านั้น
+## ขอบเขต — แท็บตามสินทรัพย์ สามแบบ
 
-| โต๊ะ | หน้าสินค้า | id ของ book |
+`/orders` แบ่งเป็นแท็บตามสินทรัพย์ (ลำดับเดียวกับ Product Catalog) — ดู
+[`orders/order-tabs.ts`](<../src/app/(dashboard)/orders/order-tabs.ts>) แต่ละแท็บเป็นหนึ่งในสามแบบ:
+
+| แบบ | แท็บ | flow |
 | --- | --- | --- |
-| **Global Structured** | `/product-catalog/product/:id` | id ของสินค้าตรง ๆ (`ko-wmt`) |
-| **Thai Structured** | `/product-catalog/thai-structured/:theme` | `thai-` + theme (`thai-chips`) |
+| **basket** | Thai Structured, Global Structured | จองจนครบ basket (notional) → ส่งคำสั่งซื้อครั้งเดียว → สินค้าปิด |
+| **quota** | Fixed Income, Global Bond | แต่ละรายการจองส่งคำสั่งซื้อได้ทันทีเมื่อวงเงินผ่าน ไม่ต้องรอครบ → สินค้าปิดเมื่อใช้โควตาครบ |
+| **transactions** | Stock, TFEX, Mutual Fund | ไม่มีการจอง — แสดงรายการซื้อขายของลูกค้าผ่านแพลตฟอร์มต่าง ๆ (อ่านอย่างเดียว) |
 
-กองทุนรวม หุ้น ตราสารหนี้ Global Bond Robo ฯลฯ **ยังไม่มีการจอง** — แต่ละตัวมีเงื่อนไข
-ขนาดไม้ เอกสารที่ต้องใช้ และบางตัวมีระบบหลังบ้านคนละตัว การเพิ่มโต๊ะจึงเป็นการตัดสินใจ
-ไม่ใช่การวนลิสต์ให้ยาวขึ้น
+ค่าเริ่มต้นของ `/orders` คือแท็บ Global Structured (`?tab=` ว่าง)
 
-เพิ่มโต๊ะที่สามทีหลัง = แก้ [`orders/bookable-products.ts`](<../src/app/(dashboard)/orders/bookable-products.ts>)
-ไฟล์เดียว + ติดปุ่มที่หน้าสินค้าของโต๊ะนั้น ส่วน `order-book.ts` / modal / `/orders`
-ไม่รู้ว่า book มาจากโต๊ะไหน
+### โต๊ะที่จองได้
 
-`/orders/:id` เป็น namespace เดียวของทั้งสองโต๊ะ — id ฝั่งไทยจึงมี prefix `thai-`
-ซึ่ง `findBookableProduct()` ใช้แยกทาง ไม่ใช่แค่ความสวยงาม
+| โต๊ะ | แบบ | หน้าสินค้า | id ของ book |
+| --- | --- | --- | --- |
+| **Global Structured** | basket | `/product-catalog/product/:id` | id ของสินค้าตรง ๆ (`ko-wmt`) |
+| **Thai Structured** | basket | `/product-catalog/thai-structured/:theme` | `thai-` + theme (`thai-chips`) |
+| **Fixed Income** | quota | `/product-catalog/fixed-income/bond/:id` | `fi-` + bond id (`fi-mqdc482b-0`) — จองได้เฉพาะหุ้นกู้ที่ `action: "invest"` |
+| **Global Bond** | quota | `/product-catalog/global-bond/:issuer` | `gb-` + bond row ของ issuer (`gb-m1`) |
+
+เพิ่มโต๊ะทีหลัง = แก้ [`orders/bookable-products.ts`](<../src/app/(dashboard)/orders/bookable-products.ts>)
+(id prefix, `findBookableProduct`, `bookingModeFor`) + ติดปุ่มที่หน้าสินค้าของโต๊ะนั้น +
+เพิ่มแท็บใน `order-tabs.ts`
+
+`/orders/:id` เป็น namespace เดียวของทุกโต๊ะ — prefix `thai-` / `fi-` / `gb-` คือสิ่งที่
+`findBookableProduct()` ใช้แยกทาง ไม่ใช่แค่ความสวยงาม
+
+### แบบ quota (หุ้นกู้)
+
+- **โควตาเป็น mock** — ยังไม่มีในข้อมูล catalogue เลือกจากบันไดค่าคงที่ตาม id
+  (`fixedIncomeQuotaThb`, `globalBondQuotaUsd`) ต่อ backend แล้วให้มาจากสินค้า
+- `OrderBook.targetAmount` ของ quota book = โควตา; `quotaUsed` = การจองที่ยังไม่ถูกยกเลิก
+  และคำสั่งซื้อไม่ถูกปฏิเสธ (ถูกปฏิเสธ = คืนโควตา)
+- จองได้ตราบที่ `quotaRemaining >= minTicket` (`isBookingOpen`) — ยอดในฟอร์มจองถูกจำกัดที่
+  โควตาคงเหลือ (`bookingRemaining`)
+- ส่งคำสั่งซื้อทีละรายการจากคอลัมน์ "คำสั่งซื้อ" ในตารางการจองบนหน้า `/orders/:id`
+  (ใช้ `submitOrder(productId, [bookingId])` ตัวเดิม)
+- ปิดเมื่อใช้โควตาครบ → `useClosedProductIds` เอาออกจากลิสต์ใน catalogue; ปุ่มบนหน้าสินค้า
+  เปลี่ยนเป็น "เต็มโควตา"
+- Risk profile ที่ต้องการของหุ้นกู้ = Moderate (`requiredRiskProfile`)
+- ปุ่มบนหน้าสินค้าใช้ `useQuotaBooking()` — หนึ่ง modal + toast ต่อหน้า toast สำเร็จมีปุ่ม
+  "ดูรายการจอง" ไปที่ book
+
+### แบบ transactions
+
+ข้อมูลเป็น mock ทั้งหมดใน [`src/lib/transaction-mock-data.ts`](../src/lib/transaction-mock-data.ts)
+(สร้างแบบ deterministic จากสินค้าใน catalogue + ลูกค้า mock) อ่านผ่าน
+`useTransactions(asset)` — ต่อ backend แก้ที่ hook นั้นที่เดียว
 
 ---
 

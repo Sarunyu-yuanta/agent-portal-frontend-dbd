@@ -117,6 +117,57 @@
         { "id": "bk-0902", "clientId": "110002", "amount": 30000, "daysAgo": 1, "credit": "insufficient" }
       ],
       "submissions": []
+    },
+    {
+      "_note": "Fixed Income, quota 10,000,000 THB. Each booking is its own order: one done, one with the back office, one cleared and waiting to be sent, one still at the funds check.",
+      "productId": "fi-mqdc482b-0",
+      "bookings": [
+        { "id": "bk-1001", "clientId": "110001", "amount": 2000000, "daysAgo": 5 },
+        { "id": "bk-1002", "clientId": "110004", "amount": 1500000, "daysAgo": 3 },
+        { "id": "bk-1003", "clientId": "110007", "amount": 1000000, "daysAgo": 1 },
+        { "id": "bk-1004", "clientId": "110003", "amount": 500000, "daysAgo": 0, "credit": "pending" }
+      ],
+      "submissions": [
+        { "id": "sub-1001", "bookingIds": ["bk-1001"], "daysAgo": 4, "status": "completed", "backendRef": "ORD-2026-001104" },
+        { "id": "sub-1002", "bookingIds": ["bk-1002"], "daysAgo": 2, "status": "processing", "backendRef": "ORD-2026-001131" }
+      ]
+    },
+    {
+      "_note": "Fixed Income, quota 15,000,000 THB — two orders done, plenty of quota left.",
+      "productId": "fi-jmt127a-0",
+      "bookings": [
+        { "id": "bk-1101", "clientId": "110002", "amount": 3000000, "daysAgo": 4 },
+        { "id": "bk-1102", "clientId": "110005", "amount": 2000000, "daysAgo": 2 }
+      ],
+      "submissions": [
+        { "id": "sub-1101", "bookingIds": ["bk-1101"], "daysAgo": 4, "status": "completed", "backendRef": "ORD-2026-001098" },
+        { "id": "sub-1102", "bookingIds": ["bk-1102"], "daysAgo": 2, "status": "completed", "backendRef": "ORD-2026-001127" }
+      ]
+    },
+    {
+      "_note": "Global Bond, quota 2,000,000 USD.",
+      "productId": "gb-m1",
+      "bookings": [
+        { "id": "bk-1201", "clientId": "110001", "amount": 400000, "daysAgo": 3 },
+        { "id": "bk-1202", "clientId": "110006", "amount": 600000, "daysAgo": 2 },
+        { "id": "bk-1203", "clientId": "110008", "amount": 200000, "daysAgo": 1 }
+      ],
+      "submissions": [
+        { "id": "sub-1201", "bookingIds": ["bk-1201"], "daysAgo": 3, "status": "completed", "backendRef": "ORD-2026-001112" },
+        { "id": "sub-1202", "bookingIds": ["bk-1202"], "daysAgo": 1, "status": "processing", "backendRef": "ORD-2026-001140" }
+      ]
+    },
+    {
+      "_note": "Global Bond, quota 1,000,000 USD, fully used — sold out, gone from the catalogue's lists.",
+      "productId": "gb-c1",
+      "bookings": [
+        { "id": "bk-1301", "clientId": "110004", "amount": 600000, "daysAgo": 6 },
+        { "id": "bk-1302", "clientId": "110007", "amount": 400000, "daysAgo": 5 }
+      ],
+      "submissions": [
+        { "id": "sub-1301", "bookingIds": ["bk-1301"], "daysAgo": 6, "status": "completed", "backendRef": "ORD-2026-001071" },
+        { "id": "sub-1302", "bookingIds": ["bk-1302"], "daysAgo": 5, "status": "completed", "backendRef": "ORD-2026-001083" }
+      ]
     }
   ],
   "requirementRequests": [

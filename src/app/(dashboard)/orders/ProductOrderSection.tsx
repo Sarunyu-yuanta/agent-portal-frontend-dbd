@@ -11,12 +11,19 @@
  *   page's summary already carries the booking button and the totals, so the
  *   table comes without either.
  *
- * Clicking a row opens that booking on its own (`BookingDetailModal`).
+ * Clicking a row opens that booking on its own (`BookingDetailModal`). Chips
+ * above the table sort the clients by where their booking stands — see
+ * `bookingPhase`.
+ *
+ * Quota books (bonds) send each booking as its own order, so on the book page
+ * their table carries one more column: ส่งคำสั่งซื้อ, live on a row whose funds
+ * check has cleared and that has not gone out yet (`onSend`).
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
+  Chip,
   Pagination,
   SearchInput,
   Table,
@@ -31,6 +38,7 @@ import {
 import {
   CheckCircleIcon,
   ClockIcon,
+  PaperPlaneTiltIcon,
   PlusIcon,
   WarningCircleIcon,
   XCircleIcon,
@@ -41,13 +49,21 @@ import { getClientProfile } from "@/data/client-profiles";
 import { IC_NAME } from "@/lib/current-ic";
 import { maskName } from "@/lib/mask-name";
 import type {
+  Booking,
   RequirementItem,
   RequirementKey,
   RequirementStatus,
 } from "@/types/domain";
 import type { BookableProduct } from "./bookable-products";
 import { useOrderBook, useRosterReadiness } from "./use-order-books";
-import { isBookingOpen } from "./order-book";
+import {
+  BOOKING_PHASES,
+  BOOKING_PHASE_LABEL,
+  bookingPhase,
+  creditOf,
+  isBookingOpen,
+  type BookingPhase,
+} from "./order-book";
 import { BookingDetailModal } from "./BookingDetailModal";
 import {
   CLOSED_TAG,
@@ -109,6 +125,7 @@ export function ProductOrderSection({
   newBookingId = null,
   onNewBookingSeen,
   variant = "product",
+  onSend,
 }: {
   product: BookableProduct;
   /** Opens the booking modal — the page owns it, and its toasts. */
@@ -125,6 +142,8 @@ export function ProductOrderSection({
   onNewBookingSeen?: () => void;
   /** Where the table sits — see the module note. */
   variant?: "product" | "book";
+  /** Quota books only: send this one booking as its own order. */
+  onSend?: (booking: Booking) => void;
 }) {
   // Seen once is seen: leaving this tab — for Detail, or another page — clears
   // the highlight, so coming back shows an ordinary row rather than replaying
@@ -144,6 +163,7 @@ export function ProductOrderSection({
   const readiness = useRosterReadiness(clients, product);
   const { isPrivate } = usePrivacy();
   const [search, setSearch] = useState("");
+  const [phase, setPhase] = useState<BookingPhase | null>(null);
   const [page, setPage] = useState(1);
   // By id rather than the row itself, so a cancel from inside the modal shows
   // up in it straight away instead of in a stale copy.
@@ -153,16 +173,17 @@ export function ProductOrderSection({
     const all = [...(book?.allBookings ?? [])].sort((a, b) =>
       b.createdAt.localeCompare(a.createdAt),
     );
+    const inPhase = book && phase ? all.filter((b) => bookingPhase(b, book) === phase) : all;
     const query = search.trim().toLowerCase();
-    if (!query) return all;
-    return all.filter(
+    if (!query) return inPhase;
+    return inPhase.filter(
       (b) =>
         maskName(b.clientName, isPrivate).toLowerCase().includes(query) ||
         maskName(getClientProfile(b.clientId).nameTh, isPrivate).includes(query) ||
         b.clientId.includes(query) ||
         getClientProfile(b.clientId).accountNo.includes(query),
     );
-  }, [book, search, isPrivate]);
+  }, [book, phase, search, isPrivate]);
 
   if (!book) return null;
 
@@ -187,6 +208,10 @@ export function ProductOrderSection({
     .reduce((sum, b) => sum + b.amount, 0);
 
   const money = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  const submittedIds = new Set(book.submissions.flatMap((s) => s.bookingIds));
+  /** Live, funded, and not yet carried by any order. */
+  const sendable = (b: Booking) =>
+    b.status === "booked" && !submittedIds.has(b.id) && creditOf(b) === "sufficient";
   const canBook = variant === "product" && isBookingOpen(book);
   const isEmpty = rows.length === 0;
   const opened = book.allBookings.find((b) => b.id === openId) ?? null;
@@ -198,8 +223,22 @@ export function ProductOrderSection({
       className="flex w-full flex-col gap-4"
       aria-label={variant === "product" ? "Order" : "รายการจอง"}
     >
-      <div className="flex items-center justify-end">
-        <div className="flex w-full items-center gap-2 md:w-auto">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="scrollable-tabs flex min-w-0 items-center gap-2">
+          {([null, ...BOOKING_PHASES] as (BookingPhase | null)[]).map((p) => (
+            <Chip
+              key={p ?? "all"}
+              label={p ? BOOKING_PHASE_LABEL[p] : "All"}
+              type="single"
+              selected={phase === p}
+              onClick={() => {
+                setPhase(p);
+                setPage(1);
+              }}
+            />
+          ))}
+        </div>
+        <div className="flex w-full items-center gap-2 md:w-auto md:shrink-0">
           {/* Gone once the order is sent — the notice above the page's tabs
               says why, on this tab and on Detail alike. */}
           {canBook && (
@@ -220,9 +259,11 @@ export function ProductOrderSection({
               setPage(1);
             }}
             onClear={() => setSearch("")}
-            placeholder="ค้นหาชื่อ รหัสลูกค้า หรือ Account No"
+            // Narrow enough to leave the phase chips the row; the placeholder
+            // is cut to fit, but name, client id and Account No all still match.
+            placeholder="ค้นหาลูกค้า หรือ Account No"
             size="sm"
-            className="min-w-0 flex-1 md:w-[400px] md:flex-none"
+            className="min-w-0 flex-1 md:w-[260px] md:flex-none"
           />
         </div>
       </div>
@@ -272,6 +313,17 @@ export function ProductOrderSection({
                   <TableHeaderCell style={CENTER} sortable={false}>Deal Status</TableHeaderCell>
                   <TableHeaderCell style={CENTER} sortable={false}>Payment Status</TableHeaderCell>
                   <TableHeaderCell style={CENTER} sortable={false}>Email Pre-Confirmation</TableHeaderCell>
+                  {onSend && (
+                    <TableHeaderCell
+                      style={CENTER}
+                      sortable={false}
+                      fixed="right"
+                      fixedOffset={0}
+                      fixedShadow="left"
+                    >
+                      คำสั่งซื้อ
+                    </TableHeaderCell>
+                  )}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -346,6 +398,29 @@ export function ProductOrderSection({
                           <Tag text={email.text} variant={email.variant} size="small" />
                         </div>
                       </TableCell>
+                      {onSend && (
+                        <TableCell style={CENTER} fixed="right" fixedOffset={0} fixedShadow="left">
+                          <div className="flex justify-center">
+                            {sendable(b) ? (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                leftIcon={<PaperPlaneTiltIcon size={14} />}
+                                // The row itself opens the booking; this is a
+                                // separate action on it.
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSend(b);
+                                }}
+                              >
+                                ส่งคำสั่งซื้อ
+                              </Button>
+                            ) : (
+                              <span className="type-caption text-muted-foreground">—</span>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })}
@@ -356,9 +431,13 @@ export function ProductOrderSection({
         {isEmpty && (
           <div className="flex flex-col items-center justify-center gap-1 px-4 py-8 text-center">
             <p className="type-body-2 font-semibold text-foreground">
-              {search ? "ไม่พบรายการที่ค้นหา" : "ยังไม่มีรายการจองซื้อ"}
+              {search
+                ? "ไม่พบรายการที่ค้นหา"
+                : phase
+                  ? `ไม่มีรายการที่อยู่ในขั้น "${BOOKING_PHASE_LABEL[phase]}"`
+                  : "ยังไม่มีรายการจองซื้อ"}
             </p>
-            {!search && (
+            {!search && !phase && (
               <p className="type-caption text-muted-foreground">
                 กด &quot;{variant === "product" ? "จองซื้อ" : "จองเพิ่มให้ลูกค้า"}&quot;
                 เพื่อจองให้ลูกค้ารายแรก — รายการจะแสดงที่นี่

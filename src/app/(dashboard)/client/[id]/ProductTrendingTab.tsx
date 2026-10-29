@@ -1,37 +1,41 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@sarunyu/system-one";
 import { FireIcon } from "@phosphor-icons/react";
 import { formatAumThb } from "@/lib/client-utils";
 import { CARD_SHADOW, PercentPill } from "./stock-ui";
 import { stockProductHref } from "./stock-product-detail-data";
+import { RankBadge, TrendingSortChips } from "./ProductTrendingAllTable";
+import { setQueryState, withQuery } from "@/lib/query-state";
 import {
   PRODUCT_TRENDING_GROUPS,
   PRODUCT_TRENDING_UPDATED_AT,
+  DEFAULT_TRENDING_SORT,
+  sortTrendingItems,
+  normalizeTrendingSort,
+  TRENDING_CARD_ROWS,
+  showsOrderCount,
+  TRENDING_SORT_PARAM,
+  type TrendingSort,
   type TrendingGroup,
   type TrendingItem,
   type TrendingTarget,
 } from "./product-trending-data";
 import type { CatalogNavigation } from "./ProductCatalogTab";
 
-/** The podium reads at a glance; everything below it is just a number. */
-const RANK_STYLE: Record<number, { bg: string; text: string }> = {
-  1: { bg: "#fef3c6", text: "#a16207" },
-  2: { bg: "#e5e7eb", text: "#4a5565" },
-  3: { bg: "#ffedd4", text: "#9f4a09" },
-};
-const RANK_DEFAULT = { bg: "#f3f4f6", text: "#6a7282" };
-
 function TrendingRow({
   item,
   showBorder,
+  showOrders,
   onSelect,
 }: {
   item: TrendingItem;
   showBorder: boolean;
+  /** See `showsOrderCount`. */
+  showOrders: boolean;
   onSelect: () => void;
 }) {
-  const rank = RANK_STYLE[item.rank] ?? RANK_DEFAULT;
   return (
     <button
       type="button"
@@ -40,12 +44,7 @@ function TrendingRow({
         showBorder ? "border-b border-black/10" : ""
       }`}
     >
-      <span
-        className="shrink-0 flex items-center justify-center size-6 rounded-full text-[12px] font-bold"
-        style={{ backgroundColor: rank.bg, color: rank.text }}
-      >
-        {item.rank}
-      </span>
+      <RankBadge rank={item.rank} />
       <span className="flex flex-col min-w-0 flex-1">
         <span className="text-[14px] font-bold text-foreground truncate">{item.title}</span>
         <span className="type-caption text-muted-foreground truncate">{item.subtitle}</span>
@@ -55,9 +54,11 @@ function TrendingRow({
           {formatAumThb(item.salesThb)}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="type-caption text-muted-foreground whitespace-nowrap">
-            {item.orders.toLocaleString("en-US")} ออเดอร์
-          </span>
+          {showOrders && (
+            <span className="type-caption text-muted-foreground whitespace-nowrap">
+              {item.orders.toLocaleString("en-US")} ออเดอร์
+            </span>
+          )}
           <PercentPill trend={item.trend} value={item.changePct} size="sm" />
         </span>
       </span>
@@ -67,30 +68,39 @@ function TrendingRow({
 
 function TrendingGroupCard({
   group,
+  items,
   onSelect,
+  onViewAll,
 }: {
   group: TrendingGroup;
+  /** The group's rows in the active sort's order. */
+  items: TrendingItem[];
   onSelect: (target: TrendingTarget) => void;
+  onViewAll: () => void;
 }) {
+  const shown = items.slice(0, TRENDING_CARD_ROWS);
   return (
     <div className={`flex flex-col bg-white rounded-lg overflow-hidden ${CARD_SHADOW}`}>
       <div
-        className="flex gap-2 items-center justify-between px-6 py-3 shrink-0"
+        className="flex gap-2 items-center justify-between px-6 h-12 shrink-0"
         style={{ backgroundColor: "#f9f9f9" }}
       >
         <p className="font-bold text-base truncate" style={{ color: "rgba(0,0,0,0.75)" }}>
           {group.title}
         </p>
-        <p className="type-caption text-muted-foreground whitespace-nowrap">
-          รวม {formatAumThb(group.totalSalesThb)}
-        </p>
+        {items.length > TRENDING_CARD_ROWS && (
+          <Button variant="plain" size="sm" onClick={onViewAll}>
+            ดูทั้งหมด
+          </Button>
+        )}
       </div>
       <div className="flex flex-col p-3 w-full">
-        {group.items.map((item, i) => (
+        {shown.map((item, i) => (
           <TrendingRow
             key={`${group.id}-${item.rank}`}
             item={item}
-            showBorder={i < group.items.length - 1}
+            showBorder={i < shown.length - 1}
+            showOrders={showsOrderCount(group.id)}
             onSelect={() => onSelect(item.target)}
           />
         ))}
@@ -99,30 +109,28 @@ function TrendingGroupCard({
   );
 }
 
+type TrendingNav = Pick<
+  CatalogNavigation,
+  | "onMutualFundSelect"
+  | "onFixedIncomeBondSelect"
+  | "onThaiProductSelect"
+  | "onProductSelect"
+  | "onGlobalBondIssuerSelect"
+>;
+
 /**
- * Best sellers across every asset class that sells units, ranked within each.
+ * Opens a trending row's product. Shared by the cards and the "ดูทั้งหมด"
+ * sub-page so both hand each kind to the same place.
  *
  * Takes the catalog's own navigation callbacks rather than routing on its own:
- * the same tab renders inside the client-detail page, where a product opens
- * inline instead of at a URL. Stock is the exception — it has no callback in
+ * the catalog falls back to opening details inline when it has no URL
+ * navigation. Stock is the exception — it has no callback in
  * `CatalogNavigation` because `StockTab` routes to `stockProductHref` directly,
  * and this does the same.
  */
-export function ProductTrendingTab({
-  nav,
-}: {
-  nav: Pick<
-    CatalogNavigation,
-    | "onMutualFundSelect"
-    | "onFixedIncomeBondSelect"
-    | "onThaiProductSelect"
-    | "onProductSelect"
-    | "onGlobalBondIssuerSelect"
-  >;
-}) {
+export function useTrendingSelect(nav: TrendingNav) {
   const router = useRouter();
-
-  const select = (target: TrendingTarget) => {
+  return (target: TrendingTarget) => {
     switch (target.kind) {
       case "stock":
         return router.push(stockProductHref(target.symbol));
@@ -138,6 +146,34 @@ export function ProductTrendingTab({
         return nav.onGlobalBondIssuerSelect(target.issuerId);
     }
   };
+}
+
+/**
+ * Best sellers across every asset class that sells units, ranked within each.
+ *
+ * IC-only: unlike the asset tabs beside it, which show what a client would
+ * see, this lists every product the desk can sell — so an IC can find one
+ * here and then point the client to it in that client-facing tab.
+ */
+export function ProductTrendingTab({
+  nav,
+}: {
+  nav: TrendingNav & Pick<CatalogNavigation, "onTrendingSeeAll">;
+}) {
+  const select = useTrendingSelect(nav);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const sort = normalizeTrendingSort(searchParams.get(TRENDING_SORT_PARAM));
+  const setSort = (next: TrendingSort) =>
+    setQueryState(
+      withQuery(pathname, searchParams, {
+        [TRENDING_SORT_PARAM]: next === DEFAULT_TRENDING_SORT ? null : next,
+      }),
+    );
+  const groups = PRODUCT_TRENDING_GROUPS.map((group) => ({
+    group,
+    items: sortTrendingItems(group.items, sort),
+  }));
 
   return (
     <div className="w-full bg-white" style={{ paddingTop: 24, paddingBottom: 40 }}>
@@ -154,9 +190,17 @@ export function ProductTrendingTab({
           </p>
         </div>
 
+        <TrendingSortChips value={sort} onChange={setSort} />
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-          {PRODUCT_TRENDING_GROUPS.map((group) => (
-            <TrendingGroupCard key={group.id} group={group} onSelect={select} />
+          {groups.map(({ group, items }) => (
+            <TrendingGroupCard
+              key={group.id}
+              group={group}
+              items={items}
+              onSelect={select}
+              onViewAll={() => nav.onTrendingSeeAll(group.id, sort)}
+            />
           ))}
         </div>
 

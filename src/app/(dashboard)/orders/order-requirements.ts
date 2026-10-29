@@ -20,7 +20,7 @@
 
 import { kycExpiry } from "../client/[id]/client-detail-data";
 import { mockClientRequirements } from "@/lib/order-mock-data";
-import type { BookableProduct } from "./bookable-products";
+import { bookingModeFor, type BookableProduct } from "./bookable-products";
 import type {
   Client,
   ClientReadiness,
@@ -99,6 +99,9 @@ function riskRank(profile: string): number {
  * is the underlying, which is an aggressive product by any reading.
  */
 export function requiredRiskProfile(product: BookableProduct): string {
+  // Bonds pay their coupon and principal unless the issuer defaults — a
+  // moderate proposition, not a note whose downside is an equity basket.
+  if (bookingModeFor(product) === "quota") return "Moderate";
   return product.tags.includes("รับประกันเงินต้น") ? "Moderate" : "Aggressive";
 }
 

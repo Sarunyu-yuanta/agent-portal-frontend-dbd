@@ -38,11 +38,12 @@ import { ResponsiveBottomSheetModal } from "@/components/ResponsiveBottomSheetMo
 import { useOrders } from "@/contexts/orders-context";
 import { useSectionBack } from "@/hooks/use-section-back";
 import { useToasts } from "@/hooks/use-toasts";
-import type { OrderBook } from "@/types/domain";
-import type { BookableProduct } from "./bookable-products";
+import type { Booking, OrderBook } from "@/types/domain";
+import { ordersListHref, type BookableProduct } from "./bookable-products";
 import {
-  BOOK_STATUS_LABEL_TH,
-  BOOK_STATUS_VARIANT,
+  BOOK_AVAILABILITY_LABEL,
+  BOOK_AVAILABILITY_VARIANT,
+  bookAvailability,
   creditOf,
   SUBMISSION_TAG,
   formatLogTime,
@@ -50,6 +51,8 @@ import {
   headlineRound,
   isBookClosed,
   isBookingOpen,
+  quotaOrderCounts,
+  quotaUsedPct,
 } from "./order-book";
 import { OrderBookingModal } from "./OrderBookingModal";
 import { ProductLogos } from "./ProductLogos";
@@ -63,12 +66,16 @@ export function OrderBookDetail({
   book: OrderBook;
   product: BookableProduct;
 }) {
-  const back = useSectionBack(() => "/orders");
+  // With no trail behind it, back lands on the tab this desk is listed under.
+  const back = useSectionBack(() => ordersListHref(book.productId));
   const { submitOrder } = useOrders();
   const { toasts, addToast, removeToast } = useToasts();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  // What the confirm sheet would send: a basket book's whole open round, or
+  // one booking of a quota book. `null` while the sheet is closed.
+  const [confirming, setConfirming] = useState<Booking[] | null>(null);
+  const quota = book.mode === "quota";
   const [sending, setSending] = useState(false);
   // The booking just placed here, marked in the table — see `ProductOrderSection`.
   const [newBookingId, setNewBookingId] = useState<string | null>(null);
@@ -94,10 +101,10 @@ export function OrderBookDetail({
     setSending(true);
     const submission = await submitOrder(
       book.productId,
-      book.openBookings.map((b) => b.id),
+      (confirming ?? []).map((b) => b.id),
     );
     setSending(false);
-    setConfirmOpen(false);
+    setConfirming(null);
     addToast({
       message: `ส่งคำสั่งซื้อแล้ว (${submission.backendRef}) — จะแจ้งเตือนเมื่อระบบหลังบ้านดำเนินการเสร็จ`,
       status: "success",
@@ -142,8 +149,8 @@ export function OrderBookDetail({
           </p>
         </div>
         <Tag
-          text={BOOK_STATUS_LABEL_TH[book.status]}
-          variant={BOOK_STATUS_VARIANT[book.status]}
+          text={BOOK_AVAILABILITY_LABEL[bookAvailability(book)]}
+          variant={BOOK_AVAILABILITY_VARIANT[bookAvailability(book)]}
           size="large"
         />
       </div>
@@ -157,135 +164,141 @@ export function OrderBookDetail({
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,4fr)_minmax(280px,1fr)]">
         {/* ── Summary: how full, and what that unlocks ── */}
         <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-sm lg:sticky lg:top-4 lg:order-2">
-          <div className="flex flex-col gap-1">
-            <span className="type-caption text-muted-foreground">
-              {round.previousRef ? `ส่งแล้ว (${round.previousRef})` : "ยังไม่ส่งคำสั่งซื้อ"}
-            </span>
-            <p className="type-h5 font-bold tabular-nums text-foreground">
-              {formatOrderAmount(round.amount, book.currency)}
-            </p>
-          </div>
-          {/* The bar's own numbers sit on it — booked over target, and the
-              percentage — so it can be read without the headline above. */}
-          <div className="flex flex-col gap-1.5">
-            <LinearProgress value={round.pct} />
-            <div className="type-caption flex items-baseline justify-between gap-2 tabular-nums text-muted-foreground">
-              <span>
-                {/* Primary once the target is met — the same rule the
-                    product page's "Request / Notional Size" follows. */}
-                <span
-                  className={`font-semibold ${
-                    round.amount >= book.targetAmount ? "text-[#0a6ee7]" : "text-foreground"
-                  }`}
-                >
-                  {round.amount.toLocaleString("en-US")}
-                </span>{" "}
-                / {book.targetAmount.toLocaleString("en-US")} {book.currency}
-              </span>
-              <span>{Math.round(round.pct)}%</span>
-            </div>
-          </div>
-
-          {/* The one sentence the page exists to answer, in the colour of
-              whether the IC can act on it yet. */}
-          {!round.previousRef && book.status === "collecting" && (
-            <div className="flex items-baseline justify-between gap-2 rounded-lg bg-[var(--fill-yellow-100)] px-3 py-2.5">
-              <span className="type-body-2 text-[var(--fill-yellow-700)]">ยังขาดอีก</span>
-              <span className="type-body-2 !font-bold tabular-nums text-[var(--fill-yellow-700)]">
-                {formatOrderAmount(shortfall, book.currency)}
-              </span>
-            </div>
-          )}
-          {book.status === "checking" && (
-            <div className="flex items-start gap-2 rounded-lg bg-[var(--fill-yellow-100)] px-3 py-2.5">
-              <HourglassMediumIcon size={18} weight="fill" className="mt-0.5 shrink-0 text-[var(--fill-yellow-700)]" />
-              <span className="type-body-2 text-[var(--fill-yellow-700)]">
-                {unfunded > 0
-                  ? `ครบยอดแล้ว แต่วงเงินไม่เพียงพอ ${unfunded} ราย — ยกเลิกรายการนั้นแล้วจองให้ลูกค้ารายอื่นแทน`
-                  : "ครบยอดแล้ว รอตรวจสอบวงเงินของลูกค้าทุกราย"}
-              </span>
-            </div>
-          )}
-          {canSubmit && (
-            <div className="flex items-center gap-2 rounded-lg bg-[var(--fill-green-100)] px-3 py-2.5">
-              <CheckCircleIcon size={18} weight="fill" className="shrink-0 text-[var(--fill-green-600)]" />
-              <span className="type-body-2 text-[var(--fill-green-700)]">
-                ครบยอดและมีวงเงินเพียงพอ พร้อมส่งคำสั่งซื้อ
-              </span>
-            </div>
-          )}
-
-          <dl className="flex flex-col divide-y divide-border rounded-xl bg-[#f3f4f6]">
-            {/* The count only — who they are is the booking list on this very
-                page, so a panel repeating it earned nothing. Counted by client:
-                one client can book the same product twice. */}
-            <Figure
-              label="ลูกค้าที่จอง"
-              value={`${new Set(round.bookings.map((b) => b.clientId)).size} ราย`}
-            />
-            <Figure label="ขั้นต่ำต่อราย" value={formatOrderAmount(book.minTicket, book.currency)} />
-          </dl>
-
-          {/* The one order, once sent — what the "คำสั่งซื้อ" tab used to list. */}
-          {order && (
-            <dl className="flex flex-col divide-y divide-border rounded-xl bg-[#f3f4f6]">
-              <div className="flex items-center justify-between gap-3 px-4 py-3">
-                <dt className="type-body-2 text-muted-foreground">คำสั่งซื้อ</dt>
-                <dd>
-                  <Tag
-                    text={SUBMISSION_TAG[order.status].text}
-                    variant={SUBMISSION_TAG[order.status].variant}
-                    size="small"
-                  />
-                </dd>
+          {quota ? (
+            <QuotaSummary book={book} canBook={canBook} onBook={() => setBookingOpen(true)} />
+          ) : (
+            <>
+              <div className="flex flex-col gap-1">
+                <span className="type-caption text-muted-foreground">
+                  {round.previousRef ? `ส่งแล้ว (${round.previousRef})` : "ยังไม่ส่งคำสั่งซื้อ"}
+                </span>
+                <p className="type-h5 font-bold tabular-nums text-foreground">
+                  {formatOrderAmount(round.amount, book.currency)}
+                </p>
               </div>
-              <Figure label="เลขที่" value={order.backendRef} />
-              <Figure label="ส่งเมื่อ" value={formatLogTime(order.submittedAt)} />
-              <Figure
-                label="ตอบกลับเมื่อ"
-                value={order.settledAt ? formatLogTime(order.settledAt) : "รอผลจากระบบหลังบ้าน"}
-              />
-            </dl>
-          )}
-          {closed && (
-            <p className="type-caption text-muted-foreground">
-              ส่งคำสั่งซื้อแล้ว — สินค้านี้ปิดรับจองและนำออกจาก Product Catalog แล้ว
-            </p>
-          )}
+              {/* The bar's own numbers sit on it — booked over target, and the
+                  percentage — so it can be read without the headline above. */}
+              <div className="flex flex-col gap-1.5">
+                <LinearProgress value={round.pct} />
+                <div className="type-caption flex items-baseline justify-between gap-2 tabular-nums text-muted-foreground">
+                  <span>
+                    {/* Primary once the target is met — the same rule the
+                        product page's "Request / Notional Size" follows. */}
+                    <span
+                      className={`font-semibold ${
+                        round.amount >= book.targetAmount ? "text-[#0a6ee7]" : "text-foreground"
+                      }`}
+                    >
+                      {round.amount.toLocaleString("en-US")}
+                    </span>{" "}
+                    / {book.targetAmount.toLocaleString("en-US")} {book.currency}
+                  </span>
+                  <span>{Math.round(round.pct)}%</span>
+                </div>
+              </div>
 
-          {canBook && (
-            <div className="flex flex-col gap-2">
-              <Button
-                variant={canSubmit ? "primary" : "disabled"}
-                size="lg"
-                disabled={!canSubmit || sending}
-                onClick={() => setConfirmOpen(true)}
-                leftIcon={<PaperPlaneTiltIcon size={18} />}
-                className="w-full"
-              >
-                {/* The disabled label says what is missing rather than repeating
-                    the action — the shortfall is the only version of "you can't"
-                    the IC can act on. */}
-                {canSubmit
-                  ? "ส่งคำสั่งซื้อ"
-                  : book.status === "checking"
-                    ? "รอตรวจสอบวงเงิน"
-                    : !hasOpen
-                      ? "ยังไม่มีรายการจอง"
-                      : shortfall > 0
-                        ? `ยังขาด ${formatOrderAmount(shortfall, book.currency)}`
-                        : "ส่งคำสั่งซื้อ"}
-              </Button>
-              <Button
-                variant={canSubmit ? "outline" : "primary"}
-                size="lg"
-                onClick={() => setBookingOpen(true)}
-                leftIcon={<PlusIcon size={18} />}
-                className="w-full"
-              >
-                จองเพิ่มให้ลูกค้า
-              </Button>
-            </div>
+              {/* The one sentence the page exists to answer, in the colour of
+                  whether the IC can act on it yet. */}
+              {!round.previousRef && book.status === "collecting" && (
+                <div className="flex items-baseline justify-between gap-2 rounded-lg bg-[var(--fill-yellow-100)] px-3 py-2.5">
+                  <span className="type-body-2 text-[var(--fill-yellow-700)]">ยังขาดอีก</span>
+                  <span className="type-body-2 !font-bold tabular-nums text-[var(--fill-yellow-700)]">
+                    {formatOrderAmount(shortfall, book.currency)}
+                  </span>
+                </div>
+              )}
+              {book.status === "checking" && (
+                <div className="flex items-start gap-2 rounded-lg bg-[var(--fill-yellow-100)] px-3 py-2.5">
+                  <HourglassMediumIcon size={18} weight="fill" className="mt-0.5 shrink-0 text-[var(--fill-yellow-700)]" />
+                  <span className="type-body-2 text-[var(--fill-yellow-700)]">
+                    {unfunded > 0
+                      ? `ครบยอดแล้ว แต่วงเงินไม่เพียงพอ ${unfunded} ราย — ยกเลิกรายการนั้นแล้วจองให้ลูกค้ารายอื่นแทน`
+                      : "ครบยอดแล้ว รอตรวจสอบวงเงินของลูกค้าทุกราย"}
+                  </span>
+                </div>
+              )}
+              {canSubmit && (
+                <div className="flex items-center gap-2 rounded-lg bg-[var(--fill-green-100)] px-3 py-2.5">
+                  <CheckCircleIcon size={18} weight="fill" className="shrink-0 text-[var(--fill-green-600)]" />
+                  <span className="type-body-2 text-[var(--fill-green-700)]">
+                    ครบยอดและมีวงเงินเพียงพอ พร้อมส่งคำสั่งซื้อ
+                  </span>
+                </div>
+              )}
+
+              <dl className="flex flex-col divide-y divide-border rounded-xl bg-[#f3f4f6]">
+                {/* The count only — who they are is the booking list on this very
+                    page, so a panel repeating it earned nothing. Counted by client:
+                    one client can book the same product twice. */}
+                <Figure
+                  label="ลูกค้าที่จอง"
+                  value={`${new Set(round.bookings.map((b) => b.clientId)).size} ราย`}
+                />
+                <Figure label="ขั้นต่ำต่อราย" value={formatOrderAmount(book.minTicket, book.currency)} />
+              </dl>
+
+              {/* The one order, once sent — what the "คำสั่งซื้อ" tab used to list. */}
+              {order && (
+                <dl className="flex flex-col divide-y divide-border rounded-xl bg-[#f3f4f6]">
+                  <div className="flex items-center justify-between gap-3 px-4 py-3">
+                    <dt className="type-body-2 text-muted-foreground">คำสั่งซื้อ</dt>
+                    <dd>
+                      <Tag
+                        text={SUBMISSION_TAG[order.status].text}
+                        variant={SUBMISSION_TAG[order.status].variant}
+                        size="small"
+                      />
+                    </dd>
+                  </div>
+                  <Figure label="เลขที่" value={order.backendRef} />
+                  <Figure label="ส่งเมื่อ" value={formatLogTime(order.submittedAt)} />
+                  <Figure
+                    label="ตอบกลับเมื่อ"
+                    value={order.settledAt ? formatLogTime(order.settledAt) : "รอผลจากระบบหลังบ้าน"}
+                  />
+                </dl>
+              )}
+              {closed && (
+                <p className="type-caption text-muted-foreground">
+                  ส่งคำสั่งซื้อแล้ว — สินค้านี้ปิดรับจองและนำออกจาก Product Catalog แล้ว
+                </p>
+              )}
+
+              {canBook && (
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant={canSubmit ? "primary" : "disabled"}
+                    size="lg"
+                    disabled={!canSubmit || sending}
+                    onClick={() => setConfirming(book.openBookings)}
+                    leftIcon={<PaperPlaneTiltIcon size={18} />}
+                    className="w-full"
+                  >
+                    {/* The disabled label says what is missing rather than repeating
+                        the action — the shortfall is the only version of "you can't"
+                        the IC can act on. */}
+                    {canSubmit
+                      ? "ส่งคำสั่งซื้อ"
+                      : book.status === "checking"
+                        ? "รอตรวจสอบวงเงิน"
+                        : !hasOpen
+                          ? "ยังไม่มีรายการจอง"
+                          : shortfall > 0
+                            ? `ยังขาด ${formatOrderAmount(shortfall, book.currency)}`
+                            : "ส่งคำสั่งซื้อ"}
+                  </Button>
+                  <Button
+                    variant={canSubmit ? "outline" : "primary"}
+                    size="lg"
+                    onClick={() => setBookingOpen(true)}
+                    leftIcon={<PlusIcon size={18} />}
+                    className="w-full"
+                  >
+                    จองเพิ่มให้ลูกค้า
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </section>
 
@@ -302,6 +315,7 @@ export function OrderBookDetail({
             onNotice={notice}
             newBookingId={newBookingId}
             onNewBookingSeen={clearNewBooking}
+            onSend={quota ? (b) => setConfirming([b]) : undefined}
           />
         </div>
       </div>
@@ -318,20 +332,21 @@ export function OrderBookDetail({
       />
 
       <ResponsiveBottomSheetModal
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
+        open={confirming !== null}
+        onClose={() => setConfirming(null)}
         title="ยืนยันส่งคำสั่งซื้อ"
         titleId="order-submit-title"
       >
         <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pb-4 pt-3">
           <p className="type-body-2 leading-5 text-muted-foreground">
-            ส่งการจองทั้งหมด {book.openBookings.length} รายการของ {book.productName}{" "}
-            เข้าระบบหลังบ้านเป็นคำสั่งซื้อเดียว หลังส่งแล้วจะแก้ไขรายการจองเหล่านี้ไม่ได้
+            {quota
+              ? `ส่งการจองนี้ของ ${book.productName} เข้าระบบหลังบ้านเป็นคำสั่งซื้อ หลังส่งแล้วจะแก้ไขรายการนี้ไม่ได้`
+              : `ส่งการจองทั้งหมด ${book.openBookings.length} รายการของ ${book.productName} เข้าระบบหลังบ้านเป็นคำสั่งซื้อเดียว หลังส่งแล้วจะแก้ไขรายการจองเหล่านี้ไม่ได้`}
           </p>
           {/* Grey panel, divided inside — the same frame as the booking form's
               customer list, so a list of people reads the same everywhere. */}
           <ul className="flex max-h-[40dvh] min-h-0 flex-col divide-y divide-border overflow-y-auto rounded-xl bg-[#f3f4f6]">
-            {book.openBookings.map((b) => (
+            {(confirming ?? []).map((b) => (
               <li key={b.id} className="flex items-center gap-3 px-4 py-3">
                 <span className="type-body-2 min-w-0 flex-1 truncate text-foreground">
                   {b.clientName}
@@ -345,7 +360,10 @@ export function OrderBookDetail({
           <div className="flex items-baseline justify-between gap-2">
             <span className="type-body-2 text-muted-foreground">รวมทั้งสิ้น</span>
             <span className="type-subtitle-2 font-bold text-foreground">
-              {formatOrderAmount(book.bookedAmount, book.currency)}
+              {formatOrderAmount(
+                (confirming ?? []).reduce((sum, b) => sum + b.amount, 0),
+                book.currency,
+              )}
             </span>
           </div>
           <Button
@@ -371,6 +389,88 @@ function Figure({ label, value }: { label: string; value: string }) {
       <dt className="type-body-2 text-muted-foreground">{label}</dt>
       <dd className="type-body-2 !font-semibold tabular-nums text-foreground">{value}</dd>
     </div>
+  );
+}
+
+/**
+ * A quota book's summary: how much of the issue is gone, what is left, and
+ * where its orders are. No "send" here — each booking is sent from its own
+ * row in the list beside it.
+ */
+function QuotaSummary({
+  book,
+  canBook,
+  onBook,
+}: {
+  book: OrderBook;
+  canBook: boolean;
+  onBook: () => void;
+}) {
+  const pct = quotaUsedPct(book);
+  const counts = quotaOrderCounts(book);
+  return (
+    <>
+      <div className="flex flex-col gap-1">
+        <span className="type-caption text-muted-foreground">ใช้โควตาแล้ว</span>
+        <p className="type-h5 font-bold tabular-nums text-foreground">
+          {formatOrderAmount(book.quotaUsed, book.currency)}
+        </p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <LinearProgress value={pct} />
+        <div className="type-caption flex items-baseline justify-between gap-2 tabular-nums text-muted-foreground">
+          <span>
+            <span className="font-semibold text-foreground">
+              {book.quotaUsed.toLocaleString("en-US")}
+            </span>{" "}
+            / {book.targetAmount.toLocaleString("en-US")} {book.currency}
+          </span>
+          <span>{Math.round(pct)}%</span>
+        </div>
+      </div>
+
+      {canBook ? (
+        <div className="flex items-baseline justify-between gap-2 rounded-lg bg-[var(--fill-green-100)] px-3 py-2.5">
+          <span className="type-body-2 text-[var(--fill-green-700)]">โควตาคงเหลือ</span>
+          <span className="type-body-2 !font-bold tabular-nums text-[var(--fill-green-700)]">
+            {formatOrderAmount(book.quotaRemaining, book.currency)}
+          </span>
+        </div>
+      ) : (
+        <p className="type-caption text-muted-foreground">
+          ใช้โควตาครบแล้ว — สินค้านี้ปิดรับจองและนำออกจาก Product Catalog แล้ว
+        </p>
+      )}
+
+      {counts.toSend > 0 && (
+        <div className="flex items-start gap-2 rounded-lg bg-[var(--fill-green-100)] px-3 py-2.5">
+          <PaperPlaneTiltIcon size={18} weight="fill" className="mt-0.5 shrink-0 text-[var(--fill-green-600)]" />
+          <span className="type-body-2 text-[var(--fill-green-700)]">
+            มีวงเงินเพียงพอ {counts.toSend} รายการ — กด &quot;ส่งคำสั่งซื้อ&quot; ที่รายการได้เลย
+          </span>
+        </div>
+      )}
+
+      <dl className="flex flex-col divide-y divide-border rounded-xl bg-[#f3f4f6]">
+        <Figure label="ลูกค้าที่จอง" value={`${new Set(book.bookings.map((b) => b.clientId)).size} ราย`} />
+        <Figure label="ขั้นต่ำต่อราย" value={formatOrderAmount(book.minTicket, book.currency)} />
+        <Figure label="รอตรวจวงเงิน" value={`${counts.checking} รายการ`} />
+        <Figure label="รอผลหลังบ้าน" value={`${counts.processing} รายการ`} />
+        <Figure label="สำเร็จ" value={`${counts.completed} รายการ`} />
+      </dl>
+
+      {canBook && (
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={onBook}
+          leftIcon={<PlusIcon size={18} />}
+          className="w-full"
+        >
+          จองเพิ่มให้ลูกค้า
+        </Button>
+      )}
+    </>
   );
 }
 
