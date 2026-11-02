@@ -23,7 +23,6 @@ import orderRequirementsRaw from "@/data/order-requirements.json";
 import type {
   Booking,
   OrderSubmission,
-  ProductOffer,
   RequirementKey,
   RequirementRequest,
   RequirementStatus,
@@ -40,6 +39,18 @@ import { NOTE_AUTHOR } from "@/app/(dashboard)/notes/note-constants";
  * people for the same afternoon.
  */
 export const ORDER_ACTOR = NOTE_AUTHOR;
+
+/**
+ * Who an order names as its sender when nobody here sent it.
+ *
+ * The basket desks hand a full book to the back office rather than having the
+ * IC submit it, so those submissions carry this instead of {@link ORDER_ACTOR}
+ * — and the log, which reads `submittedBy` back as the actor, phrases its line
+ * off the same comparison. Lives beside `ORDER_ACTOR` because the two are read
+ * against each other, and in `lib` rather than the order store so
+ * `order-book.ts` can compare without importing the provider it feeds.
+ */
+export const BACKOFFICE_ACTOR = "ระบบหลังบ้าน";
 
 const nameById = Object.fromEntries(mockClients.map((c) => [c.id, c.name]));
 
@@ -74,13 +85,6 @@ type BookingSeed = {
   status?: string;
 };
 
-type OfferSeed = {
-  id: string;
-  clientId: string;
-  daysAgo: number;
-  status?: string;
-};
-
 type SubmissionSeed = {
   id: string;
   bookingIds: string[];
@@ -100,25 +104,6 @@ export const seedBookings: Booking[] = orderBooksRaw.books.flatMap((book) =>
     createdAt: stampFromDaysAgo(b.daysAgo, b.id),
     createdBy: ORDER_ACTOR,
     status: (b.status ?? "booked") as Booking["status"],
-  })),
-);
-
-/**
- * Every seeded offer — a product put in front of a client, still waiting.
- *
- * A book's `offers` are the ones with no booking behind them yet; an offer the
- * client took is represented by the booking it produced, so none is seeded for
- * a client who also has a booking on the same product.
- */
-export const seedOffers: ProductOffer[] = orderBooksRaw.books.flatMap((book) =>
-  ((book as { offers?: OfferSeed[] }).offers ?? []).map((o) => ({
-    id: o.id,
-    productId: book.productId,
-    clientId: o.clientId,
-    clientName: nameById[o.clientId] ?? o.clientId,
-    sentAt: stampFromDaysAgo(o.daysAgo, o.id),
-    sentBy: ORDER_ACTOR,
-    status: (o.status ?? "sent") as ProductOffer["status"],
   })),
 );
 

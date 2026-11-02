@@ -297,6 +297,15 @@ function labelFor(pathname: string, ctx: BreadcrumbContext): string | null {
   // "Order Management / KO - WMT" instead of "Order Management / ko-wmt".
   // `findBookableProduct`, not `findProductById`: books span both structured
   // desks, and the Thai ones are not in the global registry.
+  // Before the book rule, which would otherwise read "client" as a product id.
+  const clientOrders = /^\/orders\/client\/([^/]+)/.exec(pathname);
+  if (clientOrders) {
+    const found = ctx.clients.find((c) => c.id === decodeURIComponent(clientOrders[1]));
+    // Masked, like the Client 360 rung: the breadcrumb is as visible as any
+    // name on the page it heads.
+    return maskName(found?.name ?? "ลูกค้า", ctx.isPrivate);
+  }
+
   const book = /^\/orders\/([^/]+)/.exec(pathname);
   if (book) {
     return findBookableProduct(decodeURIComponent(book[1]))?.underlying ?? "รายการจอง";

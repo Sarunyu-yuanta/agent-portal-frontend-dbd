@@ -102,22 +102,29 @@ function Body({ t }: { t: ClientTransaction }) {
           >
             {STATUS_TAG[t.status].text}
           </p>
-          {/* Side, symbol, then the company. Three sizes in one line, biggest
-              in the middle: the badge is a one-word fact, the symbol is what
-              the row was scanned by, and the full name is only here because
-              the table had to clip it. Wraps rather than ellipsising the lot —
-              on a narrow sheet the name takes its own line. */}
+          {/* Side and symbol on one line, the company under it. The badge is a
+              one-word fact and the symbol is what the row was scanned by —
+              together they are the identifier, and the full name is only here
+              because the table had to clip it. Its own line unconditionally:
+              trailing a forty-character name off the symbol made the pair read
+              as one long title, and on a narrow sheet it wrapped anyway. */}
           {/* `pt-4`, not the 6px it had: the heading is 20px bold and the
               line under it is 16px, and at six pixels apart the two read as
               one run-on phrase rather than a verdict and what it is about. */}
-          <div className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 pt-4">
-            <span
-              className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${SIDE_PILL[t.side]}`}
-            >
-              {SIDE_LABEL[t.side]}
+          <div className="flex max-w-full flex-col items-center gap-1 pt-4">
+            <span className="flex items-center gap-2">
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${SIDE_PILL[t.side]}`}
+              >
+                {SIDE_LABEL[t.side]}
+              </span>
+              <span className="text-[16px] leading-6 font-bold text-foreground">{t.symbol}</span>
             </span>
-            <span className="text-[16px] leading-6 font-bold text-foreground">{t.symbol}</span>
-            <span className="min-w-0 truncate text-[12px] text-muted-foreground">{t.name}</span>
+            {/* Wraps rather than ellipsising: the name is on its own line to
+                be read in full, so cutting it here would undo the point. */}
+            <span className="max-w-full text-[12px] leading-4 text-balance text-muted-foreground">
+              {t.name}
+            </span>
           </div>
         </div>
 

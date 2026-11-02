@@ -10,12 +10,12 @@
 import type {
   Booking,
   OrderBook,
-  ProductOffer,
   OrderBookStatus,
   OrderLogEntry,
   OrderSubmission,
   RequirementRequest,
 } from "@/types/domain";
+import { BACKOFFICE_ACTOR } from "@/lib/order-mock-data";
 import { REQUIREMENT_CATALOG } from "./order-requirements";
 import { bookingModeFor, deskLabelFor, type BookableProduct } from "./bookable-products";
 
@@ -82,12 +82,12 @@ const sum = (rows: Booking[]) => rows.reduce((total, b) => total + b.amount, 0);
 /**
  * Which step the product is at — see {@link OrderBookStatus} for the steps.
  *
- * Before anything is sent the step is read off the bookings alone: short of
- * the target is still booking, at the target the IC can send. There is no
- * funds step between the two — a booking the client could not fund was never
- * placed (see `Booking`).
+ * Before any order exists the step is read off the bookings alone: short of
+ * the target is still booking, at the target the book is done and waiting to
+ * be collected. There is no funds step between the two — a booking the client
+ * could not fund was never placed (see `Booking`).
  *
- * Once sent, the order's own state is the step.
+ * Once an order exists, its own state is the step.
  */
 function bookStatus(
   open: Booking[],
@@ -174,7 +174,13 @@ function buildLogs(
       at: s.submittedAt,
       actor: s.submittedBy,
       action: "order-submitted",
-      summary: `ส่งคำสั่งซื้อ ${s.bookingIds.length} รายการ`,
+      // Who did it changes the verb: the IC sent a quota booking, the back
+      // office came and took a full basket. `actor` already names them, and a
+      // summary reading "ส่ง" under "ระบบหลังบ้าน" would contradict it.
+      summary:
+        s.submittedBy === BACKOFFICE_ACTOR
+          ? `ระบบหลังบ้านรับคำสั่งซื้อไป ${s.bookingIds.length} รายการ`
+          : `ส่งคำสั่งซื้อ ${s.bookingIds.length} รายการ`,
       detail: s.backendRef,
     });
     if (s.status !== "processing" && s.settledAt) {
@@ -212,7 +218,6 @@ export function assembleOrderBook(
   bookings: Booking[],
   submissions: OrderSubmission[],
   requests: RequirementRequest[],
-  offers: ProductOffer[] = [],
 ): OrderBook {
   const target = orderTargetFor(product);
   const live = bookings.filter((b) => b.status === "booked");
@@ -232,11 +237,6 @@ export function assembleOrderBook(
   );
   const quotaUsed = sum(live.filter((b) => !rejectedIds.has(b.id)));
 
-  // An offer the client answered by booking has had its answer: the booking
-  // row says everything the offer row would, and with a number on it.
-  const booked = new Set(bookings.map((b) => b.clientId));
-  const liveOffers = offers.filter((o) => o.status === "declined" || !booked.has(o.clientId));
-
   return {
     productId: product.id,
     productName: product.underlying,
@@ -250,7 +250,6 @@ export function assembleOrderBook(
     quotaRemaining: Math.max(0, target - quotaUsed),
     minTicket: minTicketFor(product),
     bookings: live,
-    offers: liveOffers,
     openBookings: open,
     allBookings: bookings,
     bookedAmount: sum(open),
@@ -265,27 +264,20 @@ export function assembleOrderBook(
 // ── Presentation ─────────────────────────────────────────────────────────────
 
 /**
- * Where one client stands on a product, in the four words the chips filter by.
- * The order they happen in:
+ * Where one booking stands, in the three words the chips filter by. The order
+ * they happen in:
  *
- * - `offer` — the IC put the product in front of them and they have not
- *   answered. The only phase with no booking behind it (see {@link ProductOffer}).
- * - `review` — they took it, or the IC booked for them. A booking exists, so
- *   the money was checked when it was placed; from here it is the deal and the
+ * - `review` — the IC has booked the client in. A booking exists, so the money
+ *   was checked when it was placed; from here it is the deal filling up and the
  *   back office that are being waited on.
  * - `completed` — the back office accepted the order.
- * - `cancelled` — the booking was cancelled, the order rejected, or the client
- *   declined the offer.
+ * - `cancelled` — the booking was cancelled, or the order rejected.
  *
  * Coarser than `dealStatus`, which the table's Deal Status column still shows:
  * the chips sort a long list into a few piles, the tag says exactly which step.
  */
-export type BookingPhase = "offer" | "review" | "completed" | "cancelled";
+export type BookingPhase = "review" | "completed" | "cancelled";
 
-/**
- * A booking is past the offer by definition — it is what answering one looks
- * like — so it is never in that phase, however new it is.
- */
 export function bookingPhase(booking: Booking, book: OrderBook): BookingPhase {
   if (booking.status === "cancelled") return "cancelled";
   const submission = book.submissions.find((s) => s.bookingIds.includes(booking.id));
@@ -294,16 +286,10 @@ export function bookingPhase(booking: Booking, book: OrderBook): BookingPhase {
   return "review";
 }
 
-/** An offer is the `offer` phase until the client says no. */
-export function offerPhase(offer: ProductOffer): BookingPhase {
-  return offer.status === "declined" ? "cancelled" : "offer";
-}
-
 /** In the order a booking moves through them — the chips' order. */
-export const BOOKING_PHASES: BookingPhase[] = ["offer", "review", "completed", "cancelled"];
+export const BOOKING_PHASES: BookingPhase[] = ["review", "completed", "cancelled"];
 
 export const BOOKING_PHASE_LABEL: Record<BookingPhase, string> = {
-  offer: "Offer",
   review: "ตรวจสอบ",
   completed: "รับคำสั่งซื้อสำเร็จ",
   cancelled: "ยกเลิก",
@@ -328,10 +314,11 @@ export const SUBMISSION_TAG: Record<
 /**
  * Whether the product still takes bookings.
  *
- * Basket: a product is booked once, filled and sent as one order. From the
- * moment that order goes downstream nothing more can be booked — while the back
- * office is still working on it the product reads "กำลังดำเนินการ", and once it
- * answers the book is {@link isBookClosed closed}.
+ * Basket: a product is booked once, filled, and collected downstream as one
+ * order — by the back office, not by anyone here. From the moment that order
+ * exists nothing more can be booked: while the back office is still working on
+ * it the product reads "กำลังดำเนินการ", and once it answers the book is
+ * {@link isBookClosed closed}.
  *
  * Quota: open while at least one minimum ticket of quota is left; orders sent
  * along the way don't close it.
@@ -355,7 +342,7 @@ export function bookingRemaining(book: OrderBook): number {
  * Whether the back office has answered the product's order — the point at which
  * the product leaves the catalogue (see `useClosedProductIds`).
  *
- * Not at sending: an order still in flight keeps its product listed, just no
+ * Not at collection: an order still in flight keeps its product listed, just no
  * longer bookable. Rejected counts as answered — a rejection is the outcome of
  * this deal, and re-opening it would bring back the repeat booking this rule
  * replaced.

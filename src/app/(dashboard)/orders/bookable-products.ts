@@ -153,6 +153,18 @@ export function ordersListHref(productId: string): string {
 }
 
 /**
+ * One client's orders on one desk — the middle rung between the list and a
+ * book. See `orders/client/[clientId]/ClientOrdersDetail`.
+ *
+ * The tab is carried rather than derived: a client holds products on more than
+ * one desk, so there is nothing in the id to read it off, and the page has to
+ * know which desk it is showing.
+ */
+export function clientOrdersHref(clientId: string, tabId: string): string {
+  return `/orders/client/${encodeURIComponent(clientId)}?tab=${tabId}`;
+}
+
+/**
  * A book's page, on the Order Management tab its desk lives under — so the
  * page's back button returns to that tab rather than the default one.
  */

@@ -25,10 +25,13 @@ export function dealStatus(booking: Booking, book: OrderBook): BookingStatusTag 
   if (submission?.status === "processing") return { text: "กำลังดำเนินการ", variant: "blue" };
   if (submission?.status === "completed") return { text: "สำเร็จ", variant: "green" };
   if (submission?.status === "rejected") return { text: "ถูกปฏิเสธ", variant: "red" };
-  // A quota booking is its own order, so it is waiting on nobody but the IC;
-  // a basket booking waits for the rest of the deal first.
-  return book.mode === "quota" || book.status === "ready"
-    ? { text: "รอส่งคำสั่งซื้อ", variant: "lime" }
+  // Who the booking is waiting on, which is now a different answer per desk.
+  // A quota booking waits on the IC, who still sends it. A basket booking
+  // waits on the rest of the deal, and once the deal is complete it waits on
+  // the back office coming to collect it — nobody here sends anything.
+  if (book.mode === "quota") return { text: "รอส่งคำสั่งซื้อ", variant: "lime" };
+  return book.status === "ready"
+    ? { text: "รอหลังบ้านรับ", variant: "lime" }
     : { text: "รอยอดครบ", variant: "green" };
 }
 

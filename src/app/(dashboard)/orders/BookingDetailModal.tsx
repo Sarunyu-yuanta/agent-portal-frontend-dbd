@@ -19,7 +19,6 @@ import { useState } from "react";
 import {
   CaretDownIcon,
   CheckIcon,
-  ClockIcon,
   MagnifyingGlassIcon,
   XIcon,
 } from "@phosphor-icons/react";
@@ -66,7 +65,6 @@ const PHASE_DISC: Record<
   BookingPhase,
   { tone: Tone; glyph: React.ReactNode }
 > = {
-  offer: { tone: "primary", glyph: <ClockIcon size={30} weight="fill" /> },
   review: { tone: "primary", glyph: <MagnifyingGlassIcon size={28} weight="bold" /> },
   completed: { tone: "green", glyph: <CheckIcon size={30} weight="bold" /> },
   cancelled: { tone: "gray", glyph: <XIcon size={30} weight="bold" /> },

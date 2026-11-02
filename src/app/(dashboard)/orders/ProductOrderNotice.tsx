@@ -22,7 +22,7 @@ export function ProductOrderNotice({ book }: { book: OrderBook | null | undefine
       <Alert
         status="information"
         title="กำลังดำเนินการสั่งซื้อ"
-        message={`ส่งคำสั่งซื้อ ${order.backendRef} แล้ว อยู่ระหว่างดำเนินการที่ระบบหลังบ้าน — ปิดรับจองเพิ่ม`}
+        message={`คำสั่งซื้อ ${order.backendRef} อยู่ระหว่างดำเนินการที่ระบบหลังบ้าน — ปิดรับจองเพิ่ม`}
         multiline
       />
     );

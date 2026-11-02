@@ -6,7 +6,7 @@
  *
  * 1. a client has finished the forms they were sent off to fill in,
  * 2. the back office has answered a submitted order,
- * 3. a book has filled up and the order is theirs to send.
+ * 3. a book has filled up and been handed over.
  *
  * Nothing *in progress* raises a row. "ส่งคำขอแล้ว" and "กำลังดำเนินการ" are
  * states the IC put the system into themselves, and a bell that announces them
@@ -129,9 +129,13 @@ export function useOrderNotificationFeed() {
         );
       }
 
-      // ── 3. The book is full and the order is the IC's to send ─────────────
+      // ── 3. The book is full and has been handed over ──────────────────────
       // Basket books only: a quota book has no basket to fill, and its
       // cleared-but-unsent orders are on its card instead.
+      //
+      // Still worth ringing even though the IC has nothing to press: a deal
+      // reaching its notional is the thing they were working towards, and the
+      // row is how they learn it landed without sitting on the page.
       if (book.mode !== "basket" || book.status !== "ready") continue;
       // The id counts submissions rather than naming the amount: a book that
       // fills, is sent, and fills again is genuinely two announcements, while
@@ -145,9 +149,9 @@ export function useOrderNotificationFeed() {
         orderBookHref(book.productId),
         {
           title: `${book.productName} ครบยอดแล้ว`,
-          description: `จองครบ ${formatOrderAmount(book.bookedAmount, book.currency)} — ส่งคำสั่งซื้อได้`,
+          description: `จองครบ ${formatOrderAmount(book.bookedAmount, book.currency)} — รอระบบหลังบ้านมารับคำสั่งซื้อ`,
           time: "",
-          icon: iconFor("blue", <PaperPlaneTiltIcon size={15} weight="fill" />),
+          icon: iconFor("yellow", <PaperPlaneTiltIcon size={15} weight="fill" />),
         },
       );
     }

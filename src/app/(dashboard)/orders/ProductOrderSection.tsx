@@ -8,14 +8,17 @@
  *   จองซื้อ and the deal's totals underneath. It answers "what happened after I
  *   pressed จองซื้อ" without leaving the page the booking was made from.
  * - **`variant="book"`** — the booking list on `/orders/[productId]`. That
- *   page's summary already carries the booking button and the totals, so the
- *   table comes without either.
+ *   page's summary already carries the action and the totals, so the table
+ *   comes without either.
  *
- * Two kinds of row, because the flow starts before a booking does: an **offer**
- * the IC sent and the client has not answered (no amount, no statuses), and a
- * **booking** once they have. Clicking either opens it — `OfferDetailModal`
- * or `BookingDetailModal`. Chips above the table sort them by phase; see
- * `bookingPhase` and `offerPhase`.
+ * One kind of row — a booking the IC placed. Clicking it opens
+ * `BookingDetailModal`. Chips above the table sort them by phase; see
+ * `bookingPhase`.
+ *
+ * **This IC's bookings only.** A basket is shared across the desk, so a book
+ * holds every IC's clients; the totals below still describe the whole deal
+ * (that is what "will it fill" depends on, and they say so), but the rows are
+ * the signed-in IC's — the same scope Order Management's list is read at.
  *
  * Quota books (bonds) send each booking as its own order, so on the book page
  * their table carries one more column: ส่งคำสั่งซื้อ, live on a row whose funds
@@ -52,7 +55,6 @@ import { IC_NAME } from "@/lib/current-ic";
 import { maskName } from "@/lib/mask-name";
 import type {
   Booking,
-  ProductOffer,
   RequirementItem,
   RequirementKey,
   RequirementStatus,
@@ -64,12 +66,9 @@ import {
   BOOKING_PHASE_LABEL,
   bookingPhase,
   isBookingOpen,
-  offerPhase,
   type BookingPhase,
 } from "./order-book";
 import { BookingDetailModal } from "./BookingDetailModal";
-import { OfferDetailModal } from "./OfferDetailModal";
-import { SendOfferModal } from "./SendOfferModal";
 import {
   CLOSED_TAG,
   checksAtBooking,
@@ -80,14 +79,8 @@ import {
 
 const PAGE_SIZE = 10;
 
-/**
- * One line of the table: a client who was offered the product, or one whose
- * booking exists. `at` is whichever date the row sorts on, so the two kinds
- * interleave without the sort having to know which is which.
- */
-type OrderRow =
-  | { kind: "offer"; at: string; offer: ProductOffer }
-  | { kind: "booking"; at: string; booking: Booking };
+/** One line of the table: a booking, and the date it sorts on. */
+type OrderRow = { at: string; booking: Booking };
 
 
 /**
@@ -142,8 +135,14 @@ export function ProductOrderSection({
   onSend,
 }: {
   product: BookableProduct;
-  /** Opens the booking modal — the page owns it, and its toasts. */
-  onBook: () => void;
+  /**
+   * Opens the booking modal — the page owns it, and its toasts.
+   *
+   * Quota desks only, and optional for that reason: a basket page has no
+   * booking modal to open any more (see `canBook`), so requiring one would
+   * make every basket host pass a callback nothing can reach.
+   */
+  onBook?: () => void;
   /** The page's toast stack — cancelling from the detail modal reports here. */
   onNotice: (message: string, status: ToastStatus) => void;
   /**
@@ -182,26 +181,20 @@ export function ProductOrderSection({
   // By id rather than the row itself, so a cancel from inside the modal shows
   // up in it straight away instead of in a stale copy.
   const [openId, setOpenId] = useState<string | null>(null);
-  const [openOfferId, setOpenOfferId] = useState<string | null>(null);
-  const [offering, setOffering] = useState(false);
 
   const rows = useMemo(() => {
     if (!book) return [] as OrderRow[];
-    // One list, newest first, whichever kind a row is — an offer sent this
-    // morning belongs above a booking from last week.
-    const all: OrderRow[] = [
-      ...book.allBookings.map((b) => ({ kind: "booking" as const, at: b.createdAt, booking: b })),
-      ...book.offers.map((o) => ({ kind: "offer" as const, at: o.sentAt, offer: o })),
-    ].sort((a, b) => b.at.localeCompare(a.at));
-    const inPhase = phase
-      ? all.filter((r) =>
-          r.kind === "booking" ? bookingPhase(r.booking, book) === phase : offerPhase(r.offer) === phase,
-        )
-      : all;
+    const all: OrderRow[] = book.allBookings
+      // See the module note: other ICs' clients are in this book and are not
+      // this IC's to read.
+      .filter((b) => b.createdBy === IC_NAME)
+      .map((b) => ({ at: b.createdAt, booking: b }))
+      .sort((a, b) => b.at.localeCompare(a.at));
+    const inPhase = phase ? all.filter((r) => bookingPhase(r.booking, book) === phase) : all;
     const query = search.trim().toLowerCase();
     if (!query) return inPhase;
     return inPhase.filter((r) => {
-      const { clientId, clientName } = r.kind === "booking" ? r.booking : r.offer;
+      const { clientId, clientName } = r.booking;
       return (
         maskName(clientName, isPrivate).toLowerCase().includes(query) ||
         maskName(getClientProfile(clientId).nameTh, isPrivate).includes(query) ||
@@ -239,11 +232,8 @@ export function ProductOrderSection({
   const sendable = (b: Booking) =>
     b.status === "booked" && !submittedIds.has(b.id);
   const canBook = variant === "product" && isBookingOpen(book);
-  /** The book page has no จองซื้อ of its own, but it does offer. */
-  const offerable = isBookingOpen(book);
   const isEmpty = rows.length === 0;
   const opened = book.allBookings.find((b) => b.id === openId) ?? null;
-  const openedOffer = book.offers.find((o) => o.id === openOfferId) ?? null;
 
   return (
     // No card and no heading of its own — it is a tab inside the product's
@@ -270,20 +260,6 @@ export function ProductOrderSection({
         <div className="flex w-full items-center gap-2 md:w-auto md:shrink-0">
           {/* Gone once the order is sent — the notice above the page's tabs
               says why, on this tab and on Detail alike. */}
-          {/* Offer first, booking second — the order they happen in. Both go
-              the moment the book closes: a product that cannot be booked
-              cannot be offered either. */}
-          {offerable && (
-            <Button
-              variant="outline"
-              size="md"
-              onClick={() => setOffering(true)}
-              leftIcon={<PaperPlaneTiltIcon size={16} />}
-              className="shrink-0"
-            >
-              ส่ง Offer
-            </Button>
-          )}
           {canBook && (
             <Button
               variant="primary"
@@ -371,58 +347,40 @@ export function ProductOrderSection({
               </TableHead>
               <TableBody>
                 {visible.map((row) => {
-                  const offer = row.kind === "offer" ? row.offer : null;
-                  const b = row.kind === "booking" ? row.booking : null;
-                  const clientId = (b ?? offer!).clientId;
-                  const clientName = (b ?? offer!).clientName;
-                  /* An offer has no deal to report, so its three status cells
-                     say where it actually is: with the client. The other two
-                     have not started — there is no amount to pay and nothing
-                     to confirm until they answer. */
-                  const status = b
-                    ? dealStatus(b, book)
-                    : offer!.status === "declined"
-                      ? ({ text: "ลูกค้าปฏิเสธ", variant: "gray" } as const)
-                      : ({ text: "รอลูกค้าตอบรับ", variant: "blue" } as const);
-                  const payment = b ? paymentStatus(b, book) : ({ text: "—", variant: "gray" } as const);
-                  const email = b ? emailStatus(b, book) : ({ text: "—", variant: "gray" } as const);
-                  const cancelled = b ? b.status === "cancelled" : offer!.status === "declined";
-                  /* A booking carries the checks it was placed against; an
-                     offer has none of its own, so the client's live ones are
-                     what there is to show. */
+                  const b = row.booking;
+                  const { clientId, clientName } = b;
+                  const status = dealStatus(b, book);
+                  const payment = paymentStatus(b, book);
+                  const email = emailStatus(b, book);
+                  const cancelled = b.status === "cancelled";
+                  /* A booking carries the checks it was placed against; the
+                     client's live ones only stand in for a seeded one. */
                   const live = readiness.get(clientId)?.items ?? [];
-                  const checks = b ? checksAtBooking(b, live) : live;
+                  const checks = checksAtBooking(b, live);
                   const struck = cancelled ? "text-muted-foreground line-through" : "text-foreground";
                   return (
                     // The whole row opens this booking — a column of arrows only to
                     // say "this is clickable" spent width the table did not have.
                     <TableRow
-                      key={b?.id ?? offer!.id}
+                      key={b.id}
                       hoverable
                       tabIndex={0}
-                      aria-label={
-                        b
-                          ? `ดูรายละเอียดการจองของ ${maskName(clientName, isPrivate)}`
-                          : `ดูรายละเอียด Offer ของ ${maskName(clientName, isPrivate)}`
-                      }
-                      onClick={() => (b ? setOpenId(b.id) : setOpenOfferId(offer!.id))}
+                      aria-label={`ดูรายละเอียดการจองของ ${maskName(clientName, isPrivate)}`}
+                      onClick={() => setOpenId(b.id)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          if (b) setOpenId(b.id);
-                          else setOpenOfferId(offer!.id);
+                          setOpenId(b.id);
                         }
                       }}
                       // The row just booked pulses, then stays highlighted — see
                       // `.row-just-added` in globals.css.
                       className={`cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0a6ee7] active:bg-[var(--bg-default-pressed)] ${
-                        b?.id === newBookingId ? "row-just-added" : ""
+                        b.id === newBookingId ? "row-just-added" : ""
                       }`}
                     >
                       <TableCell style={FIT}>
-                        <span className="type-body-2 text-foreground">
-                          {b?.createdBy ?? offer!.sentBy}
-                        </span>
+                        <span className="type-body-2 text-foreground">{b.createdBy}</span>
                       </TableCell>
                       <TableCell style={FIT}>
                         <span className="type-body-2 tabular-nums text-foreground">
@@ -442,16 +400,12 @@ export function ProductOrderSection({
                         </TableCell>
                       ))}
                       <TableCell style={CENTER}>
-                        {/* An offer has no amount yet — that is the thing the
-                            client has not decided. */}
                         <span className={`type-body-2 font-semibold tabular-nums ${struck}`}>
-                          {b ? money(b.amount) : "—"}
+                          {money(b.amount)}
                         </span>
                       </TableCell>
                       <TableCell style={CENTER}>
-                        <span className="type-body-2 text-foreground">
-                          {b ? book.currency : "—"}
-                        </span>
+                        <span className="type-body-2 text-foreground">{book.currency}</span>
                       </TableCell>
                       {/* `large`, the top of Tag's two sizes: `small` sets the
                           label at 9px, which is below what the rest of the row
@@ -523,14 +477,19 @@ export function ProductOrderSection({
       {variant === "product" && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {/* Notional is everything booked; confirmed is what the back office
-              has accepted of it. */}
-          <Total label="Total Notional IC" value={money(notionalIc)} />
-          <Total label="Total Confirmed IC" value={money(confirmedIc)} tone="green" />
+              has accepted of it.
+
+              "ของฉัน" versus "ทั้งดีล", spelled out rather than left as the
+              "IC" suffix these carried before: the table above is now this
+              IC's rows only, so a reader seeing a bigger number in the third
+              cell has to be told it counts clients the list does not show. */}
+          <Total label="ยอดจองของฉัน" value={money(notionalIc)} />
+          <Total label="สำเร็จของฉัน" value={money(confirmedIc)} tone="green" />
           <Total
-            label="Total Notional"
+            label="ยอดจองทั้งดีล"
             value={`${money(notional)} / ${money(book.targetAmount)}`}
           />
-          <Total label="Total Confirmed" value={money(book.confirmedAmount)} tone="green" />
+          <Total label="สำเร็จทั้งดีล" value={money(book.confirmedAmount)} tone="green" />
         </div>
       )}
 
@@ -540,21 +499,6 @@ export function ProductOrderSection({
           <Pagination totalPages={totalPages} currentPage={current} onPageChange={setPage} />
         )}
       </div>
-
-      <SendOfferModal
-        open={offering}
-        product={product}
-        book={book}
-        onClose={() => setOffering(false)}
-        onNotice={onNotice}
-      />
-
-      <OfferDetailModal
-        offer={openedOffer}
-        product={product}
-        onClose={() => setOpenOfferId(null)}
-        onNotice={onNotice}
-      />
 
       {/* Rendered whether or not one is open, so the modal can animate out. */}
       <BookingDetailModal

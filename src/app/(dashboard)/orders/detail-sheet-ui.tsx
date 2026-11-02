@@ -84,7 +84,10 @@ export const TONE: Record<Tone, { halo: string; disc: string; text: string }> = 
   yellow: {
     halo: "bg-[var(--fill-yellow-100)]",
     disc: "bg-[var(--fill-yellow-500)]",
-    text: "text-[var(--fill-yellow-600)]",
+    // `700`, not the `600` the others in this half of the wheel take: yellow
+    // is the lightest ink here, and `600` on white is 2.9:1 — under the bar
+    // even for a 20px bold heading. `700` reads at 4.9:1 and still yellow.
+    text: "text-[var(--fill-yellow-700)]",
   },
   blue: {
     halo: "bg-[var(--fill-blue-100)]",
@@ -233,21 +236,24 @@ export function CopyRow({ label, value }: { label: string; value: string }) {
  *
  * The chevron is what says so: a name in a column of values looks like every
  * other value. Both sheets carry one of these and neither has room for a card.
+ *
+ * The target is the value, not the row — same as `CopyRow`. A highlight that
+ * ran the full width lit "ลูกค้า" too, and the label is not what is being
+ * pressed.
  */
 export function ClientRow({ clientId, name }: { clientId: string; name: string }) {
   return (
-    <Link
-      href={`/client/${clientId}`}
-      className={`-mx-2 flex items-center justify-between gap-3 px-2 py-1.5 no-underline ${SHEET_PRESSABLE}`}
-    >
-      <span className="shrink-0 text-[12px] text-muted-foreground">ลูกค้า</span>
-      <span className="flex min-w-0 items-center gap-2">
+    <SheetRow label="ลูกค้า">
+      <Link
+        href={`/client/${clientId}`}
+        className={`-mr-2 flex min-w-0 items-center gap-2 px-2 py-0.5 no-underline ${SHEET_PRESSABLE}`}
+      >
         {/* `getInitial`, not the two-letter helpers: the design system's Avatar
             renders one character and drops the rest. */}
         <Avatar type="text" initials={getInitial(name)} size="xs" />
         <span className="truncate text-[13px] font-semibold text-foreground">{name}</span>
         <CaretRightIcon size={14} className="shrink-0 text-muted-foreground" />
-      </span>
-    </Link>
+      </Link>
+    </SheetRow>
   );
 }

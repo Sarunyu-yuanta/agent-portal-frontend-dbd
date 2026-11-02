@@ -2,7 +2,11 @@
 
 /**
  * The basket desks' tab body — Thai Structured or Global Structured: every
- * product of that desk this IC has a book open on.
+ * client this IC has booked into a product of that desk.
+ *
+ * Client-first, not product-first (see `ClientOrdersTable`). The books are
+ * still assembled per product and still filtered here by desk and by
+ * availability; the table is what inverts them into one row per person.
  *
  * The catalogue is where a deal is found; this is where one that has already
  * been started is tracked. A product with no booking, no submission and no
@@ -18,19 +22,23 @@ import { Button, Chip, SearchInput } from "@sarunyu/system-one";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { usePrivacy } from "@/contexts/privacy-context";
+import { getClientProfile } from "@/data/client-profiles";
 import { FadeIn } from "@/components/ui/fade-in";
 import { maskName } from "@/lib/mask-name";
 import { setQueryState, withQuery } from "@/lib/query-state";
-import { OrderBookTable } from "./OrderBookTable";
+import { ClientOrdersTable } from "./ClientOrdersTable";
 import { BOOK_AVAILABILITY_STEPS as STEPS, bookAvailability } from "./order-book";
 import { useOrderBooks } from "./use-order-books";
 import type { Desk } from "./bookable-products";
 
 export function BasketBooksPanel({
   desk,
+  tabId,
   catalogHref,
 }: {
   desk: Desk;
+  /** Which `?tab=` this panel is — carried into each client's page. */
+  tabId: string;
   /** Where the empty state sends the IC to start a booking — the desk's catalogue tab. */
   catalogHref: string;
 }) {
@@ -47,19 +55,24 @@ export function BasketBooksPanel({
   const requestedStep = searchParams.get("step");
   const step = STEPS.find((s) => s.id === requestedStep) ?? STEPS[0];
 
-  // "Search All" — anything a product is recognised by: its name and type,
-  // the desk, the order reference, and the clients booked into it.
+  // "Search All" — anything a row is recognised by. The client leads, because
+  // the list is read by client now: their name, id and account number, then the
+  // products they hold and the order references those produced.
   const matching = useMemo(() => {
     const ofType = books.filter((book) => book.desk === desk);
     const query = search.trim().toLowerCase();
     if (!query) return ofType;
     return ofType.filter((book) =>
       [
+        ...book.allBookings.flatMap((b) => [
+          b.clientId,
+          maskName(b.clientName, isPrivate),
+          getClientProfile(b.clientId).accountNo,
+        ]),
         book.productName,
         book.productType,
         book.desk,
         ...book.submissions.map((s) => s.backendRef),
-        ...book.allBookings.flatMap((b) => [b.clientId, maskName(b.clientName, isPrivate)]),
       ].some((text) => text.toLowerCase().includes(query)),
     );
   }, [books, desk, search, isPrivate]);
@@ -108,14 +121,14 @@ export function BasketBooksPanel({
           endpoint, every visit flashes "ยังไม่มีรายการจอง" before the data
           lands. The project-wide rule, see `docs/handover.md`. */}
       {isLoading ? (
-        <OrderBookTable books={[]} isLoading />
+        <ClientOrdersTable books={[]} tabId={tabId} isLoading />
       ) : visible.length === 0 ? (
         <EmptyState
           icon={<ClipboardTextIcon size={40} className="text-[var(--text-default-placeholder)]" />}
           title={search ? "ไม่พบรายการที่ค้นหา" : step.empty}
           body={
             search
-              ? "ลองค้นหาด้วยชื่อสินค้า เลขคำสั่งซื้อ หรือชื่อลูกค้า"
+              ? "ลองค้นหาด้วยชื่อลูกค้า Account No ชื่อสินค้า หรือเลขคำสั่งซื้อ"
               : "เริ่มจองให้ลูกค้าได้จากหน้าสินค้าใน Product Catalog — การจองจะมารวมกันที่นี่"
           }
           actionSlot={
@@ -132,7 +145,7 @@ export function BasketBooksPanel({
         // Keyed on the step, so switching it replays the fade — the rows change
         // completely.
         <FadeIn key={step.id}>
-          <OrderBookTable books={visible} />
+          <ClientOrdersTable books={visible} tabId={tabId} />
         </FadeIn>
       )}
     </div>

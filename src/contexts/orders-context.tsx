@@ -18,6 +18,9 @@
  *    another system. Really a webhook, or a poll of that system.
  * 2. **{@link SUBMISSION_TURNAROUND_MS}** — the back office accepting an order.
  *    Really a status on the order record, arriving the same way.
+ * 3. **{@link BACKOFFICE_PICKUP_MS}** — the back office collecting a basket
+ *    book that has filled up. Really a job on their side reading full books,
+ *    or a webhook this app receives; either way nobody here presses anything.
  *
  * Every mutator is `async` and every call site awaits it, so pointing them at
  * real endpoints is a change in this file alone. `isLoading` is in the contract
@@ -36,17 +39,20 @@ import {
   type ReactNode,
 } from "react";
 import {
+  BACKOFFICE_ACTOR,
   ORDER_ACTOR,
   seedBookings,
-  seedOffers,
   seedRequirementRequests,
   seedSubmissions,
 } from "@/lib/order-mock-data";
-import { bookingModeForId } from "@/app/(dashboard)/orders/bookable-products";
+import {
+  bookingModeForId,
+  findBookableProduct,
+} from "@/app/(dashboard)/orders/bookable-products";
+import { orderTargetFor } from "@/app/(dashboard)/orders/order-book";
 import type {
   Booking,
   OrderSubmission,
-  ProductOffer,
   RequirementItem,
   RequirementKey,
   RequirementRequest,
@@ -64,6 +70,19 @@ const REQUIREMENT_TURNAROUND_MS = 15_000;
 /** The same stand-in, for the back office accepting a submitted order. */
 const SUBMISSION_TURNAROUND_MS = 12_000;
 
+/**
+ * How long the back office takes to come and collect a full basket book.
+ *
+ * The basket desks no longer have the IC send anything: a book that reaches its
+ * notional is picked up downstream on its own. This is the gap between "ครบยอด"
+ * and the order existing — long enough that the IC sees the book sitting full
+ * and waiting, which is the state they are now being asked to understand.
+ *
+ * The quota desks are untouched and still send booking by booking, because
+ * there is no basket to fill and nothing for anyone to notice is complete.
+ */
+const BACKOFFICE_PICKUP_MS = 10_000;
+
 type BookingDraft = {
   productId: string;
   clientId: string;
@@ -75,20 +94,12 @@ type BookingDraft = {
 
 type OrdersContextValue = {
   bookings: Booking[];
-  offers: ProductOffer[];
   submissions: OrderSubmission[];
   requirementRequests: RequirementRequest[];
   /** Always `false` today — see the module note. */
   isLoading: boolean;
   bookOrder: (draft: BookingDraft) => Promise<Booking>;
   cancelBooking: (bookingId: string) => Promise<void>;
-  /** Puts a product in front of one or more clients — see {@link ProductOffer}. */
-  sendOffers: (
-    productId: string,
-    clients: { id: string; name: string }[],
-  ) => Promise<ProductOffer[]>;
-  /** The client said no. The offer stays on the record, as a declined one. */
-  declineOffer: (offerId: string) => Promise<void>;
   /** Nudges a client to complete `keys` in whichever system owns them. */
   sendRequirementRequest: (input: {
     clientId: string;
@@ -96,7 +107,13 @@ type OrdersContextValue = {
     productId: string;
     keys: RequirementKey[];
   }) => Promise<RequirementRequest>;
-  /** Sends every unsent booking on a product as one order. */
+  /**
+   * Sends every unsent booking on a product as one order.
+   *
+   * **Quota desks only.** A basket book is collected by the back office when it
+   * fills — see {@link BACKOFFICE_PICKUP_MS} — so nothing on those desks calls
+   * this, and no screen on them offers a way to.
+   */
   submitOrder: (productId: string, bookingIds: string[]) => Promise<OrderSubmission>;
 };
 
@@ -112,7 +129,6 @@ const localId = (prefix: string) => `${prefix}-local-${++localSeq}`;
 
 export function OrdersProvider({ children }: { children: ReactNode }) {
   const [bookings, setBookings] = useState<Booking[]>(seedBookings);
-  const [offers, setOffers] = useState<ProductOffer[]>(seedOffers);
   const [submissions, setSubmissions] = useState<OrderSubmission[]>(seedSubmissions);
   const [requirementRequests, setRequirementRequests] =
     useState<RequirementRequest[]>(seedRequirementRequests);
@@ -135,6 +151,22 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   const later = useCallback((fn: () => void, ms: number) => {
     timers.current.push(setTimeout(fn, ms));
   }, []);
+
+  /**
+   * The live lists, for the one timer that fires long after it was set.
+   *
+   * {@link backOfficePickup} runs ten seconds after a book filled up and has to
+   * read what is true *then* — whether a booking was cancelled out from under
+   * it, whether an order already exists. Closing over the render's `bookings`
+   * would have it deciding against a snapshot that is one navigation out of
+   * date.
+   */
+  const bookingsRef = useRef(bookings);
+  const submissionsRef = useRef(submissions);
+  useEffect(() => {
+    bookingsRef.current = bookings;
+    submissionsRef.current = submissions;
+  }, [bookings, submissions]);
 
   const bookOrder = useCallback(async (draft: BookingDraft) => {
     // Basket desks take one order per product: once it has been sent the
@@ -162,33 +194,6 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     setBookings((prev) => [...prev, booking]);
     return booking;
   }, [submissions]);
-
-  const sendOffers = useCallback(
-    async (productId: string, clients: { id: string; name: string }[]) => {
-      const sentAt = new Date().toISOString();
-      const placed: ProductOffer[] = clients.map((c) => ({
-        id: localId("of"),
-        productId,
-        clientId: c.id,
-        clientName: c.name,
-        sentAt,
-        sentBy: ORDER_ACTOR,
-        status: "sent",
-      }));
-      setOffers((prev) => [...prev, ...placed]);
-      return placed;
-    },
-    [],
-  );
-
-  const declineOffer = useCallback(async (offerId: string) => {
-    // Marked rather than removed, like a cancelled booking: the offer is part
-    // of what happened to this product, and a "no" is the answer the IC asked
-    // for rather than the absence of one.
-    setOffers((prev) =>
-      prev.map((o) => (o.id === offerId ? { ...o, status: "declined" } : o)),
-    );
-  }, []);
 
   const cancelBooking = useCallback(async (bookingId: string) => {
     // Marked rather than removed: the log is rebuilt from the bookings
@@ -231,14 +236,22 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     [later],
   );
 
-  const submitOrder = useCallback<OrdersContextValue["submitOrder"]>(
-    async (productId, bookingIds) => {
+  /**
+   * One order record, however it came to exist.
+   *
+   * `by` is the whole of the difference between the two desks: an IC pressing
+   * ส่งคำสั่งซื้อ on a quota booking, or the back office helping itself to a
+   * full basket. It is read back as the actor on the log line, so a basket
+   * order must not be attributed to someone who never pressed anything.
+   */
+  const placeSubmission = useCallback(
+    (productId: string, bookingIds: string[], by: string) => {
       const submission: OrderSubmission = {
         id: localId("sub"),
         productId,
         bookingIds,
         submittedAt: new Date().toISOString(),
-        submittedBy: ORDER_ACTOR,
+        submittedBy: by,
         status: "processing",
         // The downstream system assigns this; minting it here is what lets the
         // IC quote a reference while the order is still in flight, which is
@@ -264,29 +277,86 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     [later],
   );
 
+  const submitOrder = useCallback<OrdersContextValue["submitOrder"]>(
+    async (productId, bookingIds) => placeSubmission(productId, bookingIds, ORDER_ACTOR),
+    [placeSubmission],
+  );
+
+  /**
+   * The back office collecting a basket book that has reached its notional.
+   *
+   * Re-checks on the way in rather than trusting the effect that scheduled it:
+   * ten seconds is long enough for a booking to be cancelled out from under a
+   * full book, and collecting one that is no longer full would send an order
+   * short of its target.
+   */
+  const backOfficePickup = useCallback(
+    (productId: string) => {
+      if (submissionsRef.current.some((s) => s.productId === productId)) return;
+      const product = findBookableProduct(productId);
+      if (!product) return;
+      const open = bookingsRef.current.filter(
+        (b) => b.productId === productId && b.status === "booked",
+      );
+      const total = open.reduce((sum, b) => sum + b.amount, 0);
+      if (total < orderTargetFor(product)) return;
+      placeSubmission(
+        productId,
+        open.map((b) => b.id),
+        BACKOFFICE_ACTOR,
+      );
+    },
+    [placeSubmission],
+  );
+
+  /**
+   * Watches every basket book for the moment it fills, and hands it over.
+   *
+   * An effect rather than a line inside `bookOrder`, because a book can reach
+   * its target without a booking being placed — a cancellation that lowers the
+   * total, a seeded book that is already full when the app loads. Anything that
+   * can make a book full has to be able to hand it over, and the only thing all
+   * of those have in common is the state landing.
+   *
+   * `pickedUp` is what keeps it to once each: the effect re-runs on every
+   * booking change, and a book stays full for the whole ten seconds it is
+   * waiting.
+   */
+  const pickedUp = useRef(new Set<string>());
+  useEffect(() => {
+    const totals = new Map<string, number>();
+    for (const b of bookings) {
+      if (b.status !== "booked") continue;
+      if (bookingModeForId(b.productId) !== "basket") continue;
+      totals.set(b.productId, (totals.get(b.productId) ?? 0) + b.amount);
+    }
+    for (const [productId, total] of totals) {
+      if (pickedUp.current.has(productId)) continue;
+      if (submissions.some((s) => s.productId === productId)) continue;
+      const product = findBookableProduct(productId);
+      if (!product || total < orderTargetFor(product)) continue;
+      pickedUp.current.add(productId);
+      later(() => backOfficePickup(productId), BACKOFFICE_PICKUP_MS);
+    }
+  }, [bookings, submissions, later, backOfficePickup]);
+
   const value = useMemo(
     () => ({
       bookings,
-      offers,
       submissions,
       requirementRequests,
       isLoading: false,
       bookOrder,
       cancelBooking,
-      sendOffers,
-      declineOffer,
       sendRequirementRequest,
       submitOrder,
     }),
     [
       bookings,
-      offers,
       submissions,
       requirementRequests,
       bookOrder,
       cancelBooking,
-      sendOffers,
-      declineOffer,
       sendRequirementRequest,
       submitOrder,
     ],

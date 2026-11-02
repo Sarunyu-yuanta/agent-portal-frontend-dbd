@@ -1,12 +1,15 @@
 "use client";
 
 /**
- * The quota desks' tab body — Fixed Income or Global Bond: every bond of that
- * desk this IC has booked into.
+ * The quota desks' tab body — Fixed Income or Global Bond: every client this IC
+ * has booked into a bond of that desk.
  *
- * Same frame as `BasketBooksPanel` (search, step chips, table), with the steps
- * a quota book actually has: open, or sold out. What is waiting on the IC
- * inside an open book is on its row — see `QuotaBooks.tsx`.
+ * Same frame as `BasketBooksPanel` (search, step chips, client-first table),
+ * with the steps a quota book actually has: open, or sold out.
+ *
+ * These desks lose the least in the inversion: a quota booking is its own
+ * order, so "this client's bookings" and "this client's orders" are the same
+ * list, where on a basket desk a booking is a share of someone else's deal.
  */
 
 import { useMemo, useState } from "react";
@@ -17,9 +20,10 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FadeIn } from "@/components/ui/fade-in";
 import { usePrivacy } from "@/contexts/privacy-context";
+import { getClientProfile } from "@/data/client-profiles";
 import { maskName } from "@/lib/mask-name";
 import { setQueryState, withQuery } from "@/lib/query-state";
-import { QuotaBookTable } from "./QuotaBooks";
+import { ClientOrdersTable } from "./ClientOrdersTable";
 import { BOOK_AVAILABILITY_STEPS as STEPS, bookAvailability } from "./order-book";
 import { useOrderBooks } from "./use-order-books";
 import type { Desk } from "./bookable-products";
@@ -27,9 +31,12 @@ import type { Desk } from "./bookable-products";
 
 export function QuotaBooksPanel({
   desk,
+  tabId,
   catalogHref,
 }: {
   desk: Desk;
+  /** Which `?tab=` this panel is — carried into each client's page. */
+  tabId: string;
   /** Where the empty state sends the IC to start a booking — the desk's catalogue tab. */
   catalogHref: string;
 }) {
@@ -47,10 +54,15 @@ export function QuotaBooksPanel({
     if (!query) return ofDesk;
     return ofDesk.filter((book) =>
       [
+        // The client leads — see `BasketBooksPanel` for why.
+        ...book.allBookings.flatMap((b) => [
+          b.clientId,
+          maskName(b.clientName, isPrivate),
+          getClientProfile(b.clientId).accountNo,
+        ]),
         book.productName,
         book.productType,
         ...book.submissions.map((s) => s.backendRef),
-        ...book.allBookings.flatMap((b) => [b.clientId, maskName(b.clientName, isPrivate)]),
       ].some((text) => text.toLowerCase().includes(query)),
     );
   }, [books, desk, search, isPrivate]);
@@ -92,14 +104,14 @@ export function QuotaBooksPanel({
       </div>
 
       {isLoading ? (
-        <QuotaBookTable books={[]} isLoading />
+        <ClientOrdersTable books={[]} tabId={tabId} isLoading />
       ) : visible.length === 0 ? (
         <EmptyState
           icon={<ClipboardTextIcon size={40} className="text-[var(--text-default-placeholder)]" />}
           title={search ? "ไม่พบรายการที่ค้นหา" : step.empty}
           body={
             search
-              ? "ลองค้นหาด้วยชื่อสินค้า เลขคำสั่งซื้อ หรือชื่อลูกค้า"
+              ? "ลองค้นหาด้วยชื่อลูกค้า Account No ชื่อสินค้า หรือเลขคำสั่งซื้อ"
               : "จองซื้อให้ลูกค้าได้จากหน้าสินค้าใน Product Catalog — แต่ละรายการส่งคำสั่งซื้อได้ทันทีจนกว่าจะเต็มโควตา"
           }
           actionSlot={
@@ -114,7 +126,7 @@ export function QuotaBooksPanel({
         />
       ) : (
         <FadeIn key={step.id}>
-          <QuotaBookTable books={visible} />
+          <ClientOrdersTable books={visible} tabId={tabId} />
         </FadeIn>
       )}
     </div>
