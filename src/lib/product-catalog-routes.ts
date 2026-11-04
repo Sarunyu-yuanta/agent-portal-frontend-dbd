@@ -11,7 +11,7 @@ export const PRODUCT_CATEGORIES = [
   // `tfex` is shipped as a tab before it has any content — see
   // `EMPTY_CATALOG_TABS` in `ProductCatalogTab` — and so is deliberately absent
   // from `CATEGORY_BY_PATH` below: it owns no detail route yet.
-  { id: "product-trending", title: "Product Trending" },
+  { id: "product-trending", title: "Recommended" },
   { id: "stock",           title: "Stock" },
   { id: "tfex",            title: "TFEX" },
   { id: "mutual-fund",     title: "Mutual Fund" },

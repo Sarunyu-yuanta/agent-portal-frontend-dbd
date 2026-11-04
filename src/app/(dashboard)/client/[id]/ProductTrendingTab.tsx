@@ -200,7 +200,7 @@ export function ProductTrendingTab({
           <div className="flex items-center gap-2">
             <FireIcon size={20} weight="fill" style={{ color: "#f54a00" }} />
             <p className="font-bold text-[18px] leading-6" style={{ color: "rgba(0,0,0,0.75)" }}>
-              Product Trending
+              Recommended Products
             </p>
           </div>
           {/* Two sentences because there are two rankings here, and one of

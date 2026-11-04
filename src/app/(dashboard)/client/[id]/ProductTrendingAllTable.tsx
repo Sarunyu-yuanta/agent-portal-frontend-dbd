@@ -244,7 +244,7 @@ export function ProductTrendingAllTable({
               <ArrowLeftIcon size={20} />
             </Button>
             <p className="flex-1 min-w-0 font-bold text-[18px] leading-6 truncate" style={{ color: "rgba(0,0,0,0.75)" }}>
-              Product Trending · {group.title}
+              {group.title}
             </p>
           </div>
           <p className="text-sm" style={{ color: "rgba(0,0,0,0.6)" }}>
