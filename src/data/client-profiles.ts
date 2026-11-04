@@ -162,6 +162,41 @@ const PROFILES: Record<string, ClientProfile> = {
   },
 };
 
+/**
+ * Clients of *other* ICs, which is a different thing from a client of ours.
+ *
+ * A basket is shared across the desk, so the book for one product lists
+ * bookings placed by other ICs — and those are their clients, not ours. They
+ * cannot be the ids in `PROFILES`: that list is the signed-in IC's own book,
+ * the one Client 360 shows, and a name appearing there under somebody else's
+ * IC would contradict the page it came from.
+ *
+ * Only what a shared book actually prints is filled in — the name, the Thai
+ * name and the account. The rest is the default, because the rest is theirs:
+ * this app has no business holding another desk's KYC, and the order table
+ * renders "—" where it has no check to show.
+ */
+const OTHER_DESK_PROFILES: Record<string, Pick<ClientProfile, "accountNo" | "nameTh">> = {
+  // Nalinee Vorakit's
+  "220101": { accountNo: "22010122", nameTh: "อภิญญา รัตนกร" },
+  "220102": { accountNo: "22010222", nameTh: "ฉัตรชัย วงศ์ศิริ" },
+  "220103": { accountNo: "22010322", nameTh: "ดวงใจ เพชรา" },
+  // Korn Panitchpakdi's
+  "330201": { accountNo: "33020122", nameTh: "โสภณ ตระกูลวงศ์" },
+  "330202": { accountNo: "33020222", nameTh: "รุ่งนภา อินทรัตน์" },
+  "330203": { accountNo: "33020322", nameTh: "กิตติพงษ์ แซ่ลิ้ม" },
+};
+
+/** Their names in English, for the booking rows that print one. */
+export const OTHER_DESK_CLIENT_NAMES: Record<string, string> = {
+  "220101": "Apinya Rattanakorn",
+  "220102": "Chatchai Wongsiri",
+  "220103": "Duangjai Petchara",
+  "330201": "Sophon Trakulwong",
+  "330202": "Rungnapa Intharat",
+  "330203": "Kittipong Saelim",
+};
+
 const DEFAULT_PROFILE: ClientProfile = {
   accountNo: "—",
   nameTh: "—",
@@ -178,5 +213,10 @@ const DEFAULT_PROFILE: ClientProfile = {
 };
 
 export function getClientProfile(clientId: string): ClientProfile {
-  return PROFILES[clientId] ?? DEFAULT_PROFILE;
+  const own = PROFILES[clientId];
+  if (own) return own;
+  // Another desk's client — the little of them a shared book prints, over the
+  // default for everything this app does not and should not hold.
+  const other = OTHER_DESK_PROFILES[clientId];
+  return other ? { ...DEFAULT_PROFILE, ...other } : DEFAULT_PROFILE;
 }

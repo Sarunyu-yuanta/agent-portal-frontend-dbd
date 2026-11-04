@@ -98,9 +98,12 @@ export function deskForId(id: string): Desk {
   return "Global Structured";
 }
 
-export function bookingModeForId(id: string): BookingMode {
-  const desk = deskForId(id);
+export function bookingModeForDesk(desk: Desk): BookingMode {
   return desk === "Fixed Income" || desk === "Global Bond" ? "quota" : "basket";
+}
+
+export function bookingModeForId(id: string): BookingMode {
+  return bookingModeForDesk(deskForId(id));
 }
 
 export function bookingModeFor(product: Pick<BookableProduct, "id">): BookingMode {
@@ -164,10 +167,12 @@ export function clientOrdersHref(clientId: string, tabId: string): string {
   return `/orders/client/${encodeURIComponent(clientId)}?tab=${tabId}`;
 }
 
-/**
- * A book's page, on the Order Management tab its desk lives under — so the
- * page's back button returns to that tab rather than the default one.
+/*
+ * There is no `orderBookHref`.
+ *
+ * `/orders/:productId` was a page per basket; a booking is read in
+ * `BookingDetailModal` over the list now, because the back office collects a
+ * full basket on its
+ * own and the page had nothing for the IC to do. Anything that used to link to
+ * a book links to its desk's tab instead — see {@link ordersListHref}.
  */
-export function orderBookHref(productId: string): string {
-  return `/orders/${encodeURIComponent(productId)}?tab=${ORDER_TAB_BY_DESK[deskForId(productId)]}`;
-}

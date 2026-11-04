@@ -18,9 +18,10 @@
  *    another system. Really a webhook, or a poll of that system.
  * 2. **{@link SUBMISSION_TURNAROUND_MS}** — the back office accepting an order.
  *    Really a status on the order record, arriving the same way.
- * 3. **{@link BACKOFFICE_PICKUP_MS}** — the back office collecting a basket
- *    book that has filled up. Really a job on their side reading full books,
- *    or a webhook this app receives; either way nobody here presses anything.
+ * 3. **{@link BACKOFFICE_PICKUP_MS}** — the back office taking an order up:
+ *    collecting a basket book that has filled, or starting on a bond order the
+ *    IC has sent. Really a job on their side, or a webhook this app receives;
+ *    either way nobody here presses anything.
  *
  * Every mutator is `async` and every call site awaits it, so pointing them at
  * real endpoints is a change in this file alone. `isLoading` is in the contract
@@ -41,7 +42,9 @@ import {
 import {
   BACKOFFICE_ACTOR,
   ORDER_ACTOR,
+  clientNameById,
   seedBookings,
+  seedProposals,
   seedRequirementRequests,
   seedSubmissions,
 } from "@/lib/order-mock-data";
@@ -50,9 +53,13 @@ import {
   findBookableProduct,
 } from "@/app/(dashboard)/orders/bookable-products";
 import { orderTargetFor } from "@/app/(dashboard)/orders/order-book";
+import { evidenceRequired } from "@/app/(dashboard)/orders/order-evidence";
 import type {
   Booking,
+  OrderEvidence,
   OrderSubmission,
+  ProposalChannel,
+  ProposalLog,
   RequirementItem,
   RequirementKey,
   RequirementRequest,
@@ -71,17 +78,25 @@ const REQUIREMENT_TURNAROUND_MS = 15_000;
 const SUBMISSION_TURNAROUND_MS = 12_000;
 
 /**
- * How long the back office takes to come and collect a full basket book.
+ * How long the back office takes to take an order up. Two things on each desk,
+ * one length, because it is the same queue being stood in for:
  *
- * The basket desks no longer have the IC send anything: a book that reaches its
- * notional is picked up downstream on its own. This is the gap between "ครบยอด"
- * and the order existing — long enough that the IC sees the book sitting full
- * and waiting, which is the state they are now being asked to understand.
- *
- * The quota desks are untouched and still send booking by booking, because
- * there is no basket to fill and nothing for anyone to notice is complete.
+ * - **basket** — collecting a book that reached its notional. Nobody here sends
+ *   it; this is the gap between "ครบยอด" and the order existing.
+ * - **quota** — starting on an order the IC has just sent. This is the gap the
+ *   IC can still cancel in, and the only one: see `OrderSubmissionStatus`.
  */
 const BACKOFFICE_PICKUP_MS = 10_000;
+
+/**
+ * Where every proposal goes — the client's app and their email, always.
+ *
+ * One array shared by every row rather than a literal per row: nothing varies
+ * it, and a per-row copy would invite a future edit to vary one without meaning
+ * to. A fresh array per row would also make two rows from the same send
+ * compare unequal for no reason.
+ */
+const CHANNELS: ProposalChannel[] = ["app", "email"];
 
 type BookingDraft = {
   productId: string;
@@ -90,15 +105,49 @@ type BookingDraft = {
   amount: number;
   /** The checks the booking passed — stored on it, see `Booking.checks`. */
   checks: RequirementItem[];
+  /**
+   * Proof of the client's instruction — see `Booking.evidence`.
+   *
+   * Required on a basket draft and refused without it below. Absent on a quota
+   * draft, which those desks do not ask for.
+   */
+  evidence?: OrderEvidence;
 };
 
 type OrdersContextValue = {
   bookings: Booking[];
   submissions: OrderSubmission[];
   requirementRequests: RequirementRequest[];
+  /** Append-only, newest last — every offer that has gone out. */
+  proposals: ProposalLog[];
   /** Always `false` today — see the module note. */
   isLoading: boolean;
-  bookOrder: (draft: BookingDraft) => Promise<Booking>;
+  /**
+   * Places one client's order on a product — the single action behind every
+   * booking button in the app.
+   *
+   * What that means differs by desk, which is why this returns both records:
+   *
+   * - **quota** — one press creates the booking *and* sends it downstream, so
+   *   `submission` comes back populated and the caller can quote its reference
+   *   straight away. A bond needs nothing to fill, so there was never anything
+   *   for a separate send step to wait for.
+   * - **basket** — the booking joins the basket and `submission` is `null`. The
+   *   order is created later, by the back office, when the basket fills. These
+   *   desks also require `draft.evidence`; see `Booking.evidence`.
+   */
+  placeOrder: (
+    draft: BookingDraft,
+  ) => Promise<{ booking: Booking; submission: OrderSubmission | null }>;
+  /**
+   * Pulls a booking back.
+   *
+   * What the surfaces allow differs by desk and is enforced there
+   * (`BookingDetailModal`): a basket booking can go until an order carries it,
+   * a bond order only until the back office picks it up. Cancelling one whose
+   * order is still `sent` also stops that order — see the guard in
+   * {@link placeSubmission}.
+   */
   cancelBooking: (bookingId: string) => Promise<void>;
   /** Nudges a client to complete `keys` in whichever system owns them. */
   sendRequirementRequest: (input: {
@@ -108,13 +157,24 @@ type OrdersContextValue = {
     keys: RequirementKey[];
   }) => Promise<RequirementRequest>;
   /**
-   * Sends every unsent booking on a product as one order.
+   * Sends one product's documents to any number of clients at once — an offer,
+   * and the record of it. See {@link ProposalLog}.
    *
-   * **Quota desks only.** A basket book is collected by the back office when it
-   * fills — see {@link BACKOFFICE_PICKUP_MS} — so nothing on those desks calls
-   * this, and no screen on them offers a way to.
+   * Returns the rows actually written, the way `shareMaterial` does in
+   * `contexts/campaigns-context`, so a caller reports what went rather than
+   * what it asked for.
+   *
+   * ─── Backend handoff ───────────────────────────────────────────────────────
+   * **Nothing is delivered.** There is no mail service and no app push behind
+   * this; what the mutator does is write the log the offer will be measured
+   * from. The dialog says so in as many words rather than implying a document
+   * has landed in someone's inbox. When that service exists, this is the one
+   * function it lands in.
    */
-  submitOrder: (productId: string, bookingIds: string[]) => Promise<OrderSubmission>;
+  sendProposal: (input: {
+    productId: string;
+    clientIds: string[];
+  }) => Promise<ProposalLog[]>;
 };
 
 const OrdersContext = createContext<OrdersContextValue | null>(null);
@@ -132,6 +192,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   const [submissions, setSubmissions] = useState<OrderSubmission[]>(seedSubmissions);
   const [requirementRequests, setRequirementRequests] =
     useState<RequirementRequest[]>(seedRequirementRequests);
+  const [proposals, setProposals] = useState<ProposalLog[]>(seedProposals);
 
   /**
    * Every pending stand-in timer, cleared on unmount.
@@ -167,33 +228,6 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     bookingsRef.current = bookings;
     submissionsRef.current = submissions;
   }, [bookings, submissions]);
-
-  const bookOrder = useCallback(async (draft: BookingDraft) => {
-    // Basket desks take one order per product: once it has been sent the
-    // product is closed, and every surface already hides its จองซื้อ. Held here
-    // as well because this is where the endpoint will enforce it. Quota desks
-    // send every booking on its own, so a sent order closes nothing; their cap
-    // is the quota, which the booking modal holds the amount to.
-    if (
-      bookingModeForId(draft.productId) === "basket" &&
-      submissions.some((s) => s.productId === draft.productId)
-    ) {
-      throw new Error("This product's order has already been sent; it takes no more bookings.");
-    }
-    const booking: Booking = {
-      id: localId("bk"),
-      productId: draft.productId,
-      clientId: draft.clientId,
-      clientName: draft.clientName,
-      amount: draft.amount,
-      checks: draft.checks,
-      createdAt: new Date().toISOString(),
-      createdBy: ORDER_ACTOR,
-      status: "booked",
-    };
-    setBookings((prev) => [...prev, booking]);
-    return booking;
-  }, [submissions]);
 
   const cancelBooking = useCallback(async (bookingId: string) => {
     // Marked rather than removed: the log is rebuilt from the bookings
@@ -236,23 +270,80 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     [later],
   );
 
+  const sendProposal = useCallback<OrdersContextValue["sendProposal"]>(
+    async ({ productId, clientIds }) => {
+      // Ids resolved against the roster here rather than taken from the caller:
+      // the log carries the name it was sent under, and a caller passing a
+      // stale one would put a name in the compliance record that nobody sent
+      // anything to. Unknown ids are dropped rather than logged blank.
+      const sentAt = new Date().toISOString();
+      const rows: ProposalLog[] = [];
+      for (const clientId of clientIds) {
+        const clientName = clientNameById(clientId);
+        if (!clientName) continue;
+        rows.push({
+          id: localId("prp"),
+          productId,
+          clientId,
+          clientName,
+          sentAt,
+          sentBy: ORDER_ACTOR,
+          // Both, always — the two places a proposal lands. See `ProposalLog`.
+          channels: CHANNELS,
+        });
+      }
+      // Appended, never merged into an existing row: a second proposal to the
+      // same client is a re-pitch, and the log is the record that both happened.
+      setProposals((prev) => [...prev, ...rows]);
+      return rows;
+    },
+    [],
+  );
+
+  /**
+   * Whether an order still has anything to carry.
+   *
+   * A cancellation marks the booking and nothing else, so the timers below have
+   * to ask: an order every one of whose bookings has been pulled must not go on
+   * to report itself accepted. Reads the ref, not the render's list — these are
+   * answered seconds later, after any number of navigations.
+   */
+  const stillLive = useCallback(
+    (bookingIds: string[]) =>
+      bookingIds.some(
+        (id) => bookingsRef.current.find((b) => b.id === id)?.status === "booked",
+      ),
+    [],
+  );
+
   /**
    * One order record, however it came to exist.
    *
-   * `by` is the whole of the difference between the two desks: an IC pressing
-   * ส่งคำสั่งซื้อ on a quota booking, or the back office helping itself to a
-   * full basket. It is read back as the actor on the log line, so a basket
-   * order must not be attributed to someone who never pressed anything.
+   * Two arguments carry the whole of the difference between the desks:
+   *
+   * - `by` — an IC pressing ส่งคำสั่งซื้อ on a bond, or the back office helping
+   *   itself to a full basket. Read back as the actor on the log line, so a
+   *   basket order must not be attributed to someone who never pressed
+   *   anything.
+   * - `startAt` — `"sent"` for an order the IC just sent, which the back office
+   *   has yet to take up and the IC can still pull; `"processing"` for a basket
+   *   the back office is collecting *as* it creates the order. See
+   *   `OrderSubmissionStatus`.
    */
   const placeSubmission = useCallback(
-    (productId: string, bookingIds: string[], by: string) => {
+    (
+      productId: string,
+      bookingIds: string[],
+      by: string,
+      startAt: "sent" | "processing",
+    ) => {
       const submission: OrderSubmission = {
         id: localId("sub"),
         productId,
         bookingIds,
         submittedAt: new Date().toISOString(),
         submittedBy: by,
-        status: "processing",
+        status: startAt,
         // The downstream system assigns this; minting it here is what lets the
         // IC quote a reference while the order is still in flight, which is
         // what the mock is standing in for.
@@ -261,8 +352,24 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       };
       setSubmissions((prev) => [...prev, submission]);
 
-      // ── Stand-in for the back office accepting the order ─────────────────
+      // ── Stand-in for the back office taking the order up ─────────────────
+      // Only an order that started as `sent` has this step; a basket order was
+      // created by the pickup itself.
+      const pickupAfter = startAt === "sent" ? BACKOFFICE_PICKUP_MS : 0;
+      if (startAt === "sent") {
+        later(() => {
+          if (!stillLive(bookingIds)) return;
+          setSubmissions((prev) =>
+            prev.map((s) => (s.id === submission.id ? { ...s, status: "processing" } : s)),
+          );
+        }, pickupAfter);
+      }
+
+      // ── Stand-in for the back office accepting it ────────────────────────
+      // Counted from the pickup, not from the send: the turnaround is how long
+      // they take over the order, and it has not reached them until then.
       later(() => {
+        if (!stillLive(bookingIds)) return;
         setSubmissions((prev) =>
           prev.map((s) =>
             s.id === submission.id
@@ -270,16 +377,59 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
               : s,
           ),
         );
-      }, SUBMISSION_TURNAROUND_MS);
+      }, pickupAfter + SUBMISSION_TURNAROUND_MS);
 
       return submission;
     },
-    [later],
+    [later, stillLive],
   );
 
-  const submitOrder = useCallback<OrdersContextValue["submitOrder"]>(
-    async (productId, bookingIds) => placeSubmission(productId, bookingIds, ORDER_ACTOR),
-    [placeSubmission],
+  const placeOrder = useCallback<OrdersContextValue["placeOrder"]>(
+    async (draft) => {
+      const mode = bookingModeForId(draft.productId);
+      // Basket desks take one order per product: once it has been sent the
+      // product is closed, and every surface already hides its จองซื้อ. Held
+      // here as well because this is where the endpoint will enforce it. Quota
+      // desks send every order on its own, so a sent order closes nothing;
+      // their cap is the quota, which the booking modal holds the amount to.
+      if (mode === "basket" && submissions.some((s) => s.productId === draft.productId)) {
+        throw new Error("This product's order has already been sent; it takes no more bookings.");
+      }
+      // The IC books on the client's behalf on these desks, so the record of
+      // how the client asked is part of the booking rather than a note beside
+      // it. The form disables its button without one, but a disabled button is
+      // a courtesy and this is where the endpoint will enforce it — the same
+      // reasoning `shareMaterial` spells out in `contexts/campaigns-context`.
+      if (evidenceRequired(mode) && !draft.evidence) {
+        throw new Error("A booking on this desk needs evidence of the client's instruction.");
+      }
+      const booking: Booking = {
+        id: localId("bk"),
+        productId: draft.productId,
+        clientId: draft.clientId,
+        clientName: draft.clientName,
+        amount: draft.amount,
+        checks: draft.checks,
+        evidence: draft.evidence,
+        createdAt: new Date().toISOString(),
+        createdBy: ORDER_ACTOR,
+        status: "booked",
+        // Everything this portal writes is the IC acting. `"app"` only ever
+        // arrives from the client's own app — see `Booking.placedVia`.
+        placedVia: "ic",
+      };
+      setBookings((prev) => [...prev, booking]);
+      // The booking is not in `bookingsRef` until the next render, so `sent`'s
+      // own timers would find nothing live if they fired first. They cannot —
+      // the shortest is ten seconds — but `stillLive` is deliberately written
+      // against the ref for the navigation case, so this is worth knowing.
+      if (mode !== "quota") return { booking, submission: null };
+      return {
+        booking,
+        submission: placeSubmission(draft.productId, [booking.id], ORDER_ACTOR, "sent"),
+      };
+    },
+    [placeSubmission, submissions],
   );
 
   /**
@@ -292,27 +442,47 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
    */
   const backOfficePickup = useCallback(
     (productId: string) => {
-      if (submissionsRef.current.some((s) => s.productId === productId)) return;
+      // Every early return releases the claim `pickedUp` staked when this was
+      // scheduled. Without that, a basket that filled, then lost a booking to a
+      // cancellation inside the ten seconds, then filled again, is skipped by
+      // the effect forever — it sits full and uncollected with nothing anyone
+      // can do about it.
+      const giveUp = () => {
+        pickedUp.current.delete(productId);
+      };
+      if (submissionsRef.current.some((s) => s.productId === productId)) return giveUp();
       const product = findBookableProduct(productId);
-      if (!product) return;
+      if (!product) return giveUp();
       const open = bookingsRef.current.filter(
         (b) => b.productId === productId && b.status === "booked",
       );
       const total = open.reduce((sum, b) => sum + b.amount, 0);
-      if (total < orderTargetFor(product)) return;
+      if (total < orderTargetFor(product)) return giveUp();
+      // `processing`, not `sent`: this *is* the pickup, so the order reaches
+      // them the moment it exists. See `OrderSubmissionStatus`.
       placeSubmission(
         productId,
         open.map((b) => b.id),
         BACKOFFICE_ACTOR,
+        "processing",
       );
     },
     [placeSubmission],
   );
 
   /**
+   * Books already handed to the back office, or promised to it.
+   *
+   * Claimed at *schedule* time so the effect below does not queue a second
+   * pickup while the first is still in its ten seconds; released by
+   * `backOfficePickup` if it finds the book no longer qualifies.
+   */
+  const pickedUp = useRef(new Set<string>());
+
+  /**
    * Watches every basket book for the moment it fills, and hands it over.
    *
-   * An effect rather than a line inside `bookOrder`, because a book can reach
+   * An effect rather than a line inside `placeOrder`, because a book can reach
    * its target without a booking being placed — a cancellation that lowers the
    * total, a seeded book that is already full when the app loads. Anything that
    * can make a book full has to be able to hand it over, and the only thing all
@@ -322,7 +492,6 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
    * booking change, and a book stays full for the whole ten seconds it is
    * waiting.
    */
-  const pickedUp = useRef(new Set<string>());
   useEffect(() => {
     const totals = new Map<string, number>();
     for (const b of bookings) {
@@ -345,20 +514,22 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       bookings,
       submissions,
       requirementRequests,
+      proposals,
       isLoading: false,
-      bookOrder,
+      placeOrder,
       cancelBooking,
       sendRequirementRequest,
-      submitOrder,
+      sendProposal,
     }),
     [
       bookings,
       submissions,
       requirementRequests,
-      bookOrder,
+      proposals,
+      placeOrder,
       cancelBooking,
       sendRequirementRequest,
-      submitOrder,
+      sendProposal,
     ],
   );
 

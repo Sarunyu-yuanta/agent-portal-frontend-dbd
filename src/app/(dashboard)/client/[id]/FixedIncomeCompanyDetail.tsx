@@ -158,7 +158,7 @@ function BondTableHeader({ showStatus }: { showStatus: boolean }) {
       <HeaderCellSimple>ความเสี่ยง</HeaderCellSimple>
       <HeaderCellSimple>การค้ำประกัน</HeaderCellSimple>
       <HeaderCellSimple>ประเภทเสนอขาย</HeaderCellSimple>
-      <HeaderCellSimple>คาดว่าเปิดจอง</HeaderCellSimple>
+      <HeaderCellSimple>คาดว่าเปิดขาย</HeaderCellSimple>
       <HeaderCellSimple align="center" borderRight={false} className={STICKY_ACTION_HEADER_CLS} />
     </div>
   );
@@ -420,7 +420,7 @@ export function FixedIncomeCompanyDetail({
               <AssetTag iconSrc={ASSET_TAG_ICONS.offering} label={`ประเภทการเสนอขาย : ${company.offeringType}`} />
               <AssetTag
                 iconSrc={ASSET_TAG_ICONS.minSubscription}
-                label={`จองซื้อขั้นต่ำ : ${company.minSubscription}`}
+                label={`สั่งซื้อขั้นต่ำ : ${company.minSubscription}`}
               />
             </div>
           </div>

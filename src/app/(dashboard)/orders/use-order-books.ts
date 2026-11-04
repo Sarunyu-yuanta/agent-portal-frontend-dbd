@@ -90,6 +90,42 @@ export function useOrderBooks(): Resource<OrderBook[]> {
 }
 
 /**
+ * Books for a named set of products, whether or not anything has been booked
+ * on them.
+ *
+ * The difference from {@link useOrderBooks}, which lists work in progress: a
+ * shelf asks about *products*, and a product nobody has booked yet still has a
+ * book — an empty one, at 0% of its target, open for business. Dropping those
+ * would hide every untouched product from a list whose whole job is to show
+ * what can still be bought.
+ *
+ * `productIds` has to be a stable array — the memo keys on it by identity.
+ * Pass a module-level constant (`TRENDING_BOOKABLE_IDS`), not a fresh
+ * `.map()` per render, or this reassembles every book on every keystroke
+ * anywhere above it.
+ */
+export function useBooksByIds(productIds: readonly string[]): Map<string, OrderBook> {
+  const { bookings, submissions, requirementRequests } = useOrders();
+  return useMemo(() => {
+    const byId = new Map<string, OrderBook>();
+    for (const id of productIds) {
+      const product = findBookableProduct(id);
+      if (!product) continue;
+      byId.set(
+        id,
+        assembleOrderBook(
+          product,
+          bookings.filter((b) => b.productId === id),
+          submissions.filter((s) => s.productId === id),
+          requirementRequests.filter((r) => r.productId === id),
+        ),
+      );
+    }
+    return byId;
+  }, [productIds, bookings, submissions, requirementRequests]);
+}
+
+/**
  * The products gone from the catalogue. Same rule as `isBookClosed`:
  *
  * - basket: the back office has answered the product's order. One still

@@ -12,10 +12,12 @@ import { useToasts } from "@/hooks/use-toasts";
 import { OrderBookingModal } from "@/app/(dashboard)/orders/OrderBookingModal";
 import { ProductOrderNotice } from "@/app/(dashboard)/orders/ProductOrderNotice";
 import { ProductOrderSection } from "@/app/(dashboard)/orders/ProductOrderSection";
+import { ProposalTallyLine } from "@/app/(dashboard)/orders/ProposalTallyLine";
+import { useSendProposal } from "@/app/(dashboard)/orders/useSendProposal";
 import { useOrderBook } from "@/app/(dashboard)/orders/use-order-books";
 import { isBookingOpen } from "@/app/(dashboard)/orders/order-book";
 import { toBookableProduct, type ThaiStructuredProduct } from "./thai-structured-data";
-import { DocumentDownloadMenu } from "./DocumentDownloadMenu";
+import { ProductDocumentActions } from "./ProductDocumentActions";
 import { FCNPresentationModal } from "./FCNPresentationModal";
 import { PackageFilesModal } from "./PackageFilesModal";
 
@@ -79,6 +81,8 @@ export function ThaiStructuredProductDetail({
   // *closing* the modal, and a toast rendered inside it would leave with it.
   const { toasts, addToast, removeToast } = useToasts();
   const notice = (message: string, status: ToastStatus) => addToast({ message, status });
+  // Shares this page's toast stack rather than standing up a second one.
+  const proposal = useSendProposal({ onNotice: notice });
 
   useEffect(() => {
     const main = document.querySelector("main");
@@ -163,11 +167,16 @@ export function ThaiStructuredProductDetail({
         {/* CTA — only under Detail; the Order tab carries its own จองซื้อ. */}
         {tab === "detail" && (
         <div className="flex flex-col gap-3 items-center w-full">
-          <DocumentDownloadMenu
-            onPresentation={() => setFcnModalOpen(true)}
-            onPackage={() => setPackageModalOpen(true)}
-            className="max-w-[343px]"
-          />
+          <div className="flex w-full max-w-[343px] flex-col gap-1.5">
+            <ProductDocumentActions
+              onSendProposal={() => proposal.send(adapted)}
+              onPresentation={() => setFcnModalOpen(true)}
+              onPackage={() => setPackageModalOpen(true)}
+            />
+            {/* How the offers on this product have gone. See the component —
+                the report proper is Performance's job. */}
+            <ProposalTallyLine productId={adapted.id} />
+          </div>
 
           {/* Same swap as the global desk's detail page: booking replaces the
               external hand-off, and the flag puts the old link back. */}
@@ -217,6 +226,7 @@ export function ThaiStructuredProductDetail({
           }}
         />
       )}
+      {proposal.ui}
       <Toaster items={toasts} onRemove={removeToast} />
     </div>
   );

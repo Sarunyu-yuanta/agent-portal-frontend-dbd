@@ -4,7 +4,7 @@
  * One client's orders on one desk — the middle rung Order Management was
  * missing.
  *
- * The list above it is read by client (`ClientOrdersTable`) because a basket is
+ * The list above it is read by client (`OrderRecordsTable`) because a basket is
  * shared: the book for a product holds every IC's bookings and fills to a
  * notional none of them owns. That made "open the client" the natural next
  * step, and until this page there was nowhere for it to go — the only
@@ -21,8 +21,7 @@
  * left. Across all desks is Client 360's job.
  */
 
-import { useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import {
   ArrowLeftIcon,
   CaretRightIcon,
@@ -38,6 +37,7 @@ import {
   TableHeaderCell,
   TableRow,
   Tag,
+  Toaster,
 } from "@sarunyu/system-one";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -48,24 +48,31 @@ import { IC_NAME } from "@/lib/current-ic";
 import { getInitial } from "@/lib/client-utils";
 import { maskName } from "@/lib/mask-name";
 import type { Booking, Client, OrderBook } from "@/types/domain";
-import { dealStatus, emailStatus, paymentStatus } from "../../booking-status";
+import { checksAtBooking, dealStatus, emailStatus, paymentStatus } from "../../booking-status";
 import {
   formatLogTime,
   formatOrderAmount,
   type BookingPhase,
+  BOOKING_PHASES,
   BOOKING_PHASE_LABEL,
+  BOOKING_PHASE_VARIANT,
   bookingPhase,
 } from "../../order-book";
-import { orderBookHref, ordersListHref, type Desk } from "../../bookable-products";
-import { useOrderBooks } from "../../use-order-books";
+import { ORDER_WORDS } from "../../order-words";
+import {
+  bookingModeForDesk,
+  findBookableProduct,
+  ordersListHref,
+  type BookableProduct,
+  type Desk,
+} from "../../bookable-products";
 
-/** Same tags the list's status column uses, so the two rungs agree. */
-const PHASE_VARIANT: Record<BookingPhase, "blue" | "green" | "gray"> = {
-  review: "blue",
-  completed: "green",
-  cancelled: "gray",
-};
-const PHASE_ORDER: BookingPhase[] = ["review", "completed", "cancelled"];
+/** Stands in while no booking is open — see `OrderRecordsTable`. */
+const FALLBACK_PRODUCT = { id: "", tags: [], currency: "", minInvestment: "0" } as unknown as BookableProduct;
+import { BookingDetailModal } from "../../BookingDetailModal";
+import { useClientReadiness } from "../../use-order-books";
+import { useToasts } from "@/hooks/use-toasts";
+import { useOrderBooks } from "../../use-order-books";
 
 /** One product this client holds, with their own bookings on it. */
 type Holding = { book: OrderBook; bookings: Booking[] };
@@ -82,13 +89,19 @@ export function ClientOrdersDetail({
   tabId: string;
   catalogHref: string;
 }) {
-  const router = useRouter();
   const { isPrivate } = usePrivacy();
+  /** The booking whose receipt is open — the same sheet the list opens. */
+  const [opened, setOpened] = useState<{ book: OrderBook; booking: Booking } | null>(null);
+  const { toasts, addToast, removeToast } = useToasts();
+  const openedProduct = opened ? findBookableProduct(opened.book.productId) : undefined;
+  const readiness = useClientReadiness(client, openedProduct ?? FALLBACK_PRODUCT);
   const { data: books } = useOrderBooks();
   const back = useSectionBack(() => `${ordersListHref(tabId)}`);
 
   const profile = getClientProfile(client.id);
   const name = maskName(client.name, isPrivate);
+  // One desk per page, so one mode — the same thing the panel resolved.
+  const mode = bookingModeForDesk(desk);
 
   const holdings: Holding[] = useMemo(
     () =>
@@ -107,12 +120,14 @@ export function ClientOrdersDetail({
     [books, desk, client.id],
   );
 
-  /** Their money on this desk, per currency — see `ClientOrdersTable`. */
+  /** Their money on this desk, per currency — see `OrderRecordsTable`. */
   const totals = useMemo(() => {
     const map = new Map<string, number>();
     for (const { book, bookings } of holdings) {
       for (const b of bookings) {
-        if (b.status !== "booked") continue;
+        // Phase, not `b.status` — see `OrderRecordsTable`'s own note: a
+        // rejected booking is still `"booked"` and must not count.
+        if (bookingPhase(b, book) === "cancelled") continue;
         map.set(book.currency, (map.get(book.currency) ?? 0) + b.amount);
       }
     }
@@ -187,18 +202,18 @@ export function ClientOrdersDetail({
         </div>
 
         <div className="flex flex-col justify-center gap-0.5 self-stretch border-l border-border px-6">
-          <span className="type-caption whitespace-nowrap text-muted-foreground">สินค้าที่จอง</span>
+          <span className="type-caption whitespace-nowrap text-muted-foreground">สินค้า</span>
           <span className="type-body-2 !font-semibold whitespace-nowrap tabular-nums text-foreground">
             {holdings.length} รายการ
           </span>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-3 self-stretch border-l border-border pl-6">
-          {PHASE_ORDER.filter((p) => phases.get(p)).map((p) => (
+          {BOOKING_PHASES.filter((p) => phases.get(p)).map((p) => (
             <Tag
               key={p}
-              text={`${BOOKING_PHASE_LABEL[p]} ${phases.get(p)}`}
-              variant={PHASE_VARIANT[p]}
+              text={`${BOOKING_PHASE_LABEL[mode][p]} ${phases.get(p)}`}
+              variant={BOOKING_PHASE_VARIANT[p]}
               size="large"
             />
           ))}
@@ -250,13 +265,13 @@ export function ClientOrdersDetail({
                       tabIndex={0}
                       aria-label={`ดูดีล ${book.productName}`}
                       className="cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0a6ee7] active:bg-[var(--bg-default-pressed)]"
-                      // The product is the one thing here with a page of its
-                      // own — the deal, where the basket's own total lives.
-                      onClick={() => router.push(orderBookHref(book.productId))}
+                      // The booking's own receipt, over this page rather than
+                      // away from it — the same sheet the list opens.
+                      onClick={() => setOpened({ book, booking: b })}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          router.push(orderBookHref(book.productId));
+                          setOpened({ book, booking: b });
                         }
                       }}
                     >
@@ -267,8 +282,8 @@ export function ClientOrdersDetail({
                               {book.productName}
                             </p>
                             <p className="type-caption truncate text-muted-foreground">
-                              {book.productType} · {book.currency} · จองเมื่อ{" "}
-                              {formatLogTime(b.createdAt)}
+                              {book.productType} · {book.currency} ·{" "}
+                              {ORDER_WORDS[book.mode].placedAt} {formatLogTime(b.createdAt)}
                             </p>
                           </div>
                           <CaretRightIcon
@@ -308,6 +323,22 @@ export function ClientOrdersDetail({
           </Table>
         </div>
       )}
+
+      {/* Rendered whether or not one is open, so it can animate out. */}
+      {openedProduct && opened && (
+        <BookingDetailModal
+          booking={opened.booking}
+          book={opened.book}
+          product={openedProduct}
+          checks={checksAtBooking(opened.booking, readiness.items)}
+          deal={dealStatus(opened.booking, opened.book)}
+          payment={paymentStatus(opened.booking, opened.book)}
+          email={emailStatus(opened.booking, opened.book)}
+          onClose={() => setOpened(null)}
+          onNotice={(message, status) => addToast({ message, status })}
+        />
+      )}
+      <Toaster items={toasts} onRemove={removeToast} />
     </div>
   );
 }

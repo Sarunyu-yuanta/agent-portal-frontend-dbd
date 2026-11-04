@@ -79,7 +79,9 @@ export const TONE: Record<Tone, { halo: string; disc: string; text: string }> = 
   lime: {
     halo: "bg-[var(--fill-lime-100)]",
     disc: "bg-[var(--fill-lime-500)]",
-    text: "text-[var(--fill-lime-600)]",
+    // `700` for the same reason yellow takes it: `600` measures 3.06:1 on white,
+    // which clears the large-text floor by 0.06 and nothing else.
+    text: "text-[var(--fill-lime-700)]",
   },
   yellow: {
     halo: "bg-[var(--fill-yellow-100)]",
@@ -146,6 +148,14 @@ export function SheetRow({
   label,
   /** A sentence under the label — only ever drawn when there is one. */
   hint,
+  /**
+   * Something to press, beside the label rather than in the value's place.
+   *
+   * The value answers "where does this stand"; an action is a different kind
+   * of thing and belongs with the name of what it acts on. A row that put both
+   * on the right would make the IC read a verdict and a verb as one phrase.
+   */
+  action,
   value,
   /** Overrides the value's ink, e.g. a side's red or green. */
   valueClassName = "text-foreground",
@@ -153,6 +163,7 @@ export function SheetRow({
 }: {
   label: string;
   hint?: string | null;
+  action?: React.ReactNode;
   value?: string;
   valueClassName?: string;
   children?: React.ReactNode;
@@ -163,7 +174,10 @@ export function SheetRow({
           are — the value is what truncates. A row carrying a hint gives that
           up, since the sentence is the longer of the two. */}
       <span className={`flex flex-col gap-0.5 ${hint ? "min-w-0" : "shrink-0"}`}>
-        <span className="text-[12px] text-muted-foreground">{label}</span>
+        <span className="flex flex-wrap items-baseline gap-x-2">
+          <span className="text-[12px] text-muted-foreground">{label}</span>
+          {action}
+        </span>
         {hint && <span className="text-[11px] leading-4 text-muted-foreground/80">{hint}</span>}
       </span>
       {children ?? (

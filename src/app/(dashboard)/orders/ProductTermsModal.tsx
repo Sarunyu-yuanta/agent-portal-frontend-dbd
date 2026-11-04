@@ -11,8 +11,9 @@
  *
  * The rows are the product page's own (`structuredProductRows`,
  * `thaiProductRows`), so the two can never disagree about a term — and the
- * documents are offered through the same `DocumentDownloadMenu`, since an IC
- * looking at the terms mid-book is often about to send them to a client.
+ * documents are offered through the same `ProductDocumentActions`, since an IC
+ * looking at the terms mid-book is often about to send them to a client — which
+ * on that button is now a logged Proposal rather than a download.
  */
 
 import { useState } from "react";
@@ -25,12 +26,14 @@ import {
   structuredProductRows,
   type DetailRow,
 } from "../client/[id]/StructuredProductDetail";
-import { DocumentDownloadMenu } from "../client/[id]/DocumentDownloadMenu";
+import { ProductDocumentActions } from "../client/[id]/ProductDocumentActions";
 import { FCNPresentationModal } from "../client/[id]/FCNPresentationModal";
 import { PackageFilesModal } from "../client/[id]/PackageFilesModal";
 import { thaiProductRows } from "../client/[id]/ThaiStructuredProductDetail";
 import { THAI_STRUCTURED_PRODUCTS, thaiBookableId } from "../client/[id]/thai-structured-data";
 import { catalogHrefFor, type BookableProduct } from "./bookable-products";
+import { ProposalTallyLine } from "./ProposalTallyLine";
+import { useSendProposal } from "./useSendProposal";
 import { ProductLogos } from "./ProductLogos";
 
 /**
@@ -58,9 +61,13 @@ export function ProductTermsModal({
   onClose: () => void;
 }) {
   const [doc, setDoc] = useState<"presentation" | "package" | null>(null);
+  // Its own toast stack: this modal is mounted by hosts that have none, and
+  // the send has to be able to report from inside it.
+  const proposal = useSendProposal();
 
   // One modal at a time: the document opens in place of the terms, so two
-  // sheets never stack on a phone.
+  // sheets never stack on a phone. The same applies to the send dialog, which
+  // is why it closes the terms the way a document does.
   const openDoc = (which: "presentation" | "package") => {
     onClose();
     setDoc(which);
@@ -97,10 +104,15 @@ export function ProductTermsModal({
               inline on the plain button because the library's own size
               classes sit outside Tailwind's layers and would win over a class. */}
           <div className="mx-auto flex w-[240px] max-w-full flex-col gap-2">
-            <DocumentDownloadMenu
+            <ProductDocumentActions
+              onSendProposal={() => {
+                onClose();
+                proposal.send(product);
+              }}
               onPresentation={() => openDoc("presentation")}
               onPackage={() => openDoc("package")}
             />
+            <ProposalTallyLine productId={product.id} />
             <Link href={catalogHrefFor(product)} className="block">
               <Button
                 variant="plain"
@@ -122,6 +134,7 @@ export function ProductTermsModal({
         onClose={() => setDoc(null)}
       />
       <PackageFilesModal product={product} open={doc === "package"} onClose={() => setDoc(null)} />
+      {proposal.ui}
     </>
   );
 }

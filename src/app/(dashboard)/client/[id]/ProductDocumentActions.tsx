@@ -1,26 +1,46 @@
 "use client";
 
 /**
- * "ดาวน์โหลดเอกสาร" — the button and the two documents it offers: the
- * presentation PDF and the full closing package.
+ * What an IC can do with a product's documents: **send them to a client**, or
+ * download them.
  *
- * One component for every place a product's documents are offered — both desks'
- * detail pages and Order Management's product modal — so the menu reads the
- * same wherever an IC reaches for it. The host owns the document modals and
- * opens them from the two callbacks.
+ * It used to be "ดาวน์โหลดเอกสาร" alone — the IC downloaded the presentation
+ * and sent it to the client however they liked, so an offer left no trace and
+ * nothing about it could be counted. Sending is now the headline and the
+ * portal does it (`useSendProposal`), which is what makes an offer a thing with
+ * an outcome: see `orders/order-proposals`.
+ *
+ * So this is a **split button**. The label half sends; the caret half opens the
+ * two downloads, which are unchanged and still there for a meeting, a printout,
+ * a client who wants it by hand. Two hit areas rather than one, because one
+ * surface cannot both act and disclose.
+ *
+ * One component for every place a product's documents are offered — all four
+ * desks — so it reads the same wherever an IC reaches for it. The host owns the
+ * document modals, the send dialog and the toasts, and opens them from the
+ * callbacks.
  *
  * The menu opens upward: every host puts the button at the bottom of its
  * content.
  */
 
 import { useState } from "react";
-import { CaretDownIcon, EyeIcon, FilePdfIcon, PackageIcon } from "@phosphor-icons/react";
+import {
+  CaretDownIcon,
+  EyeIcon,
+  FilePdfIcon,
+  PackageIcon,
+  PaperPlaneTiltIcon,
+} from "@phosphor-icons/react";
 
-export function DocumentDownloadMenu({
+export function ProductDocumentActions({
+  onSendProposal,
   onPresentation,
   onPackage,
   className = "",
 }: {
+  /** Opens the send dialog — the primary half. */
+  onSendProposal: () => void;
   onPresentation: () => void;
   onPackage: () => void;
   className?: string;
@@ -29,20 +49,36 @@ export function DocumentDownloadMenu({
 
   return (
     <div className={`relative w-full ${className}`}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="flex w-full items-center h-12 px-4 font-medium text-sm text-white rounded-xl cursor-pointer transition-opacity hover:opacity-90"
+      <div
+        className="flex w-full items-stretch h-12 rounded-xl overflow-hidden text-white"
         style={{ backgroundColor: "#0a6ee7" }}
       >
-        <span className="flex-1 text-center">ดาวน์โหลดเอกสาร</span>
-        <CaretDownIcon
-          size={14}
-          color="white"
-          style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-        />
-      </button>
+        <button
+          type="button"
+          onClick={onSendProposal}
+          className="flex flex-1 items-center justify-center gap-2 px-4 font-medium text-sm cursor-pointer transition-opacity hover:opacity-90"
+        >
+          <PaperPlaneTiltIcon size={16} weight="fill" />
+          <span>ส่ง Proposal ให้ลูกค้า</span>
+        </button>
+        {/* Divided, so the caret reads as a second control rather than as
+            decoration on the first — pressing it must not send anything. */}
+        <span aria-hidden className="my-2 w-px shrink-0 bg-white/30" />
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label="ดาวน์โหลดเอกสาร"
+          title="ดาวน์โหลดเอกสาร"
+          className="flex shrink-0 items-center justify-center px-3.5 cursor-pointer transition-opacity hover:opacity-90"
+        >
+          <CaretDownIcon
+            size={14}
+            color="white"
+            style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+          />
+        </button>
+      </div>
 
       {open && (
         <>

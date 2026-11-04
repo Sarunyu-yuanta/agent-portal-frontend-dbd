@@ -345,7 +345,7 @@ function TableHeader() {
         style={headerBorderStyle()}
       >
         <span className={`${HEADER_TEXT_CLS} whitespace-nowrap`}>
-          คาดว่าเปิดจอง
+          คาดว่าเปิดขาย
         </span>
       </div>
       <div

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@sarunyu/system-one";
+import { Button, TabGroup } from "@sarunyu/system-one";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import {
   filterGlobalBonds,
@@ -15,9 +15,12 @@ import {
   GlobalBondBookingContext,
   GlobalBondDetailAccordion,
   GlobalBondDetailTable,
+  GlobalBondProposalContext,
 } from "./GlobalBondDetailBondList";
 import { useOpenProducts } from "@/app/(dashboard)/orders/use-order-books";
 import { useQuotaBooking } from "@/app/(dashboard)/orders/useQuotaBooking";
+import { useSendProposal } from "@/app/(dashboard)/orders/useSendProposal";
+import { QuotaBooksPanel } from "@/app/(dashboard)/orders/QuotaBooksPanel";
 import { ORDER_BOOKING_ENABLED } from "@/lib/feature-flags";
 import { GlobalBondDetailRecommended } from "./GlobalBondDetailRecommended";
 import { useGlobalBondIssuer } from "@/hooks/use-catalog";
@@ -42,9 +45,24 @@ export function GlobalBondDetail({
   const [yieldFilter, setYieldFilter] = useState<YieldFilter>("all");
   const [maturityFilter, setMaturityFilter] = useState<MaturityFilter>("all");
 
+  const [tab, setTab] = useState<"detail" | "orders">("detail");
   const booking = useQuotaBooking();
+  // Its own stack: the page mounts no toaster of its own, and a send has to be
+  // able to report. See `useSendProposal`.
+  const proposal = useSendProposal();
   // A bond whose quota is used up has nothing left to sell — off the list.
   const openBonds = useOpenProducts(issuer?.bonds ?? NO_BONDS, globalBondBookableId);
+  /**
+   * Every bond of this issuer, as book ids — the Order tab's scope.
+   *
+   * `issuer.bonds`, not `openBonds`: a bond whose quota is spent drops off the
+   * list to sell from, but the orders already placed on it are still this
+   * issuer's and still the IC's to read.
+   */
+  const bookIds = useMemo(
+    () => (issuer?.bonds ?? NO_BONDS).map((row) => globalBondBookableId(row)),
+    [issuer],
+  );
   const filteredBonds = useMemo(
     () => filterGlobalBonds(openBonds, yieldFilter, maturityFilter),
     [openBonds, yieldFilter, maturityFilter],
@@ -64,6 +82,7 @@ export function GlobalBondDetail({
     setPrevIssuerId(issuerId);
     setYieldFilter("all");
     setMaturityFilter("all");
+    setTab("detail");
   }
 
   if (isLoading) return <GlobalBondDetailSkeleton />;
@@ -116,40 +135,68 @@ export function GlobalBondDetail({
           maturityFilter={maturityFilter}
           onYieldChange={setYieldFilter}
           onMaturityChange={setMaturityFilter}
+          // They filter the bond list, which the Order tab replaces.
+          showFilters={tab === "detail"}
         />
 
         <div className="flex flex-col gap-4 lg:gap-12 w-full">
-          <div className="flex flex-col gap-4 w-full">
-            <div className="flex items-center justify-between w-full gap-3">
-              <p className="text-sm font-bold leading-5 text-[#101828] md:text-base md:leading-6">
-                จำนวน {filteredBonds.length} รายการ
-              </p>
-              <span className="text-xs leading-4 text-[#6a7282] md:text-sm md:leading-5 whitespace-nowrap shrink-0">
-                <span className="md:hidden">
-                  อัปเดตล่าสุด {updatedAtMobile}
-                </span>
-                <span className="hidden md:inline">
-                  อัปเดตล่าสุด {issuer.updatedAt}
-                </span>
-              </span>
-            </div>
-            <GlobalBondBookingContext.Provider
-              value={ORDER_BOOKING_ENABLED ? booking.book : null}
-            >
-              <div className="lg:hidden">
-                <GlobalBondDetailAccordion bonds={filteredBonds} />
-              </div>
-              <div className="hidden lg:block">
-                <GlobalBondDetailTable bonds={filteredBonds} />
-              </div>
-            </GlobalBondBookingContext.Provider>
-          </div>
+          {/* The same two views the rest of the catalogue's product pages
+              carry. This one is an *issuer*, not a single bond, so Order is
+              scoped to all of its bonds — the chips and the table are Order
+              Management's own, narrowed by `productIds`. */}
+          {ORDER_BOOKING_ENABLED && (
+            <TabGroup
+              items={[
+                { id: "detail", title: "Detail" },
+                { id: "orders", title: "Order" },
+              ]}
+              activeId={tab}
+              onChange={(id) => setTab(id as "detail" | "orders")}
+            />
+          )}
 
-          <GlobalBondDetailRecommended
-            issuerId={issuerId}
-            onIssuerSelect={onIssuerSelect}
-          />
+          {tab === "orders" ? (
+            <QuotaBooksPanel desk="Global Bond" productIds={bookIds} />
+          ) : (
+            <>
+              <div className="flex flex-col gap-4 w-full">
+                <div className="flex items-center justify-between w-full gap-3">
+                  <p className="text-sm font-bold leading-5 text-[#101828] md:text-base md:leading-6">
+                    จำนวน {filteredBonds.length} รายการ
+                  </p>
+                  <span className="text-xs leading-4 text-[#6a7282] md:text-sm md:leading-5 whitespace-nowrap shrink-0">
+                    <span className="md:hidden">
+                      อัปเดตล่าสุด {updatedAtMobile}
+                    </span>
+                    <span className="hidden md:inline">
+                      อัปเดตล่าสุด {issuer.updatedAt}
+                    </span>
+                  </span>
+                </div>
+                <GlobalBondBookingContext.Provider
+                  value={ORDER_BOOKING_ENABLED ? booking.book : null}
+                >
+                  <GlobalBondProposalContext.Provider
+                    value={ORDER_BOOKING_ENABLED ? proposal.send : null}
+                  >
+                  <div className="lg:hidden">
+                    <GlobalBondDetailAccordion bonds={filteredBonds} />
+                  </div>
+                  <div className="hidden lg:block">
+                    <GlobalBondDetailTable bonds={filteredBonds} />
+                  </div>
+                  </GlobalBondProposalContext.Provider>
+                </GlobalBondBookingContext.Provider>
+              </div>
+
+              <GlobalBondDetailRecommended
+                issuerId={issuerId}
+                onIssuerSelect={onIssuerSelect}
+              />
+            </>
+          )}
           {booking.ui}
+          {proposal.ui}
         </div>
       </div>
     </div>

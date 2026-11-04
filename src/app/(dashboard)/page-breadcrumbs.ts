@@ -35,7 +35,6 @@ import {
   normalizeMutualFundCategoryId,
 } from "./client/[id]/mutual-fund-data";
 import { getThaiStructuredProduct } from "./client/[id]/thai-structured-data";
-import { findBookableProduct } from "./orders/bookable-products";
 import { getIndustrySectorPage } from "./client/[id]/stock-industry-sector-data";
 import { getMarketIndexPage } from "./client/[id]/stock-index-data";
 import { getStockProductDetail } from "./client/[id]/stock-product-detail-data";
@@ -290,25 +289,6 @@ function labelFor(pathname: string, ctx: BreadcrumbContext): string | null {
   if (client) {
     const found = ctx.clients.find((c) => c.id === client[1]);
     return maskName(found?.name ?? "Client", ctx.isPrivate);
-  }
-
-  // A book is named by the product it is filling — the id in the URL is the
-  // product's, and resolving it here is what keeps the rung reading
-  // "Order Management / KO - WMT" instead of "Order Management / ko-wmt".
-  // `findBookableProduct`, not `findProductById`: books span both structured
-  // desks, and the Thai ones are not in the global registry.
-  // Before the book rule, which would otherwise read "client" as a product id.
-  const clientOrders = /^\/orders\/client\/([^/]+)/.exec(pathname);
-  if (clientOrders) {
-    const found = ctx.clients.find((c) => c.id === decodeURIComponent(clientOrders[1]));
-    // Masked, like the Client 360 rung: the breadcrumb is as visible as any
-    // name on the page it heads.
-    return maskName(found?.name ?? "ลูกค้า", ctx.isPrivate);
-  }
-
-  const book = /^\/orders\/([^/]+)/.exec(pathname);
-  if (book) {
-    return findBookableProduct(decodeURIComponent(book[1]))?.underlying ?? "รายการจอง";
   }
 
   const insight = /^\/insights\/([^/]+)/.exec(pathname);

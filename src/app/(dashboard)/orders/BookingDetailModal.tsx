@@ -17,9 +17,10 @@
 
 import { useState } from "react";
 import {
+  BookmarkSimpleIcon,
   CaretDownIcon,
   CheckIcon,
-  MagnifyingGlassIcon,
+  HourglassMediumIcon,
   XIcon,
 } from "@phosphor-icons/react";
 import { Button, Tag, type ToastStatus } from "@sarunyu/system-one";
@@ -45,27 +46,33 @@ import {
 import {
   BOOKING_PHASE_LABEL,
   bookingPhase,
+  submissionFor,
   formatLogTime,
   formatOrderAmount,
   type BookingPhase,
 } from "./order-book";
+import { ORDER_WORDS } from "./order-words";
+import { EVIDENCE_CHANNEL, formatFileSize } from "./order-evidence";
 import { STATUS_CHIP } from "./OrderBookingModal";
 import type { BookingStatusTag } from "./booking-status";
 
 /**
  * The disc, by the step the booking is at rather than by its deal status.
  *
- * The status is the finer-grained thing ("รอยอดครบ", "รอส่งคำสั่งซื้อ") and it
- * colours the words; the disc answers the coarse question, so it follows the
- * step. A booking being checked took a green tick from its status's colour
- * and read as finished — it is a magnifying glass in the app's own blue now,
- * which is what "being looked at" looks like.
+ * The status is the finer-grained thing ("จองแล้ว", "ถูกปฏิเสธ") and it colours
+ * the words; the disc answers the coarse question, so it follows the step.
+ *
+ * `processing` takes yellow and an hourglass — the colour the bell already
+ * rings "ครบยอดแล้ว" in, so the notification and the sheet agree. `pending`
+ * keeps the app's own blue, and a bookmark rather than a magnifying glass:
+ * nothing is under review, the booking is simply placed.
  */
 const PHASE_DISC: Record<
   BookingPhase,
   { tone: Tone; glyph: React.ReactNode }
 > = {
-  review: { tone: "primary", glyph: <MagnifyingGlassIcon size={28} weight="bold" /> },
+  pending: { tone: "primary", glyph: <BookmarkSimpleIcon size={28} weight="fill" /> },
+  processing: { tone: "yellow", glyph: <HourglassMediumIcon size={28} weight="fill" /> },
   completed: { tone: "green", glyph: <CheckIcon size={30} weight="bold" /> },
   cancelled: { tone: "gray", glyph: <XIcon size={30} weight="bold" /> },
 };
@@ -98,7 +105,7 @@ export function BookingDetailModal({
     <ResponsiveBottomSheetModal
       open={booking !== null}
       onClose={onClose}
-      title={`รายละเอียดการจอง ${product.underlying} ${product.coupon}`}
+      title={`รายละเอียด${ORDER_WORDS[book.mode].record} ${product.underlying} ${product.coupon}`}
       titleId="booking-detail-title"
       // The sheet opens with its own heading — the deal status in colour, with
       // the product named under it. A second heading above said both again.
@@ -172,20 +179,39 @@ function Body({
 
   const profile = getClientProfile(booking.clientId);
   const name = maskName(booking.clientName, isPrivate);
-  const submission = book.submissions.find((s) => s.bookingIds.includes(booking.id));
+  const submission = submissionFor(booking, book);
+  const words = ORDER_WORDS[book.mode];
   const passed = checks.filter((i) => i.status === "passed").length;
-  const cancelled = booking.status === "cancelled";
   const phase = bookingPhase(booking, book);
-  // Only a booking still on the open round can be pulled — once an order has
-  // carried it downstream, the portal is no longer the record of it.
-  const cancellable = !cancelled && !submission;
+  // Phase, not `booking.status` — a booking whose order was rejected is still
+  // `"booked"`, and the amount below it has to read as struck through under a
+  // ยกเลิก disc.
+  const cancelled = phase === "cancelled";
+  /**
+   * Whether the IC can still pull it — one window per desk, and they close for
+   * the same reason: the moment the back office has the order, it is theirs.
+   *
+   * - **basket** — until an order carries the booking at all. The back office
+   *   creates that order by collecting the basket, so its existence *is* the
+   *   handover.
+   * - **quota** — while the order is still `sent`. Creating a bond order sends
+   *   it, so there is no before-the-order window to use instead; this is the
+   *   gap before pickup (`BACKOFFICE_PICKUP_MS`), and the only one.
+   *
+   * `booking.status`, not `phase`: a booking whose order was rejected is
+   * cancelled-*looking* but was never cancelled, and offering to cancel it
+   * again would be offering to undo the back office.
+   */
+  const cancellable =
+    booking.status !== "cancelled" &&
+    (book.mode === "quota" ? submission?.status === "sent" : !submission);
 
   const cancel = async () => {
     setCancelling(true);
     await cancelBooking(booking.id);
     setCancelling(false);
     onClose();
-    onNotice(`ยกเลิกการจองของ ${name} แล้ว`, "information");
+    onNotice(`${words.cancel}ของ ${name} แล้ว`, "information");
   };
 
   return (
@@ -198,7 +224,7 @@ function Body({
               "where is this", which one circle and one word answer. */}
           <StatusDisc variant={PHASE_DISC[phase].tone}>{PHASE_DISC[phase].glyph}</StatusDisc>
           <p className={`pt-3 text-[20px] leading-7 font-bold ${TONE[PHASE_DISC[phase].tone].text}`}>
-            {BOOKING_PHASE_LABEL[phase]}
+            {BOOKING_PHASE_LABEL[book.mode][phase]}
           </p>
           {/* The product, with the desk as its badge — the sheet is reached
               from a book that is already one desk's, but it is also reached
@@ -209,7 +235,7 @@ function Body({
               run-on phrase rather than a verdict and the thing it is about. */}
           <div className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 pt-4">
             <span className="shrink-0 rounded-full bg-[var(--fill-blue-100)] px-2 py-0.5 text-[11px] font-semibold text-[var(--fill-blue-700)]">
-              จองซื้อ
+              {words.action}
             </span>
             <span className="text-[16px] leading-6 font-bold text-foreground">
               {product.underlying}
@@ -222,12 +248,12 @@ function Body({
 
         <div className="flex flex-col gap-3 px-5 pb-5 pt-2 md:px-6">
           <div className={`flex flex-col gap-3 ${SHEET_PANEL}`}>
-            <SheetBlock title="รายละเอียดการจอง">
+            <SheetBlock title={`รายละเอียด${words.record}`}>
               <ClientRow clientId={booking.clientId} name={name} />
               <SheetRow label="Full Name (TH)" value={maskName(profile.nameTh, isPrivate)} />
               <SheetRow label="Account No" value={profile.accountNo} />
               <SheetRow label="IC Name" value={booking.createdBy} />
-              <SheetRow label="จองเมื่อ" value={formatLogTime(booking.createdAt)} />
+              <SheetRow label={words.placedAt} value={formatLogTime(booking.createdAt)} />
               {submission && <CopyRow label="เลขที่คำสั่งซื้อ" value={submission.backendRef} />}
               {/* The three statuses the table's last three columns carry, in
                   the same order and the same `large` tags. Deal Status is back
@@ -247,6 +273,36 @@ function Body({
               </SheetRow>
             </SheetBlock>
 
+            {/* Proof of the client's instruction, above the checks because it
+                answers the earlier question: the checks say the client was
+                allowed to buy, this says they asked to. Basket desks only —
+                see `evidenceRequired`. */}
+            {booking.evidence && (
+              <>
+                <div className={SHEET_DASHED} />
+                <SheetBlock title="หลักฐานการรับคำสั่ง">
+                  <SheetRow label="ช่องทาง">
+                    <span className="inline-flex items-center gap-1.5 text-[13px] font-bold text-foreground">
+                      {(() => {
+                        const Icon = EVIDENCE_CHANNEL[booking.evidence.channel].icon;
+                        return <Icon size={15} weight="fill" className="shrink-0 text-muted-foreground" />;
+                      })()}
+                      {EVIDENCE_CHANNEL[booking.evidence.channel].label}
+                    </span>
+                  </SheetRow>
+                  {/* The name wraps rather than truncates: a recording called
+                      `call-110002-2026-11-03.m4a` is only useful whole. */}
+                  <SheetRow label="ไฟล์">
+                    <span className="text-right text-[13px] font-bold break-all text-foreground">
+                      {booking.evidence.fileName}
+                    </span>
+                  </SheetRow>
+                  <SheetRow label="ขนาด" value={formatFileSize(booking.evidence.fileSize)} />
+                  <SheetRow label="แนบเมื่อ" value={formatLogTime(booking.evidence.attachedAt)} />
+                </SheetBlock>
+              </>
+            )}
+
             <div className={SHEET_DASHED} />
 
             {/* Folded away by default. The four checks are the one block here
@@ -262,10 +318,8 @@ function Body({
                 aria-expanded={checksOpen}
                 className={`-mx-2 flex flex-wrap items-center gap-2 px-2 py-1 text-left ${SHEET_PRESSABLE}`}
               >
-                <span className="text-[13px] font-bold text-foreground">
-                  ข้อมูลที่ต้องมีก่อนจองซื้อ
-                </span>
-                <span className="text-[11px] text-muted-foreground">ณ วันที่จอง</span>
+                <span className="text-[13px] font-bold text-foreground">{words.prereq}</span>
+                <span className="text-[11px] text-muted-foreground">{words.asOf}</span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[11px] tabular-nums ${
                     passed === checks.length
@@ -310,11 +364,16 @@ function Body({
             </p>
           </div>
 
-          {/* At the very end, centred — reached only after reading the booking
+          {/* At the very end, centred — reached only after reading the record
               it would undo. No footer "ปิด": the header's ✕ closes it, and a
-              second close button only sat next to this one. */}
+              second close button only sat next to this one.
+
+              The only action on this sheet. There is nothing constructive left
+              to offer: a basket is collected by the back office and a bond
+              order was sent by the press that created it, so whatever happens
+              next happens somewhere else. */}
           {cancellable && (
-            <div className="flex justify-center pt-2">
+            <div className="flex flex-col items-center gap-1 pt-2">
               <Button
                 variant={cancelling ? "disabled" : "plain"}
                 size="md"
@@ -322,8 +381,19 @@ function Body({
                 onClick={cancel}
                 className="text-[var(--fill-red-600)]"
               >
-                {cancelling ? "กำลังยกเลิก…" : "ยกเลิกการจอง"}
+                {cancelling ? "กำลังยกเลิก…" : words.cancel}
               </Button>
+              {/* Why this one can be pulled when the next one along cannot.
+                  Both read "กำลังดำเนินการรับคำสั่งซื้อ" — the difference is
+                  whether the back office has taken it up (`OrderSubmissionStatus`
+                  `"sent"` vs `"processing"`), which is not a distinction worth a
+                  status of its own but is worth a line next to the button that
+                  depends on it. */}
+              {book.mode === "quota" && (
+                <p className="type-caption text-center text-muted-foreground">
+                  ยกเลิกได้จนกว่าระบบหลังบ้านจะรับคำสั่งซื้อไปดำเนินการ
+                </p>
+              )}
             </div>
           )}
         </div>

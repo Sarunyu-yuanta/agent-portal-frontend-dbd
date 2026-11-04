@@ -159,7 +159,7 @@ export function fixedIncomeToBookableProduct(bond: FixedIncomeBond): StructuredP
 }
 
 export function getBookingLabel(bond: FixedIncomeBond): string {
-  const prefix = bond.status === "open" ? "เปิดจอง" : "คาดว่าเปิดจอง";
+  const prefix = bond.status === "open" ? "เปิดขาย" : "คาดว่าเปิดขาย";
   return `${prefix} ${bond.subscriptionPeriod}`;
 }
 

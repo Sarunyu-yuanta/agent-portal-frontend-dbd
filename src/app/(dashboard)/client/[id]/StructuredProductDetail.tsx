@@ -13,10 +13,12 @@ import { useToasts } from "@/hooks/use-toasts";
 import { OrderBookingModal } from "@/app/(dashboard)/orders/OrderBookingModal";
 import { ProductOrderNotice } from "@/app/(dashboard)/orders/ProductOrderNotice";
 import { ProductOrderSection } from "@/app/(dashboard)/orders/ProductOrderSection";
+import { ProposalTallyLine } from "@/app/(dashboard)/orders/ProposalTallyLine";
+import { useSendProposal } from "@/app/(dashboard)/orders/useSendProposal";
 import { useOrderBook } from "@/app/(dashboard)/orders/use-order-books";
 import { headlineRound, isBookingOpen } from "@/app/(dashboard)/orders/order-book";
 import type { StructuredProduct } from "./structured-product-data";
-import { DocumentDownloadMenu } from "./DocumentDownloadMenu";
+import { ProductDocumentActions } from "./ProductDocumentActions";
 import { FCNPresentationModal } from "./FCNPresentationModal";
 import { PackageFilesModal } from "./PackageFilesModal";
 
@@ -155,6 +157,8 @@ export function StructuredProductDetail({
   // *closing* the modal, and a toast rendered inside it would leave with it.
   const { toasts, addToast, removeToast } = useToasts();
   const notice = (message: string, status: ToastStatus) => addToast({ message, status });
+  // Shares this page's toast stack rather than standing up a second one.
+  const proposal = useSendProposal({ onNotice: notice });
 
 
   useEffect(() => {
@@ -280,11 +284,16 @@ export function StructuredProductDetail({
             Management tab carries its own จองซื้อ. */}
         {tab === "detail" && (
           <div className="flex flex-col gap-3 items-center w-full">
-            <DocumentDownloadMenu
-              onPresentation={() => setFcnModalOpen(true)}
-              onPackage={() => setPackageModalOpen(true)}
-              className="max-w-[343px]"
-            />
+            <div className="flex w-full max-w-[343px] flex-col gap-1.5">
+              <ProductDocumentActions
+                onSendProposal={() => proposal.send(product)}
+                onPresentation={() => setFcnModalOpen(true)}
+                onPackage={() => setPackageModalOpen(true)}
+              />
+              {/* How the offers on this product have gone. See the component —
+                  the report proper is Performance's job. */}
+              <ProposalTallyLine productId={product.id} />
+            </div>
             {/* Booking replaces the external hand-off the page used to make.
                 With the flag off it goes back to that link, so the catalogue is
                 exactly what it was before this feature existed. */}
@@ -342,6 +351,7 @@ export function StructuredProductDetail({
           }}
         />
       )}
+      {proposal.ui}
       <Toaster items={toasts} onRemove={removeToast} />
     </div>
   );

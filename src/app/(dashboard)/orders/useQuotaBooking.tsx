@@ -1,13 +1,15 @@
 "use client";
 
 /**
- * Booking a bond from a catalogue page — Fixed Income or Global Bond.
+ * Ordering a bond from a catalogue page — Fixed Income or Global Bond.
  *
- * The structured desks book from a product page that has its own Order tab to
- * land on. A bond is booked from a list row as often as from its own page, and
- * a list has no tab to switch to, so the hand-off is a toast instead: the
- * booking modal's own "จอง … แล้ว" carries a "ดูรายการจอง" action to the
- * book's page on Order Management, where the order is sent.
+ * One press is the whole flow here: a bond has nothing to fill, so the order is
+ * created and sent in the same action (`placeOrder` in `contexts/orders-context`)
+ * and the IC has nothing left to do with it. The structured desks order from a
+ * product page with its own Order tab to land on; a bond is ordered from a list
+ * row as often as from its own page, and a list has no tab to switch to, so the
+ * hand-off is a toast instead — the modal's "ส่งคำสั่งซื้อ … แล้ว" quotes the
+ * reference and carries a "ดูคำสั่งซื้อ" action to Order Management.
  *
  * One hook per page rather than one modal per row: a table of bonds would
  * otherwise mount a modal and a toast stack for every line.
@@ -18,14 +20,30 @@ import { useRouter } from "next/navigation";
 import { Button, Toaster, type ToastStatus } from "@sarunyu/system-one";
 import { useToasts } from "@/hooks/use-toasts";
 import { ORDER_BOOKING_ENABLED } from "@/lib/feature-flags";
-import { orderBookHref, type BookableProduct } from "./bookable-products";
+import type { Booking } from "@/types/domain";
+import { ordersListHref, type BookableProduct } from "./bookable-products";
 import { isBookingOpen } from "./order-book";
+import { ORDER_WORDS } from "./order-words";
 import { OrderBookingModal } from "./OrderBookingModal";
 import { useOrderBook } from "./use-order-books";
 
-export function useQuotaBooking(): {
-  /** Opens the booking modal on this bond. */
+export function useQuotaBooking(options?: {
+  /**
+   * The order just placed, for a page that marks it — the bond page's Order
+   * tab highlights the row it made (see `ProductOrderSection`).
+   */
+  onPlaced?: (booking: Booking) => void;
+}): {
+  /** Opens the order modal on this bond. */
   book: (product: BookableProduct) => void;
+  /**
+   * Reports into this page's one toast stack.
+   *
+   * Exposed so whatever else the page mounts — the Order tab, whose detail
+   * modal reports a cancellation — reports in the same place rather than
+   * standing up a second `<Toaster>` over the first.
+   */
+  notice: (message: string, status: ToastStatus) => void;
   /** The modal and its toasts — render once, anywhere on the page. */
   ui: ReactNode;
 } {
@@ -43,7 +61,7 @@ export function useQuotaBooking(): {
       message,
       status,
       ...(id
-        ? { actionLabel: "ดูรายการจอง", onActionClick: () => router.push(orderBookHref(id)) }
+        ? { actionLabel: "ดูคำสั่งซื้อ", onActionClick: () => router.push(ordersListHref(id)) }
         : {}),
     });
   };
@@ -58,6 +76,7 @@ export function useQuotaBooking(): {
           onNotice={notice}
           onBooked={(booking) => {
             bookedId.current = booking.productId;
+            options?.onPlaced?.(booking);
           }}
         />
       )}
@@ -65,11 +84,11 @@ export function useQuotaBooking(): {
     </>
   );
 
-  return { book: setProduct, ui };
+  return { book: setProduct, notice, ui };
 }
 
 /**
- * The CTA on a bond: opens the booking modal while the bond has quota left,
+ * The CTA on a bond: opens the order modal while the bond has quota left,
  * and says เต็มโควตา once it hasn't.
  */
 export function QuotaBookButton({
@@ -77,7 +96,7 @@ export function QuotaBookButton({
   onBook,
   size = "xs",
   className,
-  label = "จองซื้อให้ลูกค้า",
+  label = ORDER_WORDS.quota.cta,
 }: {
   product: BookableProduct;
   onBook: (product: BookableProduct) => void;

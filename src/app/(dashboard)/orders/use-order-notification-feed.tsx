@@ -22,7 +22,7 @@
  */
 
 import { useMemo } from "react";
-import { orderBookHref } from "./bookable-products";
+import { ordersListHref } from "./bookable-products";
 import {
   CheckCircleIcon,
   IdentificationCardIcon,
@@ -32,7 +32,7 @@ import {
 import { useOrders } from "@/contexts/orders-context";
 import type { ZonedNotification } from "../notification-zones";
 import { zoneForDays } from "../notification-zones";
-import { formatOrderAmount } from "./order-book";
+import { formatOrderAmount, isBookFull } from "./order-book";
 import { useOrderBooks } from "./use-order-books";
 
 /** Whole days since `iso`, counted in calendar days rather than hours. */
@@ -95,7 +95,7 @@ export function useOrderNotificationFeed() {
       add(
         `order-req-${request.id}`,
         daysSince(request.completedAt),
-        orderBookHref(request.productId),
+        ordersListHref(request.productId),
         {
           title: request.clientName,
           // "ตรวจสอบได้" rather than "จองซื้อได้". What came back is the forms
@@ -112,12 +112,16 @@ export function useOrderNotificationFeed() {
     for (const book of books) {
       // ── 2. The back office has answered ───────────────────────────────────
       for (const submission of book.submissions) {
-        if (submission.status === "processing" || !submission.settledAt) continue;
+        // Only an order the back office has answered rings. `sent` and
+        // `processing` are both still in flight — and both carry no
+        // `settledAt`, which is the same answer read off the record rather than
+        // off a list of statuses a later member could fall out of.
+        if (!submission.settledAt) continue;
         const ok = submission.status === "completed";
         add(
           `order-sub-${submission.id}`,
           daysSince(submission.settledAt),
-          orderBookHref(book.productId),
+          ordersListHref(book.productId),
           {
             title: ok ? "คำสั่งซื้อสำเร็จ" : "คำสั่งซื้อถูกปฏิเสธ",
             description: `${book.productName} · ${submission.backendRef}`,
@@ -136,7 +140,10 @@ export function useOrderNotificationFeed() {
       // Still worth ringing even though the IC has nothing to press: a deal
       // reaching its notional is the thing they were working towards, and the
       // row is how they learn it landed without sitting on the page.
-      if (book.mode !== "basket" || book.status !== "ready") continue;
+      // The same predicate the chips use, so the bell and the row cannot
+      // disagree about whether a basket is full — `book.status` answers a
+      // different question once a submission exists. See `isBookFull`.
+      if (book.mode !== "basket" || !isBookFull(book) || book.submissions.length > 0) continue;
       // The id counts submissions rather than naming the amount: a book that
       // fills, is sent, and fills again is genuinely two announcements, while
       // one extra booking on an already-full book is not — an id carrying the
@@ -146,7 +153,7 @@ export function useOrderNotificationFeed() {
         // A standing state, not an event: it is true now, so it rings today
         // and keeps the "วันนี้" heading until it stops being true.
         0,
-        orderBookHref(book.productId),
+        ordersListHref(book.productId),
         {
           title: `${book.productName} ครบยอดแล้ว`,
           description: `จองครบ ${formatOrderAmount(book.bookedAmount, book.currency)} — รอระบบหลังบ้านมารับคำสั่งซื้อ`,

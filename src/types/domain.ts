@@ -132,6 +132,36 @@ export type ClientReadiness = {
   outstanding: RequirementItem[];
 };
 
+/** How a client asked for an order — see {@link OrderEvidence}. */
+export type EvidenceChannel = "call" | "email" | "chat";
+
+/**
+ * Proof that the client asked for this order, and down which channel.
+ *
+ * The four checks on `ClientReadiness` say a client is *allowed* to buy. None
+ * of them says this client asked to buy *this*, for *this much*, today — and on
+ * the basket desks the IC places the order on their behalf, so that gap is the
+ * whole of what a compliance review would ask about. A phone order attaches the
+ * call recording; an emailed reply attaches the mail; a chat attaches the
+ * thread.
+ *
+ * ─── Backend handoff ─────────────────────────────────────────────────────────
+ * **The file is not stored anywhere.** There is no upload endpoint and no
+ * object store, so `placeOrder` keeps what the browser could report about the
+ * file the IC chose and drops the `File` itself. The form says so rather than
+ * implying the recording has been filed. When storage exists, `placeOrder` is
+ * the one function it lands in.
+ */
+export type OrderEvidence = {
+  channel: EvidenceChannel;
+  fileName: string;
+  /** Bytes. Shown back, so a two-second mis-recording is visible as one. */
+  fileSize: number;
+  /** The browser's MIME type, or `""` where it could not tell. */
+  fileType: string;
+  attachedAt: string;
+};
+
 export type Booking = {
   id: string;
   productId: string;
@@ -142,6 +172,28 @@ export type Booking = {
   createdAt: string;
   createdBy: string;
   status: "booked" | "cancelled";
+  /**
+   * Proof of the client's instruction — see {@link OrderEvidence}.
+   *
+   * Optional on the type because a **quota** booking has none: on Fixed Income
+   * and Global Bond the press is the order and the requirement names the
+   * structured desks only. Required on a basket booking, by the form and by
+   * `placeOrder`, which refuses a basket draft without one.
+   */
+  evidence?: OrderEvidence;
+  /**
+   * Who put it through: this portal (`ic`) or the client's own app (`app`).
+   *
+   * Nothing in the order flow reads it — a booking is a booking either way. It
+   * exists because it is the one thing that separates the two ways a
+   * {@link ProposalLog} converts: the client acting on the app themselves, or
+   * reading the email and phoning the IC to do it for them. Both are wins and
+   * `proposalOutcome` treats them alike; splitting them is the Performance
+   * report's job, and this is the field it will split on.
+   *
+   * Absent on seeded bookings that predate it — read as `"ic"`.
+   */
+  placedVia?: "ic" | "app";
   /**
    * The four checks as they stood when the booking was placed.
    *
@@ -167,7 +219,26 @@ export type Booking = {
  * nothing downstream has to ask.
  */
 
-export type OrderSubmissionStatus = "processing" | "completed" | "rejected";
+/**
+ * Where one order is, downstream.
+ *
+ * `sent` is the window between the order leaving here and the back office
+ * taking it up, and which desk the order came from decides whether it has that
+ * window at all:
+ *
+ * - **quota** (Fixed Income, Global Bond) — the IC creates the order, so it
+ *   starts at `sent` and moves to `processing` when the back office picks it up
+ *   (`BACKOFFICE_PICKUP_MS` in `contexts/orders-context`). That window is the
+ *   only one in which the IC can still pull it — which is the whole of what
+ *   `sent` is for. **It is not shown as a status of its own**: from the IC's
+ *   side the order is downstream either way, so both read
+ *   "กำลังดำเนินการรับคำสั่งซื้อ" (see `BookingPhase`), and the cancel button
+ *   in `BookingDetailModal` is where the difference is said.
+ * - **basket** (Thai / Global Structured) — the *back office* creates the order
+ *   by collecting a full basket, so it is picked up the moment it exists and
+ *   starts at `processing`. Nothing on those desks is ever `sent`.
+ */
+export type OrderSubmissionStatus = "sent" | "processing" | "completed" | "rejected";
 
 /** One book sent downstream as a single order. */
 export type OrderSubmission = {
@@ -180,7 +251,7 @@ export type OrderSubmission = {
   status: OrderSubmissionStatus;
   /** The reference the downstream system hands back. */
   backendRef: string;
-  /** Set once that system answers; `null` while it is still processing. */
+  /** Set once that system answers; `null` while it is `sent` or `processing`. */
   settledAt: string | null;
 };
 
@@ -575,6 +646,43 @@ export type ShareLog = {
   materialVersion: string;
   sentBy: string;
   sentAt: string;
+};
+
+/** Where a proposal was delivered. Both, today — see {@link ProposalLog}. */
+export type ProposalChannel = "app" | "email";
+
+/**
+ * One product's documents, sent to one client — an offer, and the record of it.
+ *
+ * The IC used to download the presentation and send it however they liked, so
+ * an offer left no trace and nothing about it could be counted. This is that
+ * send, made into an event: who it went to, when, and down which channels.
+ *
+ * **Append-only**, for the same reason {@link ShareLog} is: a send is a thing
+ * that happened. A second proposal on the same product to the same client is a
+ * second row — a re-pitch is not an edit of the first one.
+ *
+ * **The outcome is not here.** Whether an offer converted is read off the
+ * bookings (`proposalOutcome` in `orders/order-proposals`), because a stored
+ * verdict is a verdict that can disagree with the bookings it describes — the
+ * same bargain {@link OrderLogEntry} strikes.
+ */
+export type ProposalLog = {
+  id: string;
+  productId: string;
+  clientId: string;
+  clientName: string;
+  sentAt: string;
+  sentBy: string;
+  /**
+   * Where it was delivered.
+   *
+   * Both today, always — the client's app and their email are the two places a
+   * proposal lands. Stored as a list rather than assumed, because which one the
+   * client acted through is half of how the Performance report will read this
+   * (the other half being {@link Booking.placedVia}).
+   */
+  channels: ProposalChannel[];
 };
 
 /** A note an IC/RM writes — about any number of clients, or none (a general note). */

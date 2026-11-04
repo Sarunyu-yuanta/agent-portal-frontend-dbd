@@ -8,7 +8,7 @@ import {
   DEFAULT_TRENDING_SORT,
   getTrendingGroup,
   normalizeTrendingSort,
-  PRODUCT_TRENDING_UPDATED_AT,
+  trendingUpdatedAt,
   TRENDING_SORT_PARAM,
 } from "../../../client/[id]/product-trending-data";
 import { setQueryState, withQuery } from "@/lib/query-state";
@@ -46,7 +46,7 @@ export default function ProductTrendingGroupPage({
   return (
     <ProductTrendingAllTable
       group={group}
-      updatedAt={PRODUCT_TRENDING_UPDATED_AT}
+      updatedAt={trendingUpdatedAt(group.measure)}
       sort={sort}
       onSortChange={(next) =>
         setQueryState(

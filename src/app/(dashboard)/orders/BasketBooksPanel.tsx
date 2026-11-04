@@ -4,7 +4,7 @@
  * The basket desks' tab body — Thai Structured or Global Structured: every
  * client this IC has booked into a product of that desk.
  *
- * Client-first, not product-first (see `ClientOrdersTable`). The books are
+ * One row per record, not per product (see `OrderRecordsTable`). The books are
  * still assembled per product and still filtered here by desk and by
  * availability; the table is what inverts them into one row per person.
  *
@@ -26,25 +26,33 @@ import { getClientProfile } from "@/data/client-profiles";
 import { FadeIn } from "@/components/ui/fade-in";
 import { maskName } from "@/lib/mask-name";
 import { setQueryState, withQuery } from "@/lib/query-state";
-import { ClientOrdersTable } from "./ClientOrdersTable";
-import { BOOK_AVAILABILITY_STEPS as STEPS, bookAvailability } from "./order-book";
+import { OrderRecordsTable } from "./OrderRecordsTable";
+import { bookingPhaseSteps } from "./order-book";
+import { hasOwnWorkAt } from "./order-proposals";
+import { IC_NAME } from "@/lib/current-ic";
+import { useOrders } from "@/contexts/orders-context";
 import { useOrderBooks } from "./use-order-books";
-import type { Desk } from "./bookable-products";
+import { bookingModeForDesk, type Desk } from "./bookable-products";
 
 export function BasketBooksPanel({
   desk,
-  tabId,
   catalogHref,
 }: {
   desk: Desk;
-  /** Which `?tab=` this panel is — carried into each client's page. */
-  tabId: string;
   /** Where the empty state sends the IC to start a booking — the desk's catalogue tab. */
   catalogHref: string;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: books, isLoading } = useOrderBooks();
+  // Offers are part of this list now — see `hasOwnWorkAt`.
+  const { proposals } = useOrders();
+  // One desk per panel, so one mode — the chips and the table both read it.
+  const mode = bookingModeForDesk(desk);
+  // Memoised on the mode: `step` is an object picked out of this array and
+  // feeds the filter below, so a fresh array every render would cost the
+  // memoisation of the whole list.
+  const STEPS = useMemo(() => bookingPhaseSteps(mode, { offers: true }), [mode]);
   const { isPrivate } = usePrivacy();
   const [search, setSearch] = useState("");
 
@@ -54,12 +62,19 @@ export function BasketBooksPanel({
   // step it was opened from.
   const requestedStep = searchParams.get("step");
   const step = STEPS.find((s) => s.id === requestedStep) ?? STEPS[0];
+  /** `null` on "ทั้งหมด" — what the filters read as "no step filter". */
+  const step_ = step.id === "all" ? null : step.id;
 
   // "Search All" — anything a row is recognised by. The client leads, because
   // the list is read by client now: their name, id and account number, then the
   // products they hold and the order references those produced.
   const matching = useMemo(() => {
-    const ofType = books.filter((book) => book.desk === desk);
+    // This desk, the step, and only the IC's own work — the same predicate
+    // the table groups by, so the two cannot disagree about whether a desk is
+    // empty. See `hasOwnWorkAt`.
+    const ofType = books.filter(
+      (book) => book.desk === desk && hasOwnWorkAt(book, IC_NAME, step_, proposals),
+    );
     const query = search.trim().toLowerCase();
     if (!query) return ofType;
     return ofType.filter((book) =>
@@ -75,12 +90,9 @@ export function BasketBooksPanel({
         ...book.submissions.map((s) => s.backendRef),
       ].some((text) => text.toLowerCase().includes(query)),
     );
-  }, [books, desk, search, isPrivate]);
+  }, [books, desk, search, isPrivate, step_, proposals]);
 
-  const visible = useMemo(
-    () => (step.id === "all" ? matching : matching.filter((b) => bookAvailability(b) === step.id)),
-    [matching, step],
-  );
+
 
   return (
     <div className="flex flex-col gap-4">
@@ -111,7 +123,10 @@ export function BasketBooksPanel({
             value={search}
             onChange={setSearch}
             onClear={() => setSearch("")}
-            placeholder="Search All"
+            // The same words as the transaction tabs' box: all seven tabs of
+            // Order Management search the same two things, and "Search All" was
+            // the only English left on the page.
+            placeholder="ค้นหาสินค้า หรือลูกค้า"
             className="w-full"
           />
         </div>
@@ -121,8 +136,8 @@ export function BasketBooksPanel({
           endpoint, every visit flashes "ยังไม่มีรายการจอง" before the data
           lands. The project-wide rule, see `docs/handover.md`. */}
       {isLoading ? (
-        <ClientOrdersTable books={[]} tabId={tabId} isLoading />
-      ) : visible.length === 0 ? (
+        <OrderRecordsTable books={[]} mode={mode} step={step_} isLoading />
+      ) : matching.length === 0 ? (
         <EmptyState
           icon={<ClipboardTextIcon size={40} className="text-[var(--text-default-placeholder)]" />}
           title={search ? "ไม่พบรายการที่ค้นหา" : step.empty}
@@ -145,7 +160,7 @@ export function BasketBooksPanel({
         // Keyed on the step, so switching it replays the fade — the rows change
         // completely.
         <FadeIn key={step.id}>
-          <ClientOrdersTable books={visible} tabId={tabId} />
+          <OrderRecordsTable books={matching} mode={mode} step={step_} />
         </FadeIn>
       )}
     </div>

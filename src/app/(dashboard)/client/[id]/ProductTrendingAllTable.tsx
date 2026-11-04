@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, Pagination } from "@sarunyu/system-one";
+import { Button, LinearProgress, Pagination } from "@sarunyu/system-one";
 import { ArrowLeftIcon, FireIcon } from "@phosphor-icons/react";
 import { formatAumThb } from "@/lib/client-utils";
+import { ORDER_BOOKING_ENABLED } from "@/lib/feature-flags";
+import { bookFill } from "@/app/(dashboard)/orders/order-book";
+import type { OrderBook } from "@/types/domain";
+import { bookForItem, trendingRows, useTrendingBooks } from "./use-trending-books";
 import { PercentPill } from "./stock-ui";
 import { TagFilterChip } from "./MutualFundCard";
 import { MF_ASSETS } from "./mutual-fund-assets";
@@ -16,8 +20,6 @@ import {
   headerBorderStyle,
 } from "./fixed-income-shared";
 import {
-  showsOrderCount,
-  sortTrendingItems,
   TRENDING_SORTS,
   type TrendingSort,
   type TrendingGroup,
@@ -46,6 +48,51 @@ export function RankBadge({ rank }: { rank: number }) {
       {rank}
     </span>
   );
+}
+
+/**
+ * How much of a product's book is taken — the shelf's own progress bar.
+ *
+ * One component for both booking modes, because from the shelf they are the
+ * same question: how much of this window is gone. What fills the bar differs —
+ * a basket collects toward its notional, a bond draws down an issue quota —
+ * and `headlineRound` is what keeps the basket side honest: `bookedAmount`
+ * counts only bookings no order has carried, so a collected basket would read
+ * 0% at the very moment it is fullest.
+ *
+ * Shared with the cards, so a fill looks the same on both.
+ */
+export function TrendingFill({ book }: { book: OrderBook }) {
+  const fill = bookFill(book);
+  const taken = fill.taken;
+  // Rounded once, for the bar and the figure both: `LinearProgress` publishes
+  // what it is given as `aria-valuenow`, so an unrounded `pct` had a screen
+  // reader announcing 33.33333333333333 beside a printed "33%".
+  const pct = Math.round(fill.pct);
+  const money = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  return (
+    <span className="flex min-w-0 flex-1 items-center gap-2">
+      <LinearProgress value={pct} className="min-w-[40px] flex-1" />
+      <span className="type-caption text-muted-foreground whitespace-nowrap">
+        {money(taken)} / {money(book.targetAmount)} {book.currency}
+      </span>
+      {/* Bold and last, where the eye lands after the bar — the bar is the
+          shape of the answer, this is the answer. */}
+      <span className="type-caption font-bold text-foreground whitespace-nowrap tabular-nums">
+        {pct}%
+      </span>
+    </span>
+  );
+}
+
+/**
+ * Whether this group's rows carry a fill bar.
+ *
+ * The measure answers it — `"fill"` groups are precisely the ones with books.
+ * Still gated on the flag: with booking off there are no books to read.
+ */
+export function showsFill(group: TrendingGroup): boolean {
+  return ORDER_BOOKING_ENABLED && group.measure === "fill";
 }
 
 /** Mutual Fund's View/Highlight artwork for the two editorial filters; best
@@ -84,7 +131,7 @@ export function TrendingSortChips({
 }
 
 type ColDef = {
-  key: "rank" | "product" | "sales" | "orders" | "change";
+  key: "rank" | "product" | "fill" | "sales" | "orders" | "change";
   label: string;
   width: string;
   align: string;
@@ -93,15 +140,24 @@ type ColDef = {
 const COLS: ColDef[] = [
   { key: "rank",    label: "อันดับ",       width: "w-[80px]",              align: "justify-center" },
   { key: "product", label: "สินค้า",       width: "flex-1 min-w-[300px]",  align: "" },
+  { key: "fill",    label: "ยอดจองในตะกร้า", width: "w-[280px]",          align: "" },
   { key: "sales",   label: "ยอดขาย",      width: "w-[140px]",             align: "justify-end" },
   { key: "orders",  label: "ออเดอร์",      width: "w-[120px]",             align: "justify-end" },
   { key: "change",  label: "เทียบสัปดาห์ก่อน", width: "w-[150px]",        align: "justify-end" },
 ];
 
-function Cell({ item, col }: { item: TrendingItem; col: ColDef }) {
+function Cell({ item, col, book }: { item: TrendingItem; col: ColDef; book: OrderBook | null }) {
   switch (col.key) {
     case "rank":
       return <RankBadge rank={item.rank} />;
+    case "fill":
+      // A dash, not an empty cell: the column is there because the desk has
+      // books, and a blank reads as "0%" rather than "this row has none".
+      return book ? (
+        <TrendingFill book={book} />
+      ) : (
+        <span className="type-caption text-muted-foreground">—</span>
+      );
     case "product":
       return (
         <span className="flex flex-col min-w-0">
@@ -109,20 +165,25 @@ function Cell({ item, col }: { item: TrendingItem; col: ColDef }) {
           <span className="type-caption text-muted-foreground truncate">{item.subtitle}</span>
         </span>
       );
+    // The three sales columns are only mounted on a `"sales"` group (see
+    // `cols` below), so reaching one with nothing to print would be a column
+    // list and a measure that disagree — render nothing rather than a zero.
     case "sales":
-      return (
+      return item.salesThb === undefined ? null : (
         <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">
           {formatAumThb(item.salesThb)}
         </span>
       );
     case "orders":
-      return (
+      return item.orders === undefined ? null : (
         <span className="text-sm leading-5 text-[#101828] whitespace-nowrap">
           {item.orders.toLocaleString("en-US")}
         </span>
       );
     case "change":
-      return <PercentPill trend={item.trend} value={item.changePct} size="sm" />;
+      return item.trend && item.changePct ? (
+        <PercentPill trend={item.trend} value={item.changePct} size="sm" />
+      ) : null;
   }
 }
 
@@ -157,8 +218,18 @@ export function ProductTrendingAllTable({
     else window.scrollTo(0, 0);
   }, []);
 
-  const items = sortTrendingItems(group.items, sort);
-  const cols = showsOrderCount(group.id) ? COLS : COLS.filter((c) => c.key !== "orders");
+  const books = useTrendingBooks();
+  const items = trendingRows(group, books, sort);
+  const fill = showsFill(group);
+  /** A column per figure the group actually has — see `TrendingMeasure`. */
+  const cols = COLS.filter((c) =>
+    c.key === "fill"
+      ? fill
+      : group.measure === "sales" || (c.key !== "sales" && c.key !== "orders" && c.key !== "change"),
+  );
+  // Wider when the fill column is in: the bar needs room to be a bar, and the
+  // table scrolls sideways rather than crushing it.
+  const minWidth = fill ? "min-w-[860px]" : MIN_WIDTH;
   const total = items.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Math.min(currentPage, totalPages);
@@ -193,7 +264,7 @@ export function ProductTrendingAllTable({
           {/* No order count for desks that open a single round — see `showsOrderCount`. */}
           <div className="w-full rounded-xl bg-white" style={TABLE_CARD_STYLE}>
             <div className={SCROLLABLE_TABLE_BODY_CLS}>
-              <div className={`flex h-11 items-stretch ${MIN_WIDTH}`}>
+              <div className={`flex h-11 items-stretch ${minWidth}`}>
                 {cols.map((col, i) => (
                   <div
                     key={col.key}
@@ -204,7 +275,7 @@ export function ProductTrendingAllTable({
                   </div>
                 ))}
               </div>
-              <div className={`flex flex-col ${MIN_WIDTH}`}>
+              <div className={`flex flex-col ${minWidth}`}>
                 {paged.map((item, i) => (
                   <button
                     key={item.rank}
@@ -218,7 +289,7 @@ export function ProductTrendingAllTable({
                         className={`flex ${col.width} shrink-0 items-center ${col.align} px-3 py-3 min-w-0`}
                         style={cellBorderStyle({ bottom: i < paged.length - 1 })}
                       >
-                        <Cell item={item} col={col} />
+                        <Cell item={item} col={col} book={bookForItem(item, books)} />
                       </div>
                     ))}
                   </button>

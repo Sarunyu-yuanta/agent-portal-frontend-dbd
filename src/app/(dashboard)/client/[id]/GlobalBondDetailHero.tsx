@@ -114,12 +114,21 @@ export function GlobalBondDetailHero({
   maturityFilter,
   onYieldChange,
   onMaturityChange,
+  showFilters = true,
 }: {
   issuer: GlobalBondIssuer;
   yieldFilter: YieldFilter;
   maturityFilter: MaturityFilter;
   onYieldChange: (id: YieldFilter) => void;
   onMaturityChange: (id: MaturityFilter) => void;
+  /**
+   * Whether the yield and maturity pills show.
+   *
+   * Off on the page's Order tab: they filter the bond *list*, which that tab
+   * replaces — left on, the page offered three "ทั้งหมด" pills, two of them
+   * for a list nobody could see.
+   */
+  showFilters?: boolean;
 }) {
   const heroImage = issuer.heroImage ?? "/products/global-bond/global-bond-apple-hero.webp";
   return (
@@ -205,7 +214,11 @@ export function GlobalBondDetailHero({
         <p className="md:hidden text-sm font-semibold leading-[22px] text-[rgba(0,0,0,0.75)]">
           {issuer.description}
         </p>
-        <div className="flex flex-col gap-3 md:gap-2 lg:flex-row lg:gap-10 lg:items-start">
+        <div
+          className={`flex-col gap-3 md:gap-2 lg:flex-row lg:gap-10 lg:items-start ${
+            showFilters ? "flex" : "hidden"
+          }`}
+        >
           <div className="flex flex-col gap-2 md:flex-row md:gap-4 md:items-center lg:gap-3 lg:items-center">
             <span className="text-xs leading-[18px] text-[rgba(0,0,0,0.75)] md:text-sm md:leading-[22px] whitespace-nowrap">
               ผลตอบแทนโดยประมาณ :

@@ -13,7 +13,9 @@
  * step bought (no typing an amount for a client who cannot buy) without the
  * extra click.
  *
- * `จองซื้อ` still re-checks readiness rather than trusting the faded section: a
+ * The primary button — `จองซื้อ` on a basket, `ส่งคำสั่งซื้อ` on a bond, see
+ * {@link ORDER_WORDS} — still re-checks readiness rather than trusting the
+ * faded section: a
  * check can expire while the form is open. A client who is missing something is
  * fixed in the system that owns the record, which is where
  * "ส่งให้ลูกค้าดำเนินการ" sends them — the form has no override.
@@ -25,7 +27,6 @@ import {
   Alert,
   Avatar,
   Button,
-  Input,
   SearchInput,
   useIsMobile,
   type ToastStatus,
@@ -34,8 +35,8 @@ import {
   ArrowLeftIcon,
   CaretRightIcon,
   CheckCircleIcon,
-  PaperPlaneTiltIcon,
   ClockIcon,
+  PaperclipIcon,
   WarningCircleIcon,
   XCircleIcon,
 } from "@phosphor-icons/react";
@@ -53,9 +54,20 @@ import type {
   Client,
   ClientReadiness,
   RequirementItem,
+  RequirementKey,
+  EvidenceChannel,
+  OrderEvidence,
   RequirementStatus,
 } from "@/types/domain";
-import type { BookableProduct } from "./bookable-products";
+import { bookingModeFor, type BookableProduct } from "./bookable-products";
+import { ORDER_WORDS } from "./order-words";
+import { SHEET_PANEL, SheetRow } from "./detail-sheet-ui";
+import {
+  EVIDENCE_CHANNEL,
+  EVIDENCE_CHANNELS,
+  evidenceRequired,
+  formatFileSize,
+} from "./order-evidence";
 import {
   cashInCurrency,
   clientCashThb,
@@ -64,7 +76,6 @@ import {
   isBookClosed,
   isBookingOpen,
   minTicketFor,
-  USD_THB,
 } from "./order-book";
 import { requestableKeys, shortRequirementLabel } from "./order-requirements";
 import { useClientReadiness, useOrderBook, useRosterReadiness } from "./use-order-books";
@@ -102,7 +113,7 @@ export function OrderBookingModal({
     <ResponsiveBottomSheetModal
       open={open}
       onClose={onClose}
-      title={`ทำรายการจองซื้อ ${product.underlying} ${product.coupon}`}
+      title={`ทำรายการ${ORDER_WORDS[bookingModeFor(product)].action} ${product.underlying} ${product.coupon}`}
       titleId="order-booking-title"
       // Two columns of short fields and one amount — past about this width the
       // grid stops being two columns of a form and becomes two columns of a
@@ -171,11 +182,14 @@ function BookingForm({
 }) {
   const clients = useClients();
   const { isPrivate } = usePrivacy();
-  const { bookOrder } = useOrders();
+  const { placeOrder } = useOrders();
 
   const isMobile = useIsMobile();
   const [raw, setRaw] = useState("");
   const [booking, setBooking] = useState(false);
+  /** The attached proof of the client's instruction — basket desks only. */
+  const [evidence, setEvidence] = useState<OrderEvidence | null>(null);
+  const needsEvidence = evidenceRequired(bookingModeFor(product));
 
   const client = clients.find((c) => c.id === clientId) ?? null;
   const atForm = client !== null;
@@ -253,8 +267,21 @@ function BookingForm({
             form is a drill-in from the row the IC just pressed, and Back has to
             land on the list exactly as it was — same scroll position, same
             search. */}
+        {/* `overflow-clip`, because the off-screen pane keeps its own height.
+            `items-start` below stops the panes stretching to each other, which
+            is what the measured height depends on — but it also means the
+            taller pane hangs out of the track, and an overhang inside a
+            scroller is scrollable space. With the customer list (tall) parked
+            beside a form whose later steps are hidden (short), that was ~300px
+            of blank scroll under the form.
+
+            `clip` rather than `hidden`: `hidden` would make this the scrollport
+            the picker's sticky search header sticks to, and this box never
+            scrolls — the header would have scrolled away with its rows. A
+            `clip` box is not a scroll container, so the header still sticks to
+            the scroller above. */}
         <div
-          className="transition-[height] duration-200 ease-out"
+          className="overflow-clip transition-[height] duration-200 ease-out"
           style={{ height: trackHeight }}
         >
           {/* `items-start` is load-bearing: a flex row stretches its children to
@@ -285,7 +312,11 @@ function BookingForm({
             </div>
             <div
               ref={formRef}
-              className="w-1/2 shrink-0 px-4 pb-4 pt-3 md:px-6"
+              // `pt-5`, matching the gap between every section below it: the
+              // first block was sitting nearer the title than the blocks are to
+              // each other, which read as the header's padding rather than as
+              // the form starting.
+              className="w-1/2 shrink-0 px-4 pb-4 pt-5 md:px-6"
               inert={!atForm}
             >
               {shown && (
@@ -333,16 +364,54 @@ function BookingForm({
                     <ReadOnlyField label="IC Team" value={IC_TEAM} />
                   </div>
 
-                  <StatusGrid product={product} client={shown} onNotice={onNotice} />
-                  <AmountSection
-                    product={product}
-                    client={shown}
-                    raw={raw}
-                    onRawChange={setRaw}
-                    disabled={!ready}
-                    passed={readiness.items.filter((i) => i.status === "passed").length}
-                    total={readiness.items.length}
-                  />
+                  {/* The checks keep the receipt's rows — four grey cards made
+                      the block that needs no attention the heaviest thing on
+                      the screen. The facts above stay as cards: they are the
+                      order's header, and the grid is what pairs them off.
+
+                      `mt-5` because the panel carries its own fill: the gap has
+                      to read as a gap between two blocks rather than as the
+                      panel's padding, and the grid's last row sat on the fill's
+                      edge without it. The old layout got the same separation
+                      from a rule and `mt-4 pt-4`, which the panel replaced. */}
+                  <div className={`mt-5 ${SHEET_PANEL}`}>
+                    <StatusGrid product={product} client={shown} onNotice={onNotice} />
+                  </div>
+                  {/* The steps after the checks do not exist until the checks
+                      pass.
+
+                      They used to render faded and inert, on the reasoning
+                      that the IC should see what is coming. What that actually
+                      produced was two-thirds of a long modal greyed out under
+                      a warning — the reader scrolled past an amount they could
+                      not type and a file they could not attach to reach a dead
+                      button. The line below says what is missing and where to
+                      fix it, which is the whole of what the faded blocks were
+                      communicating. */}
+                  {ready ? (
+                    <>
+                      <AmountSection
+                        product={product}
+                        client={shown}
+                        raw={raw}
+                        onRawChange={setRaw}
+                      />
+                      {needsEvidence && (
+                        <EvidenceSection value={evidence} onChange={setEvidence} />
+                      )}
+                    </>
+                  ) : (
+                    <Alert
+                      status="warning"
+                      message={`${ORDER_WORDS[bookingModeFor(product)].prereq}ยังไม่ครบ (${
+                        readiness.items.filter((i) => i.status === "passed").length
+                      }/${readiness.items.length}) — ทำให้ครบก่อนจึงจะ${
+                        ORDER_WORDS[bookingModeFor(product)].action
+                      }ได้`}
+                      multiline
+                      className="mt-5"
+                    />
+                  )}
                 </>
               )}
             </div>
@@ -351,8 +420,8 @@ function BookingForm({
       </div>
 
       {/* Only on the second screen. Both of its buttons are about an order that
-          does not exist yet while the list is up — "จองซื้อ" can only ever be
-          dead there, and a dead primary button under a list of people reads as
+          does not exist yet while the list is up — the primary button can only
+          ever be dead there, and a dead primary under a list of people reads as
           "one of these should have enabled it". The ✕ in the title row is the
           way out of the picker; Cancel comes back with the form it belongs to.
 
@@ -364,6 +433,7 @@ function BookingForm({
       {shown && (
         <Footer
           ready={ready}
+          evidence={evidence}
           product={product}
           cashAvailable={cashInCurrency(clientCashThb(shown), product.currency)}
           raw={raw}
@@ -371,18 +441,29 @@ function BookingForm({
           onCancel={onClose}
           onBooked={async (amount) => {
             setBooking(true);
-            const placed = await bookOrder({
+            const { booking: placed, submission } = await placeOrder({
               productId: product.id,
               clientId: shown.id,
               clientName: shown.name,
               amount,
               checks: readiness.items,
+              // `?? undefined`, so a desk that does not ask for it sends
+              // nothing rather than an explicit null the store would have to
+              // know to ignore.
+              evidence: evidence ?? undefined,
             });
             setBooking(false);
             onClose();
             onBookedProp?.(placed);
+            // On a bond the order has already gone downstream, so the notice
+            // can quote its reference — which is the whole reason the IC would
+            // otherwise have gone looking for the record.
+            const money = formatOrderAmount(amount, product.currency);
+            const who = maskName(shown.name, isPrivate);
             onNotice(
-              `จอง ${formatOrderAmount(amount, product.currency)} ให้ ${maskName(shown.name, isPrivate)} แล้ว`,
+              submission
+                ? `ส่งคำสั่งซื้อ ${money} ของ ${who} แล้ว (${submission.backendRef})`
+                : `จอง ${money} ให้ ${who} แล้ว`,
               "success",
             );
           }}
@@ -471,7 +552,8 @@ function CustomerPicker({
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <span className="type-body-2 !font-semibold text-foreground">เลือกลูกค้า</span>
           <span className="type-caption text-muted-foreground tabular-nums">
-            จองได้เลย {readyCount} จาก {results.length} ราย
+            {ORDER_WORDS[bookingModeFor(product)].eligible} {readyCount} จาก{" "}
+            {results.length} ราย
           </span>
         </div>
 
@@ -639,30 +721,37 @@ function StatusGrid({
   const readiness = useClientReadiness(client, product);
   const sendable = requestableKeys(readiness);
   const displayName = maskName(client.name, isPrivate);
-  const [sending, setSending] = useState(false);
+  /** Which row is in flight, by key — `null` while none is. */
+  const [sendingKey, setSendingKey] = useState<RequirementKey | null>(null);
 
   /**
-   * Sends the client off to complete everything outstanding, in one request.
+   * Sends the client off to complete one record.
    *
-   * One request rather than one per record: they go out together, they come
-   * back together, and the IC has no reason to send half of them. In the real
-   * screen each record lives in its own system (Wealth Declare, Risk Consent) —
-   * that is a routing detail of the request, not a decision for whoever is on
-   * the phone. Here there is nowhere to route to, so the store answers on a
-   * timer; same round trip, minus the other applications. See
-   * `contexts/orders-context`.
+   * One request per row, where this used to send the whole outstanding set at
+   * once. The single button was a fair reading while the four were cards and
+   * the action had nowhere to sit inside them; as rows they each have room
+   * beside their own label, and only *some* of them are sendable — KYC is
+   * started at a branch with the client present, and a risk rating below the
+   * product's is not something a form can fix. A button that acts on "whatever
+   * of these four happens to qualify" is a button whose effect the IC has to
+   * work out from the count in its label.
+   *
+   * In the real screen each record lives in its own system (Wealth Declare,
+   * Risk Consent), so one row is one routing target anyway. Here there is
+   * nowhere to route to and the store answers on a timer — same round trip,
+   * minus the other applications. See `contexts/orders-context`.
    */
-  const sendAll = async () => {
-    setSending(true);
+  const sendOne = async (item: RequirementItem) => {
+    setSendingKey(item.key);
     await sendRequirementRequest({
       clientId: client.id,
       clientName: client.name,
       productId: product.id,
-      keys: sendable,
+      keys: [item.key],
     });
-    setSending(false);
+    setSendingKey(null);
     onNotice(
-      `ส่งให้ ${displayName} ดำเนินการ ${sendable.length} รายการแล้ว — จะแจ้งเตือนเมื่อลูกค้าทำเสร็จ`,
+      `ส่ง "${item.label}" ให้ ${displayName} ดำเนินการแล้ว — จะแจ้งเตือนเมื่อลูกค้าทำเสร็จ`,
       "success",
     );
   };
@@ -672,11 +761,16 @@ function StatusGrid({
   return (
     <>
       {/* A heading over the four, with the verdict. The chips answer each row;
-          this answers the grid, so the reader is not re-counting colours every
-          time the form re-renders under them. */}
-      <div className="mt-4 flex items-center gap-2 border-t border-border pt-4">
-        <span className="type-body-2 !font-semibold text-foreground">
-          ข้อมูลที่ต้องมีก่อนจองซื้อ
+          this answers the set, so the reader is not re-counting ticks every
+          time the form re-renders under them.
+
+          Rendered here rather than through `SheetBlock`, whose title is a
+          string: the verdict rides beside the words and has to be a node. The
+          type matches that block's own so the two headings in this panel are
+          the same heading. */}
+      <div className="flex flex-wrap items-center gap-2 pb-1">
+        <span className="text-[13px] font-bold text-foreground">
+          {ORDER_WORDS[bookingModeFor(product)].prereq}
         </span>
         {/* The same word the customer list gave this client a moment ago — the
             IC picked the row that said "ยังไม่ครบ" and the next screen has to
@@ -696,43 +790,48 @@ function StatusGrid({
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 pt-3 md:grid-cols-2">
-        {readiness.items.map((item) => (
-          <StatusField key={item.key} item={item} />
-        ))}
-      </div>
+      {/* One row each, in the panel's own language. They were four grey cards
+          in a 2×2 grid, which made the block that needs no attention — every
+          one of them passes, nine times in ten — the heaviest thing on the
+          screen. A row says the same thing and sits level with the facts above
+          it.
 
-      {/* One button for the whole set, where each card used to carry its own
-          link. Those links were per-field because each record lives in its own
-          system, but the IC's move is the same either way — send the client off
-          to finish what is missing — and one button is that move stated once.
-          It also means the cards hold nothing clickable, which is what lets the
-          big icon on the right read as the only thing in them.
-
-          Hidden when there is nothing to send: everything passed, or the only
-          thing left is a risk rating no form can change (the alert below says
-          so instead). */}
-      {sendable.length > 0 && (
-        /* Right-aligned, under the grid it acts on — the same edge the modal's
-           own `จองซื้อ` sits on, so the two actions line up as one column of
-           "what happens next" rather than one starting at each margin.
-           Full-width on a phone, where there is no second column to align to
-           and a 280px button floated right just looks stranded. */
-        <div className="flex justify-end pt-3">
-          <Button
-            variant={sending ? "disabled" : "primary"}
-            size="md"
-            disabled={sending}
-            onClick={sendAll}
-            leftIcon={<PaperPlaneTiltIcon size={18} />}
-            className="w-full md:w-auto"
+          The risk row prints its rating *instead of* an icon: a tick beside the
+          word "Aggressive" is the same verdict twice. That is what
+          `item.value !== null` means. */}
+      {readiness.items.map((item) => {
+        const chip = STATUS_CHIP[item.status];
+        const Icon = chip.icon;
+        const canSend = sendable.includes(item.key);
+        const inFlight = sendingKey === item.key;
+        return (
+          <SheetRow
+            key={item.key}
+            label={item.label}
+            hint={item.detail}
+            // The action sits beside the label, so the row names the record and
+            // the move on it in one breath. See `sendOne`.
+            action={
+              canSend ? (
+                <button
+                  type="button"
+                  disabled={inFlight}
+                  onClick={() => void sendOne(item)}
+                  className="shrink-0 cursor-pointer text-[12px] font-semibold text-primary-action hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
+                >
+                  {inFlight ? "กำลังส่ง…" : "ส่งให้ลูกค้า"}
+                </button>
+              ) : undefined
+            }
           >
-            {sending
-              ? "กำลังส่ง…"
-              : `ส่งให้ลูกค้าดำเนินการ (${sendable.length} รายการ)`}
-          </Button>
-        </div>
-      )}
+            {item.value ? (
+              <span className={`text-[13px] font-bold ${chip.fg}`}>{item.value}</span>
+            ) : (
+              <Icon size={20} weight="fill" className={`shrink-0 ${chip.fg}`} />
+            )}
+          </SheetRow>
+        );
+      })}
 
       {/* One line under the grid, only when the grid alone would leave the IC
           guessing why the button is dead. The red boxes say *what* is wrong;
@@ -899,46 +998,6 @@ export function FieldCard({
   );
 }
 
-/**
- * One status: label and value on the left, the verdict as a single large icon
- * on the right.
- *
- * The icon carries the state on its own now, which is why the value beside it
- * is plain foreground rather than tinted: one accent per card reads as a
- * verdict, two read as decoration. At this size it is also legible from the
- * far edge of the card, so a grid of four can be checked down its right-hand
- * column without reading a word.
- */
-export function StatusField({ item }: { item: RequirementItem }) {
-  const chip = STATUS_CHIP[item.status];
-  const Icon = chip.icon;
-
-  return (
-    <FieldCard
-      label={item.label}
-      variant="status"
-      /* A rating takes the icon's place rather than sitting beside it:
-         "Aggressive" already answers the row, and an icon next to it would be a
-         second verdict about a value that is its own. The tone does the work
-         the icon was doing, so the column still reads green or red straight
-         down. Every other row has no rating and gets the icon. */
-      trailing={
-        item.value ? (
-          <span className={`type-body-2 shrink-0 !font-bold ${chip.fg}`}>{item.value}</span>
-        ) : (
-          <Icon size={28} weight="fill" className={`shrink-0 ${chip.fg}`} />
-        )
-      }
-    >
-      {/* Only ever a sentence about something being wrong — a passing card is a
-          label and a tick, which is the whole of what it has to say. */}
-      {item.detail && (
-        <span className="type-caption text-muted-foreground">{item.detail}</span>
-      )}
-    </FieldCard>
-  );
-}
-
 /** A quiet blue link, greyed when the thing it opens would do nothing. */
 function ActionLink({
   label,
@@ -977,6 +1036,7 @@ export function ReadOnlyField({ label, value }: { label: string; value: string }
   );
 }
 
+
 // ── Amount ───────────────────────────────────────────────────────────────────
 
 /**
@@ -994,7 +1054,14 @@ const hasNonDigit = (raw: string) => /[^0-9,]/.test(raw);
 
 function amountCheck(
   product: BookableProduct,
-  remaining: number,
+  /**
+   * The cap on this booking, or `null` where the desk has none — see
+   * `bookingRemaining`. A basket has none: its notional is a target, not a
+   * limit, and it can be over-booked.
+   */
+  cap: number | null,
+  /** The product takes no more bookings at all — see `isBookingOpen`. */
+  closed: boolean,
   /** The client's own cash, in the product's currency — see `overCash`. */
   cashAvailable: number,
   raw: string,
@@ -1011,9 +1078,12 @@ function amountCheck(
   // happened to be in it, so they stand down and this is the one error shown.
   const invalid = hasNonDigit(raw);
   const amount = invalid ? 0 : parseAmount(raw);
-  const full = remaining <= 0;
+  // Read off the product rather than inferred from the cap running out. A
+  // basket at its notional is not closed — it can take more — and a quota book
+  // with nothing left is closed whatever anyone types.
+  const full = closed || cap === 0;
   const tooSmall = amount > 0 && amount < minTicketFor(product);
-  const tooBig = !full && amount > remaining;
+  const tooBig = !full && cap !== null && amount > cap;
   /**
    * More than the client can fund.
    *
@@ -1041,35 +1111,47 @@ function AmountSection({
   client,
   raw,
   onRawChange,
-  disabled,
-  passed,
-  total,
 }: {
   product: BookableProduct;
   client: Client;
   raw: string;
   onRawChange: (next: string) => void;
-  /**
-   * The checks have not all passed. The section stays on screen, faded, so the
-   * IC can see the amount is the next thing and that it is not open yet.
-   */
-  disabled: boolean;
-  /** The same `passed / total` the status heading shows. */
-  passed: number;
-  total: number;
 }) {
   const { data: book } = useOrderBook(product.id);
   const currency = product.currency;
   const minTicket = minTicketFor(product);
-  const target = book?.targetAmount ?? 0;
-  const sent = book ? !isBookingOpen(book) : false;
-  const remaining = book ? bookingRemaining(book) : 0;
+  const closed = book ? !isBookingOpen(book) : false;
+  /** The cap on this booking — `null` on a basket, which has none. */
+  const cap = book ? bookingRemaining(book) : null;
+  // `bookingModeFor(product)`, not `book.mode` — the book may not have loaded
+  // and the product is the authority on its desk either way.
+  const mode = bookingModeFor(product);
+  const words = ORDER_WORDS[mode];
 
   const cashThb = clientCashThb(client);
   const cashHere = cashInCurrency(cashThb, currency);
+  /** What is in the field right now, as a number — `0` while it is empty. */
+  const typed = hasNonDigit(raw) ? 0 : parseAmount(raw);
+  /**
+   * The amounts offered as one-press fills.
+   *
+   * Multiples of the minimum ticket, de-duplicated, and only those the client
+   * can actually fund and the desk's cap allows — a chip that fails the form's
+   * own check the moment it is pressed is worse than no chip.
+   */
+  const quickFills = ((): number[] => {
+    // No `useMemo`: three multiplications over a three-item list, and the React
+    // Compiler memoises it better than a dependency list can — a hand-written
+    // one here is what it reports as "memoization could not be preserved".
+    const ceiling = Math.min(Math.floor(cashHere), cap ?? Number.POSITIVE_INFINITY);
+    return [1, 2, 5]
+      .map((n) => minTicket * n)
+      .filter((v, i, a) => v <= ceiling && a.indexOf(v) === i);
+  })();
   const { full, invalid, tooSmall, tooBig, overCash } = amountCheck(
     product,
-    remaining,
+    cap,
+    closed,
     cashHere,
     raw,
   );
@@ -1078,7 +1160,18 @@ function AmountSection({
    * who is short a document cannot book whatever the round's state, so that
    * message wins and the round's is not also shown.
    */
-  const blocked = disabled || full;
+  // The checks are the caller's gate now — this one only closes for a product
+  // that takes no more bookings.
+  const blocked = full;
+  /**
+   * Whether the figure reads as wrong.
+   *
+   * Not while the field is closed: a faded, inert section in red would be
+   * shouting about a number nobody can change.
+   */
+  const showError = !blocked && (invalid || tooSmall || tooBig || overCash);
+  /** `฿` for a Thai product, `$` for a dollar one — against the figure. */
+  const symbol = currency === "THB" ? "฿" : "$";
 
   /**
    * Digits are grouped with commas as they are typed. Anything else is kept
@@ -1097,26 +1190,21 @@ function AmountSection({
   };
 
   return (
-    <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
-      {/* On top of the faded block it explains, and outside it so it stays at
-          full strength — the one thing in this section that is not disabled. */}
-      {disabled && (
-        <Alert
-          status="warning"
-          message={`ข้อมูลที่ต้องมีก่อนจองซื้อยังไม่ครบ (${passed}/${total}) จึงยังกรอกจำนวนเงินและจองซื้อไม่ได้`}
-        />
-      )}
-      {/* The deal is full, or already sent. Not an error on the amount — there
-          is no amount that would be right — so it closes the field the same way
-          a missing document does. A product is booked once: nothing reopens it. */}
-      {!disabled && full && (
+    <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5">
+      {/* The product takes no more bookings. Not an error on the amount —
+          there is no amount that would be right — so it closes the field the
+          same way a missing document does.
+
+          No "ครบยอดแล้ว" branch: a basket reaching its notional does *not*
+          close it. The target is what the deal aims for, and a basket can be
+          over-booked — see `bookingRemaining`. What closes a basket is its
+          order going downstream, which is the third and fourth cases here. */}
+      {full && (
         <Alert
           status="information"
           message={
-            book?.mode === "quota"
+            mode === "quota"
               ? `${product.underlying} เต็มโควตาแล้ว — ไม่สามารถจองเพิ่มได้`
-              : !sent
-              ? `ครบยอด ${formatOrderAmount(target, currency)} แล้ว — ไม่สามารถจองเพิ่มได้`
               : book && isBookClosed(book)
                 ? `ส่งคำสั่งซื้อของ ${product.underlying} แล้ว — สินค้านี้ปิดรับจอง`
                 : `คำสั่งซื้อของ ${product.underlying} กำลังดำเนินการที่ระบบหลังบ้าน — ไม่สามารถจองเพิ่มได้`
@@ -1133,69 +1221,282 @@ function AmountSection({
           blocked ? "pointer-events-none select-none opacity-40" : ""
         }`}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Input
-            label={`Notional Amount (${currency})`}
-            required
-            value={raw}
-            onChange={setAmount}
-            placeholder="Enter Amount"
-            inputMode="numeric"
-            disabled={blocked}
-            forceState={
-              blocked
-                ? "disabled"
-                : invalid || tooSmall || tooBig || overCash
-                  ? "error"
-                  : "default"
-            }
-            /* Ordered the way they are read: what was typed, then how big it
-               is against the round, then against the client. */
-            errorMessage={
-              invalid
+        {/* The amount as a figure, not a field.
+
+            It was a bordered `Input` with the cash beside it, and it read as a
+            form: six boxes of equal weight, one of which happened to be the
+            only decision on the screen. This is the shape a payment app uses
+            for the same job — the number large and centred, the currency
+            against it, the common amounts one press away, and the balance a
+            caption underneath — because there is exactly one thing to do here
+            and it should look like it.
+
+            A plain `<input>` rather than the library's: the figure has to be
+            48px, centred and borderless, and `Input` owns its own box from an
+            unlayered stylesheet that a class cannot beat (see the note on
+            `FIT` in `ProductOrderSection`). The validation it would have drawn
+            is drawn below instead — same four messages, same order. */}
+        <div className="flex flex-col items-center gap-4 py-2">
+          <label
+            htmlFor="booking-amount"
+            className="type-caption text-muted-foreground"
+          >
+            {`Notional Amount (${currency})`}
+          </label>
+
+          <div
+            className={`flex items-baseline justify-center ${
+              showError ? "text-[var(--fill-red-600)]" : "text-primary-action"
+            }`}
+          >
+            {/* The same size as the figure and hard against it — the two are
+                one number read as one word, the way `$408` is. No gap, so the
+                only space between them is the glyph's own sidebearing. */}
+            <span className="text-[48px] leading-[1.1] font-bold">{symbol}</span>
+            <input
+              id="booking-amount"
+              value={raw}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0"
+              inputMode="numeric"
+              disabled={blocked}
+              aria-invalid={showError}
+              // Sized to its content, and left-aligned, so the digits start
+              // immediately after the symbol. Centred with a character of slack
+              // put half that slack between the two and pushed them apart;
+              // left-aligned it all falls to the right, where the caret goes.
+              size={Math.max(raw.length, 1)}
+              className="min-w-0 border-0 bg-transparent p-0 text-left text-[48px] leading-[1.1] font-bold tabular-nums outline-none placeholder:text-[var(--text-default-placeholder)] disabled:cursor-not-allowed"
+            />
+          </div>
+
+          {/* One line under the figure, where the reference puts its balance.
+              The error replaces it rather than stacking under it: both are
+              about the same number, and two lines of small text below a 48px
+              figure is the clutter this layout exists to remove. */}
+          {showError ? (
+            <p className="type-caption text-center text-[var(--fill-red-600)]">
+              {invalid
                 ? "กรอกได้เฉพาะตัวเลข 0–9 เท่านั้น"
                 : tooSmall
                   ? `ต่ำกว่าขั้นต่ำ ${formatOrderAmount(minTicket, currency)}`
                   : tooBig
-                    ? `เกินยอดที่ยังจองได้ ${formatOrderAmount(remaining, currency)}`
-                    : `เกินเงินสดคงเหลือของลูกค้า ${formatOrderAmount(Math.floor(cashHere), currency)}`
-            }
-            // The deal's total is deliberately left off: the sentence under this
-            // section already names it, and repeating it here is what pushed the
-            // helper onto a second line.
-            helperText={`ขั้นต่ำ ${formatOrderAmount(minTicket, currency)} · ยังจองได้ ${formatOrderAmount(remaining, currency)}`}
-          />
-          {/* The number the IC checks the amount against, so it sits beside the
-            input — and on a grey card, because it is the system talking back
-            rather than somewhere to type. */}
-          <FieldCard label="เงินสดคงเหลือของลูกค้า" className="self-start">
-            <div className="flex flex-wrap items-baseline gap-x-2">
-              <span className="type-body-2 !font-semibold text-foreground">
-                ฿ {formatThbAmount(cashThb)}
-              </span>
-              {currency !== "THB" && (
-                <span className="type-caption text-muted-foreground">
-                  ≈ {formatOrderAmount(Math.floor(cashHere), currency)} @{" "}
-                  {USD_THB}
-                </span>
-              )}
+                    ? `เกิน${words.remainingLabel} ${formatOrderAmount(cap ?? 0, currency)}`
+                    : `เกินเงินสดคงเหลือของลูกค้า ${formatOrderAmount(Math.floor(cashHere), currency)}`}
+            </p>
+          ) : (
+            <p className="type-caption text-center text-muted-foreground">
+              ขั้นต่ำ {formatOrderAmount(minTicket, currency)}
+              {cap !== null && <> · {words.remainingLabel} {formatOrderAmount(cap, currency)}</>}
+            </p>
+          )}
+
+          {/* Steps off the minimum, so the common amounts are one press rather
+              than six keystrokes each. Multiples of the ticket rather than
+              round numbers: a product with a 10,000 minimum does not sell in
+              25,000s. Anything the client cannot fund is left out — a
+              suggestion that fails the form's own check is worse than none.
+              Scrolls rather than wraps, so the row stays one line. */}
+          {quickFills.length > 0 && (
+            <div className="scrollable-tabs flex w-full items-center justify-center gap-2">
+              {quickFills.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => onRawChange(v.toLocaleString("en-US"))}
+                  className={`shrink-0 cursor-pointer rounded-full border px-4 py-2 text-[13px] font-semibold tabular-nums transition-colors ${
+                    typed === v
+                      ? "border-primary-action bg-primary-action-light text-primary-action"
+                      : "border-border bg-white text-foreground hover:border-[var(--border-hover)] hover:bg-[var(--bg-default-secondary)]"
+                  }`}
+                >
+                  {v.toLocaleString("en-US")}
+                </button>
+              ))}
             </div>
-          </FieldCard>
+          )}
+
+          {/* The balance, as the reference captions it. In THB, which is the
+              account's own currency — where the amount above exceeds it, the
+              error line says so in the product's. */}
+          <div className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-0.5">
+            <span className="type-caption text-muted-foreground">เงินสดคงเหลือของลูกค้า</span>
+            <span className="type-body-2 !font-semibold tabular-nums text-foreground">
+              ฿ {formatThbAmount(cashThb)}
+            </span>
+          </div>
         </div>
 
         {overCash && (
           <Alert
             status="critical"
-            message="จำนวนที่จองมากกว่าเงินสดคงเหลือของลูกค้า — ลดจำนวนลง หรือให้ลูกค้าเติมเงินก่อนจึงจะจองได้"
+            message="จำนวนมากกว่าเงินสดคงเหลือของลูกค้า — ลดจำนวนลง หรือให้ลูกค้าเติมเงินก่อนจึงจะทำรายการได้"
             multiline
           />
         )}
 
-        <p className="type-caption leading-snug text-muted-foreground">
-          การจองนี้เป็นคำสั่งซื้อล่วงหน้า
-          ยังไม่ส่งเข้าระบบหลังบ้านจนกว่ายอดรวมของดีลจะครบ{" "}
-          {formatOrderAmount(target, currency)}
-        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Evidence ─────────────────────────────────────────────────────────────────
+
+/**
+ * The file that proves the client asked for this — basket desks only.
+ *
+ * Two steps and they are in this order on purpose: the channel decides which
+ * files are even offered (`EVIDENCE_CHANNEL[...].accept`), so there is no file
+ * field until a channel is chosen. A field that took anything would be a field
+ * that took the wrong thing — a chat screenshot filed under "โทรศัพท์" is a log
+ * that lies about the one fact it exists to record.
+ *
+ * Faded until the four checks pass, exactly as the amount is: this is gated on
+ * the same thing, and the IC should see it is coming without it being open yet.
+ *
+ * ─── Backend handoff ─────────────────────────────────────────────────────────
+ * The `File` goes no further than this component — see `OrderEvidence`. What
+ * leaves is its name, size and type, and the note at the foot says so rather
+ * than implying the recording has been filed somewhere.
+ */
+function EvidenceSection({
+  value,
+  onChange,
+}: {
+  value: OrderEvidence | null;
+  onChange: (next: OrderEvidence | null) => void;
+}) {
+  const [channel, setChannel] = useState<EvidenceChannel | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const chosen = channel ? EVIDENCE_CHANNEL[channel] : null;
+
+  const pickChannel = (next: EvidenceChannel) => {
+    setChannel(next);
+    // A file attached under one channel is not evidence of another, so
+    // switching clears it rather than re-labelling it.
+    onChange(null);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const attach = (file: File | undefined) => {
+    if (!file || !channel) return;
+    onChange({
+      channel,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      attachedAt: new Date().toISOString(),
+    });
+  };
+
+  return (
+    <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+        <span className="type-body-2 !font-semibold text-foreground">
+          หลักฐานการรับคำสั่งจากลูกค้า
+        </span>
+        {/* Said once, here, rather than only by a disabled button: the IC
+            should know it is required before they go looking for the file. */}
+        <span className="type-caption text-[var(--fill-red-600)]">จำเป็นต้องแนบ</span>
+      </div>
+
+      <div>
+        <div className="flex flex-col gap-3">
+          {/* Three cards across the modal rather than a row of chips. Chips
+              read as a *filter* — something narrowing a list that is already on
+              screen — and this is a choice the IC has to make before anything
+              below it exists. Equal thirds, because none of the three is the
+              expected one. */}
+          <div className="grid grid-cols-3 gap-2">
+            {EVIDENCE_CHANNELS.map((c) => {
+              const meta = EVIDENCE_CHANNEL[c];
+              const Icon = meta.icon;
+              const on = channel === c;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => pickChannel(c)}
+                  className={`flex h-[84px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border px-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6ee7] ${
+                    on
+                      ? "border-primary-action bg-primary-action-light"
+                      : "border-border bg-white hover:border-[var(--border-hover)] hover:bg-[var(--bg-default-secondary)]"
+                  }`}
+                >
+                  <Icon
+                    size={22}
+                    weight="fill"
+                    className={`shrink-0 ${on ? "text-primary-action" : "text-muted-foreground"}`}
+                  />
+                  <span
+                    className={`type-body-2 leading-tight !font-semibold ${
+                      on ? "text-primary-action" : "text-foreground"
+                    }`}
+                  >
+                    {meta.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {chosen && (
+            <>
+              <p className="type-caption text-muted-foreground">{chosen.hint}</p>
+              {/* The input itself is never shown: a bare file input cannot be
+                  styled and reads as a different app. The button in front of it
+                  is what the IC presses. */}
+              <input
+                ref={fileRef}
+                type="file"
+                accept={chosen.accept}
+                className="hidden"
+                aria-label={`แนบ${chosen.hint}`}
+                onChange={(e) => attach(e.target.files?.[0])}
+              />
+              {value ? (
+                <div className="flex items-center gap-2 rounded-xl border border-border bg-[var(--bg-default-secondary)] px-3 py-2">
+                  <PaperclipIcon size={16} className="shrink-0 text-muted-foreground" />
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="type-body-2 truncate !font-semibold text-foreground">
+                      {value.fileName}
+                    </span>
+                    <span className="type-caption text-muted-foreground">
+                      {EVIDENCE_CHANNEL[value.channel].label} · {formatFileSize(value.fileSize)}
+                    </span>
+                  </div>
+                  <Button
+                    variant="plain"
+                    size="sm"
+                    className="shrink-0 text-[var(--fill-red-600)]"
+                    onClick={() => {
+                      onChange(null);
+                      if (fileRef.current) fileRef.current.value = "";
+                    }}
+                  >
+                    นำออก
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="md"
+                  className="self-start"
+                  leftIcon={<PaperclipIcon size={16} />}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  เลือกไฟล์
+                </Button>
+              )}
+            </>
+          )}
+
+          <p className="type-caption leading-snug text-muted-foreground">
+            ระบบจะบันทึกชื่อไฟล์ ขนาด และช่องทางไว้กับการจองนี้
+            เพื่อให้ตรวจสอบย้อนหลังได้ว่าลูกค้าสั่งมาทางไหน
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -1205,6 +1506,7 @@ function AmountSection({
 
 function Footer({
   ready,
+  evidence,
   product,
   cashAvailable,
   raw,
@@ -1214,6 +1516,8 @@ function Footer({
 }: {
   /** Whether all four checks pass — the gate on the amount and the booking. */
   ready: boolean;
+  /** The attached proof, where this desk asks for one. */
+  evidence: OrderEvidence | null;
   product: BookableProduct;
   /** The client's cash in the product's currency — see `amountCheck`. */
   cashAvailable: number;
@@ -1223,13 +1527,22 @@ function Footer({
   onBooked: (amount: number) => void;
 }) {
   const { data: book } = useOrderBook(product.id);
-  const remaining = book ? bookingRemaining(book) : 0;
-  const { amount, ok } = amountCheck(product, remaining, cashAvailable, raw);
+  const { amount, ok } = amountCheck(
+    product,
+    book ? bookingRemaining(book) : null,
+    book ? !isBookingOpen(book) : false,
+    cashAvailable,
+    raw,
+  );
 
+  const mode = bookingModeFor(product);
   // `ready` is checked here as well as on the amount section: a check can
   // expire while the form is open, and the gate has to hold at the moment of
-  // booking.
-  const canBook = ready && ok && !booking;
+  // booking. The evidence is re-checked for the same reason — the section can
+  // have it removed after it was attached.
+  const hasEvidence = !evidenceRequired(mode) || evidence !== null;
+  const canBook = ready && ok && hasEvidence && !booking;
+  const words = ORDER_WORDS[mode];
 
   return (
     <div className="flex shrink-0 flex-col gap-2 border-t border-border px-4 py-3 md:px-6">
@@ -1243,7 +1556,7 @@ function Footer({
           disabled={!canBook}
           onClick={() => onBooked(amount)}
         >
-          {booking ? "กำลังจอง…" : "จองซื้อ"}
+          {booking ? words.actionBusy : words.action}
         </Button>
       </div>
     </div>

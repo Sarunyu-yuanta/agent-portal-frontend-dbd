@@ -62,9 +62,9 @@ function OrdersPageInner() {
 
       <FadeIn key={tab.id}>
         {tab.kind === "basket" ? (
-          <BasketBooksPanel desk={tab.desk} tabId={tab.id} catalogHref={catalogListHref(tab.id)} />
+          <BasketBooksPanel desk={tab.desk} catalogHref={catalogListHref(tab.id)} />
         ) : tab.kind === "quota" ? (
-          <QuotaBooksPanel desk={tab.desk} tabId={tab.id} catalogHref={catalogListHref(tab.id)} />
+          <QuotaBooksPanel desk={tab.desk} catalogHref={catalogListHref(tab.id)} />
         ) : (
           <TransactionsPanel asset={tab.asset} />
         )}

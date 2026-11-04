@@ -4,18 +4,18 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@sarunyu/system-one";
 import { FireIcon } from "@phosphor-icons/react";
 import { formatAumThb } from "@/lib/client-utils";
+import type { OrderBook } from "@/types/domain";
 import { CARD_SHADOW, PercentPill } from "./stock-ui";
 import { stockProductHref } from "./stock-product-detail-data";
-import { RankBadge, TrendingSortChips } from "./ProductTrendingAllTable";
+import { RankBadge, TrendingFill, TrendingSortChips } from "./ProductTrendingAllTable";
+import { bookForItem, trendingRows, useTrendingBooks } from "./use-trending-books";
 import { setQueryState, withQuery } from "@/lib/query-state";
 import {
   PRODUCT_TRENDING_GROUPS,
   PRODUCT_TRENDING_UPDATED_AT,
   DEFAULT_TRENDING_SORT,
-  sortTrendingItems,
   normalizeTrendingSort,
   TRENDING_CARD_ROWS,
-  showsOrderCount,
   TRENDING_SORT_PARAM,
   type TrendingSort,
   type TrendingGroup,
@@ -26,42 +26,57 @@ import type { CatalogNavigation } from "./ProductCatalogTab";
 
 function TrendingRow({
   item,
+  book,
   showBorder,
-  showOrders,
   onSelect,
 }: {
   item: TrendingItem;
+  /** This product's order book, or `null` on a desk that keeps none. */
+  book: OrderBook | null;
   showBorder: boolean;
-  /** See `showsOrderCount`. */
-  showOrders: boolean;
   onSelect: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={`flex gap-3 items-center py-3 px-3 w-full text-left cursor-pointer transition-colors hover:bg-black/[0.02] ${
+      className={`flex flex-col gap-2 py-3 px-3 w-full text-left cursor-pointer transition-colors hover:bg-black/[0.02] ${
         showBorder ? "border-b border-black/10" : ""
       }`}
     >
-      <RankBadge rank={item.rank} />
-      <span className="flex flex-col min-w-0 flex-1">
-        <span className="text-[14px] font-bold text-foreground truncate">{item.title}</span>
-        <span className="type-caption text-muted-foreground truncate">{item.subtitle}</span>
-      </span>
-      <span className="flex flex-col items-end shrink-0 gap-0.5">
-        <span className="text-[14px] font-bold text-foreground whitespace-nowrap">
-          {formatAumThb(item.salesThb)}
+      <span className="flex gap-3 items-center w-full">
+        <RankBadge rank={item.rank} />
+        <span className="flex flex-col min-w-0 flex-1">
+          <span className="text-[14px] font-bold text-foreground truncate">{item.title}</span>
+          <span className="type-caption text-muted-foreground truncate">{item.subtitle}</span>
         </span>
-        <span className="flex items-center gap-1.5">
-          {showOrders && (
-            <span className="type-caption text-muted-foreground whitespace-nowrap">
-              {item.orders.toLocaleString("en-US")} ออเดอร์
+        {/* Sales figures only where there are sales — on a booked desk the
+            fill line below is the whole of the right-hand side. */}
+        {item.salesThb !== undefined && (
+          <span className="flex flex-col items-end shrink-0 gap-0.5">
+            <span className="text-[14px] font-bold text-foreground whitespace-nowrap">
+              {formatAumThb(item.salesThb)}
             </span>
-          )}
-          <PercentPill trend={item.trend} value={item.changePct} size="sm" />
-        </span>
+            <span className="flex items-center gap-1.5">
+              {item.orders !== undefined && (
+                <span className="type-caption text-muted-foreground whitespace-nowrap">
+                  {item.orders.toLocaleString("en-US")} ออเดอร์
+                </span>
+              )}
+              {item.trend && item.changePct && (
+                <PercentPill trend={item.trend} value={item.changePct} size="sm" />
+              )}
+            </span>
+          </span>
+        )}
       </span>
+      {/* Its own line under the row, indented past the rank badge so the bars
+          down a card line up with each other rather than with the titles. */}
+      {book && (
+        <span className="flex w-full pl-9">
+          <TrendingFill book={book} />
+        </span>
+      )}
     </button>
   );
 }
@@ -69,12 +84,14 @@ function TrendingRow({
 function TrendingGroupCard({
   group,
   items,
+  books,
   onSelect,
   onViewAll,
 }: {
   group: TrendingGroup;
   /** The group's rows in the active sort's order. */
   items: TrendingItem[];
+  books: Map<string, OrderBook>;
   onSelect: (target: TrendingTarget) => void;
   onViewAll: () => void;
 }) {
@@ -99,8 +116,8 @@ function TrendingGroupCard({
           <TrendingRow
             key={`${group.id}-${item.rank}`}
             item={item}
+            book={bookForItem(item, books)}
             showBorder={i < shown.length - 1}
-            showOrders={showsOrderCount(group.id)}
             onSelect={() => onSelect(item.target)}
           />
         ))}
@@ -170,9 +187,10 @@ export function ProductTrendingTab({
         [TRENDING_SORT_PARAM]: next === DEFAULT_TRENDING_SORT ? null : next,
       }),
     );
+  const books = useTrendingBooks();
   const groups = PRODUCT_TRENDING_GROUPS.map((group) => ({
     group,
-    items: sortTrendingItems(group.items, sort),
+    items: trendingRows(group, books, sort),
   }));
 
   return (
@@ -185,8 +203,12 @@ export function ProductTrendingTab({
               Product Trending
             </p>
           </div>
+          {/* Two sentences because there are two rankings here, and one of
+              them used to be described as the other: a note or a bond has no
+              weekly turnover, so those cards rank by how full the book is. */}
           <p className="text-sm" style={{ color: "rgba(0,0,0,0.6)" }}>
-            สินค้าขายดีของแต่ละสินทรัพย์ เรียงตามยอดขายสัปดาห์ล่าสุด
+            หุ้นและกองทุนเรียงตามยอดขายสัปดาห์ล่าสุด · สินค้าที่จองเป็นตะกร้าเรียงตามยอดจองในตะกร้า
+            และแสดงเฉพาะตะกร้าที่ยังเปิดให้จอง
           </p>
         </div>
 
@@ -198,6 +220,7 @@ export function ProductTrendingTab({
               key={group.id}
               group={group}
               items={items}
+              books={books}
               onSelect={select}
               onViewAll={() => nav.onTrendingSeeAll(group.id, sort)}
             />

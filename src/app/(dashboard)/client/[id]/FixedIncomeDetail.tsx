@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
-import { Button } from "@sarunyu/system-one";
-import { ArrowLeftIcon, CaretDoubleRightIcon, FileTextIcon } from "@phosphor-icons/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button, TabGroup } from "@sarunyu/system-one";
+import {
+  ArrowLeftIcon,
+  CaretDoubleRightIcon,
+  FileTextIcon,
+  PaperPlaneTiltIcon,
+} from "@phosphor-icons/react";
 import { BOND_LOGOS, type FixedIncomeBond } from "./fixed-income-data";
 import { BORDER_COLOR, ACTION_LABELS, StatusTag, BondLogo } from "./fixed-income-shared";
 import { fixedIncomeToBookableProduct } from "./fixed-income-data";
 import { ORDER_BOOKING_ENABLED } from "@/lib/feature-flags";
+import { ProductOrderSection } from "@/app/(dashboard)/orders/ProductOrderSection";
+import { ProposalTallyLine } from "@/app/(dashboard)/orders/ProposalTallyLine";
+import { useSendProposal } from "@/app/(dashboard)/orders/useSendProposal";
 import { QuotaBookButton, useQuotaBooking } from "@/app/(dashboard)/orders/useQuotaBooking";
 
 function DetailTable({ bond }: { bond: FixedIncomeBond }) {
@@ -26,7 +34,7 @@ function DetailTable({ bond }: { bond: FixedIncomeBond }) {
     { label: "ความเสี่ยง", value: bond.risk },
     { label: "การค้ำประกัน", value: bond.guarantee, link: true },
     { label: "ประเภทเสนอขาย", value: bond.offerType },
-    { label: "เปิดจองวันที่", value: bond.subscriptionPeriod },
+    { label: "เปิดขายวันที่", value: bond.subscriptionPeriod },
     { label: "เอกสารที่เกี่ยวข้อง", documents: bond.documents },
   ];
 
@@ -82,7 +90,26 @@ export function FixedIncomeDetail({
   onCompanySelect?: (companyId: string) => void;
 }) {
   const isFollowed = bond.action === "followed";
-  const booking = useQuotaBooking();
+  const [tab, setTab] = useState<"detail" | "orders">("detail");
+  // The order just placed here — marked on the Order tab, the same hand-off the
+  // structured desks' product pages make. See `ProductOrderSection`.
+  const [newBookingId, setNewBookingId] = useState<string | null>(null);
+  const clearNewBooking = useCallback(() => setNewBookingId(null), []);
+  const booking = useQuotaBooking({
+    onPlaced: (placed) => {
+      setNewBookingId(placed.id);
+      // Straight to the tab that shows it: on this desk the press *sent* the
+      // order, so the thing the IC wants next is the record and its reference,
+      // not the terms they have just finished reading.
+      setTab("orders");
+    },
+  });
+  // Memoised: a fresh object every render feeds a hook's dependency list, and
+  // would re-run the readiness derivation behind the Order tab's modal on
+  // every keystroke in its search box.
+  const adapted = useMemo(() => fixedIncomeToBookableProduct(bond), [bond]);
+  // Shares the booking hook's toast stack rather than standing up a second one.
+  const proposal = useSendProposal({ onNotice: booking.notice });
 
   useEffect(() => {
     const main = document.querySelector("main");
@@ -141,37 +168,85 @@ export function FixedIncomeDetail({
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 items-center w-full">
-              <DetailTable bond={bond} />
-              <p className="text-sm leading-5 text-[#6a7282] text-center whitespace-nowrap">
-                อัปเดตล่าสุด {bond.updatedAt}
-              </p>
-            </div>
+            {/* Same two views as every other product page in the catalogue —
+                the bond's terms, and what has been ordered on it. Only behind
+                the flag: with ordering off there is no Order tab to show, and
+                the page is the terms alone as it was before. */}
+            {ORDER_BOOKING_ENABLED && (
+              <TabGroup
+                items={[
+                  { id: "detail", title: "Detail" },
+                  { id: "orders", title: "Order" },
+                ]}
+                activeId={tab}
+                onChange={(id) => setTab(id as "detail" | "orders")}
+              />
+            )}
+
+            {tab === "detail" ? (
+              <div className="flex flex-col gap-3 items-center w-full">
+                <DetailTable bond={bond} />
+                <p className="text-sm leading-5 text-[#6a7282] text-center whitespace-nowrap">
+                  อัปเดตล่าสุด {bond.updatedAt}
+                </p>
+              </div>
+            ) : (
+              <ProductOrderSection
+                newBookingId={newBookingId}
+                onNewBookingSeen={clearNewBooking}
+                product={adapted}
+                onBook={() => booking.book(adapted)}
+                onNotice={booking.notice}
+              />
+            )}
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 items-center w-full">
-          {/* Open for subscription: book a client straight in (see
-              `useQuotaBooking`). Otherwise the follow action, as before. */}
-          {ORDER_BOOKING_ENABLED && bond.action === "invest" ? (
-            <QuotaBookButton
-              product={fixedIncomeToBookableProduct(bond)}
-              onBook={booking.book}
-              size="xl"
-              className="w-full max-w-[343px]"
-              label={ACTION_LABELS[bond.action]}
-            />
-          ) : (
-            <Button
-              variant="primary"
-              size="xl"
-              disabled={isFollowed}
-              className="w-full max-w-[343px]"
-            >
-              {ACTION_LABELS[bond.action]}
-            </Button>
-          )}
-        </div>
+        {/* Under Detail only — the Order tab carries its own ส่งคำสั่งซื้อ, and
+            two primaries for the same action read as two different ones. */}
+        {tab === "detail" && (
+          <div className="flex flex-col gap-3 items-center w-full">
+            {/* The offer, above the order it is trying to produce. A bond's
+                documents are the rows in its own table above (`bond.documents`),
+                so this carries no download menu — sending is all of it. */}
+            {ORDER_BOOKING_ENABLED && (
+              <div className="flex w-full max-w-[343px] flex-col gap-1.5">
+                <Button
+                  variant="outline"
+                  size="xl"
+                  className="w-full"
+                  leftIcon={<PaperPlaneTiltIcon size={16} weight="fill" />}
+                  onClick={() => proposal.send(adapted)}
+                >
+                  ส่ง Proposal ให้ลูกค้า
+                </Button>
+                <ProposalTallyLine productId={adapted.id} />
+              </div>
+            )}
+            {/* Open for subscription: order for a client straight from here
+                (see `useQuotaBooking`). Otherwise the follow action, as
+                before. */}
+            {ORDER_BOOKING_ENABLED && bond.action === "invest" ? (
+              <QuotaBookButton
+                product={adapted}
+                onBook={booking.book}
+                size="xl"
+                className="w-full max-w-[343px]"
+                label={ACTION_LABELS[bond.action]}
+              />
+            ) : (
+              <Button
+                variant="primary"
+                size="xl"
+                disabled={isFollowed}
+                className="w-full max-w-[343px]"
+              >
+                {ACTION_LABELS[bond.action]}
+              </Button>
+            )}
+          </div>
+        )}
+        {proposal.ui}
         {booking.ui}
       </div>
     </div>

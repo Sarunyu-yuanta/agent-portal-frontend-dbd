@@ -7,8 +7,12 @@ import { GlobalBondTopPickAccordion } from "./GlobalBondTopPickAccordion";
 import { GlobalBondRecommendedAccordion } from "./GlobalBondRecommendedAccordion";
 import { GlobalBondTopPickTable } from "./GlobalBondTopPickTable";
 import { GlobalBondRecommendedTable } from "./GlobalBondRecommendedTable";
-import { GlobalBondBookingContext } from "./GlobalBondDetailBondList";
+import {
+  GlobalBondBookingContext,
+  GlobalBondProposalContext,
+} from "./GlobalBondDetailBondList";
 import { useQuotaBooking } from "@/app/(dashboard)/orders/useQuotaBooking";
+import { useSendProposal } from "@/app/(dashboard)/orders/useSendProposal";
 import { ORDER_BOOKING_ENABLED } from "@/lib/feature-flags";
 
 function TopPickHeading() {
@@ -28,9 +32,14 @@ export function GlobalBondTab({
   onViewAll?: () => void;
 }) {
   const booking = useQuotaBooking();
+  // Its own stack: the page mounts no toaster of its own, and a send has to be
+  // able to report. See `useSendProposal`.
+  const proposal = useSendProposal();
   return (
     <GlobalBondBookingContext.Provider value={ORDER_BOOKING_ENABLED ? booking.book : null}>
+      <GlobalBondProposalContext.Provider value={ORDER_BOOKING_ENABLED ? proposal.send : null}>
       {booking.ui}
+      {proposal.ui}
       {/* Tablet + mobile — accordion cards */}
       <div className="lg:hidden flex flex-col gap-6 items-center w-full max-w-[1280px] mx-auto px-4 md:px-8 pt-6 pb-10">
         <h2 className="w-full text-lg font-bold leading-6 text-[#101828]">
@@ -82,6 +91,7 @@ export function GlobalBondTab({
           ดูทั้งหมด
         </Button>
       </div>
+      </GlobalBondProposalContext.Provider>
     </GlobalBondBookingContext.Provider>
   );
 }

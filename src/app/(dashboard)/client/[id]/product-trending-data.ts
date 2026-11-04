@@ -11,11 +11,16 @@
  * not units off a shelf, so it has no "best seller" to rank. TFEX is absent
  * too, for the plainer reason that the catalog has no TFEX products yet.
  */
-import { FIXED_INCOME_BONDS, type FixedIncomeBond } from "./fixed-income-data";
 import {
-  ALL_OVERSEAS_BONDS,
-  getIssuerIdForBondRow,
+  FIXED_INCOME_BONDS,
+  fixedIncomeBookableId,
+  type FixedIncomeBond,
+} from "./fixed-income-data";
+import {
+  GLOBAL_BOND_ISSUERS,
+  globalBondBookableId,
   type GlobalBondIssuerId,
+  type GlobalBondRow,
 } from "./global-bond-data";
 import { getTopPerformers } from "./mutual-fund-data";
 import { STOCK_TOP_PICK, type Trend } from "./stock-data";
@@ -25,7 +30,11 @@ import {
   TOP_PICKS,
   type StructuredProduct,
 } from "./structured-product-data";
-import { THAI_STRUCTURED_PRODUCTS, type ThaiStructuredProduct } from "./thai-structured-data";
+import {
+  THAI_STRUCTURED_PRODUCTS,
+  thaiBookableId,
+  type ThaiStructuredProduct,
+} from "./thai-structured-data";
 
 /** Where a trending row goes when clicked. Mirrors `CatalogNavigation`'s
  *  callbacks so the tab can hand each kind to the handler that already knows
@@ -39,46 +48,72 @@ export type TrendingTarget =
   | { kind: "structured"; product: StructuredProduct }
   | { kind: "global-bond"; issuerId: GlobalBondIssuerId };
 
+/**
+ * What a group ranks its products by, and therefore which figures its rows
+ * carry.
+ *
+ * - `"sales"` — Stock and Mutual Fund. They trade continuously, so a week's
+ *   turnover is a real measure of how a product is selling.
+ * - `"fill"` — the four desks that book. A note or a bond opens once, fills,
+ *   and closes; there is no weekly turnover to rank by, and the figure an IC
+ *   actually wants is how much of *this* window is gone. So those rows carry
+ *   their book's fill and no sales figure at all — see `bookFill`.
+ *
+ * The distinction used to be `showsOrderCount`, which hid one column while
+ * leaving the invented sales figure those desks never had sitting beside it.
+ */
+export type TrendingMeasure = "sales" | "fill";
+
 export type TrendingItem = {
   /** 1-based, within its own asset class. */
   rank: number;
   title: string;
   subtitle: string;
-  /** Mock sales for the week, in THB. Formatted at the edge, not here. */
-  salesThb: number;
-  /** Mock number of orders that made up `salesThb`. */
-  orders: number;
+  /**
+   * Mock sales for the week, in THB, on a `"sales"` group. Formatted at the
+   * edge, not here. Absent on a `"fill"` group — those products have no such
+   * figure, and carrying a plausible-looking one is how a number nobody can
+   * source ends up quoted back.
+   */
+  salesThb?: number;
+  /** Mock number of orders that made up `salesThb`. `"sales"` groups only. */
+  orders?: number;
   /** Week-on-week change in sales, pre-formatted with its sign. */
-  changePct: string;
-  trend: Trend;
+  changePct?: string;
+  trend?: Trend;
   /** Mock: picked by Yuanta's desk — rises to the top under "Yuanta Highlight". */
   highlight: boolean;
   /** Mock: in line with the CIO's house view — rises to the top under "CIO View". */
   cioView: boolean;
   target: TrendingTarget;
+  /**
+   * The id this product's order book is kept under, for the four desks that
+   * take bookings — see `bookable-products`. Stock and mutual funds trade
+   * continuously and have no book, so theirs is `undefined`.
+   *
+   * Resolved here, where the source row is still in hand. `target` carries the
+   * product for most desks but Global Bond's carries only an issuer, and an
+   * issuer is not what is booked — one of its bonds is.
+   */
+  bookableId?: string;
 };
 
 export type TrendingGroup = {
   /** A `PRODUCT_CATEGORIES` id — the tab this group's products live under. */
   id: string;
   title: string;
+  /** See {@link TrendingMeasure}. */
+  measure: TrendingMeasure;
   /** Every product in the class, ranked. The card shows the first
    *  `TRENDING_CARD_ROWS`; "ดูทั้งหมด" opens the whole list as a table. */
   items: TrendingItem[];
 };
 
-/**
- * Whether a group's rows show their order count.
- *
- * Not for the booked desks — structured products and bonds open once and close
- * (on a full basket or a used-up quota), so "how many orders" is a count of one
- * round's clients, not a measure of how well it sells. Stock and mutual funds
- * trade continuously, where the count does say something.
- */
-const SINGLE_ROUND_GROUPS = new Set(["structured", "thai-structured", "global-bond", "fixed-income"]);
+/** The four desks that book, by `PRODUCT_CATEGORIES` id. */
+const BOOKED_GROUPS = new Set(["structured", "thai-structured", "global-bond", "fixed-income"]);
 
-export function showsOrderCount(groupId: string): boolean {
-  return !SINGLE_ROUND_GROUPS.has(groupId);
+function measureOf(groupId: string): TrendingMeasure {
+  return BOOKED_GROUPS.has(groupId) ? "fill" : "sales";
 }
 
 /** How many of a group's rows its card shows before "ดูทั้งหมด". */
@@ -86,6 +121,21 @@ export const TRENDING_CARD_ROWS = 5;
 
 export const PRODUCT_TRENDING_UPDATED_AT =
   "ยอดขาย 7 วันล่าสุด | Latest update: 30 Apr 2025 - 09:22";
+
+/**
+ * The same line for a single group's page, in terms that group can stand
+ * behind.
+ *
+ * A `"fill"` group has no weekly sales figure and no "latest update" either —
+ * its numbers are the live book, which is as current as the page. Printing the
+ * sales line over a table of basket fills was quoting a date for figures that
+ * do not have one.
+ */
+export function trendingUpdatedAt(measure: TrendingMeasure): string {
+  return measure === "sales"
+    ? PRODUCT_TRENDING_UPDATED_AT
+    : "ยอดจองในตะกร้าตามเวลาจริง — แสดงเฉพาะตะกร้าที่ยังเปิดให้จอง";
+}
 
 /**
  * The invented part: five rungs of [sales THB, orders, week-on-week] per asset
@@ -100,34 +150,6 @@ const SALES_LADDER: Record<string, [salesThb: number, orders: number, changePct:
     [884_000_000, 1_503, "+6.8%", "up"],
     [612_000_000, 1_142, "-3.1%", "down"],
     [471_000_000, 905, "+2.4%", "up"],
-  ],
-  structured: [
-    [1_205_000_000, 164, "+24.6%", "up"],
-    [948_000_000, 131, "+9.9%", "up"],
-    [702_000_000, 98, "+4.2%", "up"],
-    [536_000_000, 74, "-8.5%", "down"],
-    [388_000_000, 52, "0.0%", "flat"],
-  ],
-  "fixed-income": [
-    [967_000_000, 486, "+14.1%", "up"],
-    [743_000_000, 402, "+7.7%", "up"],
-    [598_000_000, 331, "-2.3%", "down"],
-    [455_000_000, 268, "+3.9%", "up"],
-    [312_000_000, 190, "-5.6%", "down"],
-  ],
-  "thai-structured": [
-    [845_000_000, 122, "+31.8%", "up"],
-    [664_000_000, 97, "+12.5%", "up"],
-    [521_000_000, 79, "+5.1%", "up"],
-    [402_000_000, 61, "-4.8%", "down"],
-    [287_000_000, 44, "+1.6%", "up"],
-  ],
-  "global-bond": [
-    [732_000_000, 214, "+9.2%", "up"],
-    [585_000_000, 176, "+6.4%", "up"],
-    [441_000_000, 138, "-1.9%", "down"],
-    [329_000_000, 102, "+4.7%", "up"],
-    [246_000_000, 77, "-7.2%", "down"],
   ],
   stock: [
     [518_000_000, 3_142, "+21.3%", "up"],
@@ -177,16 +199,31 @@ function dedupeBy<T>(items: T[], keyOf: (item: T) => string): T[] {
   return [...seen.values()];
 }
 
-/** Pairs the real products of one asset class with that class's sales ladder. */
+/**
+ * Pairs the real products of one asset class with that class's sales ladder —
+ * or with nothing, on a `"fill"` group, which has no sales to pair with.
+ *
+ * The ranks written here are the *source* order, and on a fill group that is
+ * the catalogue's order, not a ranking. `trendingRows` reorders by fill and
+ * renumbers; see `sortTrendingItems`.
+ */
 function group<T>(
   id: string,
   title: string,
   source: T[],
-  row: (item: T) => { title: string; subtitle: string; target: TrendingTarget },
+  row: (item: T) => {
+    title: string;
+    subtitle: string;
+    target: TrendingTarget;
+    bookableId?: string;
+  },
 ): TrendingGroup {
+  const measure = measureOf(id);
   const ladder = SALES_LADDER[id];
   const items = source.map((item, i) => {
-    const [salesThb, orders, changePct, trend] = rung(ladder, i);
+    const [salesThb, orders, changePct, trend] = measure === "sales"
+      ? rung(ladder, i)
+      : ([] as const);
     return {
       rank: i + 1,
       salesThb,
@@ -200,13 +237,38 @@ function group<T>(
       ...row(item),
     };
   });
-  return { id, title, items };
+  return { id, title, measure, items };
 }
 
-const globalBondRows = dedupeBy(
-  ALL_OVERSEAS_BONDS.filter((bond) => getIssuerIdForBondRow(bond) !== undefined),
-  (bond) => bond.name,
-);
+/**
+ * The issuer pages' own bond rows — the one list where every bond is distinct
+ * *and* bookable.
+ *
+ * Not `ALL_OVERSEAS_BONDS`, which this used to read. That list is seed-expanded
+ * and mixes issuer names with coupons and maturities from elsewhere, so most of
+ * its rows name a bond that exists nowhere else: "Microsoft Corp 3.05% 2032"
+ * has no issuer row, no quota and no book. That was survivable while a trending
+ * row only had to link at an issuer page, and stopped being so when the rows
+ * started carrying their book's fill — three of the five showed no bar, because
+ * there was no book to read one from.
+ *
+ * Round-robin across issuers rather than issuer by issuer: `SALES_LADDER`
+ * assigns a rung by position, so reading the issuer pages in order made the
+ * card's five best sellers Apple's first five bonds. Interleaved, the top of
+ * the card is five issuers — which is what a reader takes "best selling global
+ * bonds" to mean.
+ */
+const globalBondRows = (() => {
+  const byIssuer = Object.values(GLOBAL_BOND_ISSUERS).map((issuer) =>
+    issuer.bonds.map((row) => ({ issuer, row })),
+  );
+  const rows: { issuer: (typeof byIssuer)[number][number]["issuer"]; row: GlobalBondRow }[] = [];
+  const deepest = Math.max(...byIssuer.map((b) => b.length));
+  for (let i = 0; i < deepest; i += 1) {
+    for (const bonds of byIssuer) if (i < bonds.length) rows.push(bonds[i]);
+  }
+  return rows;
+})();
 
 const stockRows = dedupeBy(
   [...STOCK_TOP_PICK, ...getSectorStockBatch(0, 10)],
@@ -262,6 +324,7 @@ export const PRODUCT_TRENDING_GROUPS: TrendingGroup[] = [
     title: bond.symbol,
     subtitle: `${bond.companyName} · YTM ${bond.ytm}`,
     target: { kind: "fixed-income", bond },
+    bookableId: fixedIncomeBookableId(bond),
   })),
   // The basket leads and the theme follows, matching the Global Structured
   // rows above and the All Thai FCN table's own columns — "Chips" names a
@@ -270,6 +333,7 @@ export const PRODUCT_TRENDING_GROUPS: TrendingGroup[] = [
     title: [product.bbg1, product.bbg2, product.bbg3].filter(Boolean).join(" - "),
     subtitle: `${product.theme} · ${product.product} · Coupon ${product.couponPa} · ${product.tenor}M`,
     target: { kind: "thai-structured", product },
+    bookableId: thaiBookableId(product.theme),
   })),
   // Underlying first, unlike the search index's productName-first rows: every
   // product here is a "Global FCN", so the basket is the only thing that tells
@@ -278,17 +342,46 @@ export const PRODUCT_TRENDING_GROUPS: TrendingGroup[] = [
     title: product.underlying,
     subtitle: `${product.productName} · Coupon ${product.coupon}`,
     target: { kind: "structured", product },
+    bookableId: product.id,
   })),
-  group("global-bond", "Global Bond", globalBondRows, (bond) => ({
-    title: bond.name,
-    subtitle: `${bond.currency} · Yield ${bond.yieldPct} · Maturity ${bond.maturity}`,
-    // Narrowed by the `filter` that built `globalBondRows`.
-    target: { kind: "global-bond", issuerId: getIssuerIdForBondRow(bond)! },
+  group("global-bond", "Global Bond", globalBondRows, ({ issuer, row }) => ({
+    title: row.name,
+    subtitle: `${row.currency} · Yield ${row.yieldPct} · Maturity ${row.maturity}`,
+    // The issuer page, which is where a bond is read — there is no page per
+    // bond, and the row the IC pressed is on the one this opens.
+    target: { kind: "global-bond", issuerId: issuer.id },
+    bookableId: globalBondBookableId(row),
   })),
 ].sort((a, b) => orderOf(a.id) - orderOf(b.id));
 
 export function getTrendingGroup(id: string): TrendingGroup | undefined {
   return PRODUCT_TRENDING_GROUPS.find((g) => g.id === id);
+}
+
+/**
+ * Every product on this shelf that has an order book.
+ *
+ * Module-level, and therefore the same array on every render — which is what
+ * lets `useTrendingBooks` memoise on it instead of reassembling thirty books
+ * each time a parent re-renders.
+ */
+export const TRENDING_BOOKABLE_IDS: string[] = [
+  ...new Set(
+    PRODUCT_TRENDING_GROUPS.flatMap((g) =>
+      g.items.map((i) => i.bookableId).filter((id): id is string => id !== undefined),
+    ),
+  ),
+];
+
+/**
+ * 1..n again, after something has reordered or dropped rows.
+ *
+ * The rank is a position in the list the reader is looking at, not a property
+ * of the product — leave it alone after a filter and the podium reads
+ * "1, 2, 4, 5" with no explanation of where 3 went.
+ */
+function reranked(items: TrendingItem[]): TrendingItem[] {
+  return items.map((item, i) => ({ ...item, rank: i + 1 }));
 }
 
 /** `?sort=` — omitted from the URL while it holds its default value. */
@@ -314,18 +407,18 @@ export function normalizeTrendingSort(value: string | null | undefined): Trendin
  * A group's rows in the order a sort asks for, re-ranked 1..n so the podium
  * follows it.
  *
- * Reorders, never drops: this tab is the IC's full shelf — everything the desk
- * can sell, not the narrower set a client sees in the asset tabs beside it.
- * The editorial sorts lift their picks to the top (by sales among themselves)
- * and leave the rest below, still by sales.
+ * Reorders, never drops. The editorial sorts lift their picks to the top (by
+ * sales among themselves) and leave the rest below, still by sales.
+ *
+ * What *does* drop is a desk's closed products, and it happens before this —
+ * see `openTrendingItems`. Keeping the two apart matters for the ranks: this
+ * renumbers whatever it is handed, so filtering afterwards would leave the
+ * gaps renumbering exists to close.
  */
 export function sortTrendingItems(items: TrendingItem[], sort: TrendingSort): TrendingItem[] {
-  if (sort === "best-seller") return items;
+  if (sort === "best-seller") return reranked(items);
   const picked = sort === "highlight" ? (i: TrendingItem) => i.highlight : (i: TrendingItem) => i.cioView;
-  return [...items.filter(picked), ...items.filter((i) => !picked(i))].map((item, i) => ({
-    ...item,
-    rank: i + 1,
-  }));
+  return reranked([...items.filter(picked), ...items.filter((i) => !picked(i))]);
 }
 
 /** A group's full ranking — the sub-page its card's "ดูทั้งหมด" opens. */

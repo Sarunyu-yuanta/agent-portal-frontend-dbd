@@ -246,10 +246,13 @@ export function TransactionsPanel({ asset }: { asset: TransactionAsset }) {
                         <span className="type-caption text-foreground">{t.channel}</span>
                       </TableCell>
                       <TableCell>
+                        {/* `large`, the component's own default — the สถานะ
+                            column is the one an IC scans down, and it reads at
+                            the same size as the booking tabs' beside it. */}
                         <Tag
                           text={STATUS_TAG[t.status].text}
                           variant={STATUS_TAG[t.status].variant}
-                          size="small"
+                          size="large"
                         />
                       </TableCell>
                     </TableRow>

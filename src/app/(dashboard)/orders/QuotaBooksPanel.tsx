@@ -2,14 +2,17 @@
 
 /**
  * The quota desks' tab body — Fixed Income or Global Bond: every client this IC
- * has booked into a bond of that desk.
+ * has sent an order for on that desk.
  *
- * Same frame as `BasketBooksPanel` (search, step chips, client-first table),
- * with the steps a quota book actually has: open, or sold out.
+ * Same frame as `BasketBooksPanel` (search, chips, one row per record), with
+ * the chips in this desk's own wording: a bond order starts life already sent,
+ * where a basket booking starts by waiting for the basket. See
+ * `bookingPhaseSteps` and {@link ORDER_WORDS}.
  *
- * These desks lose the least in the inversion: a quota booking is its own
- * order, so "this client's bookings" and "this client's orders" are the same
- * list, where on a basket desk a booking is a share of someone else's deal.
+ * These desks lose the least in the inversion: a bond order is one client's
+ * whole transaction, so "this client's records" and "this client's orders" are
+ * the same list, where on a basket desk a booking is a share of someone else's
+ * deal.
  */
 
 import { useMemo, useState } from "react";
@@ -23,33 +26,65 @@ import { usePrivacy } from "@/contexts/privacy-context";
 import { getClientProfile } from "@/data/client-profiles";
 import { maskName } from "@/lib/mask-name";
 import { setQueryState, withQuery } from "@/lib/query-state";
-import { ClientOrdersTable } from "./ClientOrdersTable";
-import { BOOK_AVAILABILITY_STEPS as STEPS, bookAvailability } from "./order-book";
+import { OrderRecordsTable } from "./OrderRecordsTable";
+import { bookingPhaseSteps } from "./order-book";
+import { hasOwnWorkAt } from "./order-proposals";
+import { IC_NAME } from "@/lib/current-ic";
+import { useOrders } from "@/contexts/orders-context";
 import { useOrderBooks } from "./use-order-books";
-import type { Desk } from "./bookable-products";
+import { bookingModeForDesk, type Desk } from "./bookable-products";
 
 
 export function QuotaBooksPanel({
   desk,
-  tabId,
   catalogHref,
+  productIds,
 }: {
   desk: Desk;
-  /** Which `?tab=` this panel is — carried into each client's page. */
-  tabId: string;
-  /** Where the empty state sends the IC to start a booking — the desk's catalogue tab. */
-  catalogHref: string;
+  /**
+   * Where the empty state sends the IC to start an order — the desk's
+   * catalogue tab. Omitted where the IC is *already* looking at the products:
+   * an issuer's page offers no link back to a list it is a page of.
+   */
+  catalogHref?: string;
+  /**
+   * Narrow to these books, by product id.
+   *
+   * Order Management's tab passes nothing and gets the whole desk. An issuer's
+   * page passes its own bonds, so its Order tab answers "what have I ordered
+   * from this issuer" with the same chips and the same table as the desk tab —
+   * one implementation, two scopes.
+   */
+  productIds?: string[];
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: books, isLoading } = useOrderBooks();
+  // Offers are part of this list now — see `hasOwnWorkAt`.
+  const { proposals } = useOrders();
+  // One desk per panel, so one mode — the chips and the table both read it.
+  const mode = bookingModeForDesk(desk);
+  // Memoised on the mode: `step` is an object picked out of this array and
+  // feeds the filter below, so a fresh array every render would cost the
+  // memoisation of the whole list.
+  const STEPS = useMemo(() => bookingPhaseSteps(mode, { offers: true }), [mode]);
   const { isPrivate } = usePrivacy();
   const [search, setSearch] = useState("");
 
   const step = STEPS.find((s) => s.id === searchParams.get("step")) ?? STEPS[0];
+  /** `null` on "ทั้งหมด" — what the filters read as "no step filter". */
+  const step_ = step.id === "all" ? null : step.id;
 
   const matching = useMemo(() => {
-    const ofDesk = books.filter((book) => book.desk === desk);
+    // This desk, the step's phase, and only the IC's own bookings — the same
+    // filter the table groups by, so the two cannot disagree about whether a
+    // desk is empty. See `ownBookings`.
+    const ofDesk = books.filter(
+      (book) =>
+        book.desk === desk &&
+        (!productIds || productIds.includes(book.productId)) &&
+        hasOwnWorkAt(book, IC_NAME, step_, proposals),
+    );
     const query = search.trim().toLowerCase();
     if (!query) return ofDesk;
     return ofDesk.filter((book) =>
@@ -65,12 +100,9 @@ export function QuotaBooksPanel({
         ...book.submissions.map((s) => s.backendRef),
       ].some((text) => text.toLowerCase().includes(query)),
     );
-  }, [books, desk, search, isPrivate]);
+  }, [books, desk, search, isPrivate, step_, proposals, productIds]);
 
-  const visible = useMemo(
-    () => (step.id === "all" ? matching : matching.filter((b) => bookAvailability(b) === step.id)),
-    [matching, step],
-  );
+
 
   return (
     <div className="flex flex-col gap-4">
@@ -97,25 +129,30 @@ export function QuotaBooksPanel({
             value={search}
             onChange={setSearch}
             onClear={() => setSearch("")}
-            placeholder="Search All"
+            // The same words as the transaction tabs' box: all seven tabs of
+            // Order Management search the same two things, and "Search All" was
+            // the only English left on the page.
+            placeholder="ค้นหาสินค้า หรือลูกค้า"
             className="w-full"
           />
         </div>
       </div>
 
       {isLoading ? (
-        <ClientOrdersTable books={[]} tabId={tabId} isLoading />
-      ) : visible.length === 0 ? (
+        <OrderRecordsTable books={[]} mode={mode} step={step_} isLoading />
+      ) : matching.length === 0 ? (
         <EmptyState
           icon={<ClipboardTextIcon size={40} className="text-[var(--text-default-placeholder)]" />}
           title={search ? "ไม่พบรายการที่ค้นหา" : step.empty}
           body={
             search
               ? "ลองค้นหาด้วยชื่อลูกค้า Account No ชื่อสินค้า หรือเลขคำสั่งซื้อ"
-              : "จองซื้อให้ลูกค้าได้จากหน้าสินค้าใน Product Catalog — แต่ละรายการส่งคำสั่งซื้อได้ทันทีจนกว่าจะเต็มโควตา"
+              : catalogHref
+                ? "ส่งคำสั่งซื้อให้ลูกค้าได้จากหน้าสินค้าใน Product Catalog — กดครั้งเดียวส่งถึงหลังบ้านเลย ทำได้จนกว่าจะเต็มโควตา"
+                : "กด \"สร้างคำสั่งซื้อ\" ที่หุ้นกู้ด้านบน — กดครั้งเดียวส่งถึงหลังบ้านเลย ทำได้จนกว่าจะเต็มโควตา"
           }
           actionSlot={
-            search ? undefined : (
+            search || !catalogHref ? undefined : (
               <Link href={catalogHref}>
                 <Button variant="outline" size="md">
                   ไปที่ Product Catalog
@@ -126,7 +163,7 @@ export function QuotaBooksPanel({
         />
       ) : (
         <FadeIn key={step.id}>
-          <ClientOrdersTable books={visible} tabId={tabId} />
+          <OrderRecordsTable books={matching} mode={mode} step={step_} />
         </FadeIn>
       )}
     </div>

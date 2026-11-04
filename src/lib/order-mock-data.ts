@@ -22,13 +22,18 @@ import orderBooksRaw from "@/data/order-books.json";
 import orderRequirementsRaw from "@/data/order-requirements.json";
 import type {
   Booking,
+  EvidenceChannel,
+  OrderEvidence,
   OrderSubmission,
+  ProposalLog,
   RequirementKey,
   RequirementRequest,
   RequirementStatus,
 } from "@/types/domain";
 import { mockClients } from "@/lib/mock-data";
+import { OTHER_DESK_CLIENT_NAMES } from "@/data/client-profiles";
 import { NOTE_AUTHOR } from "@/app/(dashboard)/notes/note-constants";
+import { bookingModeForId } from "@/app/(dashboard)/orders/bookable-products";
 
 /**
  * Who every booking, request and submission is attributed to.
@@ -52,7 +57,27 @@ export const ORDER_ACTOR = NOTE_AUTHOR;
  */
 export const BACKOFFICE_ACTOR = "ระบบหลังบ้าน";
 
-const nameById = Object.fromEntries(mockClients.map((c) => [c.id, c.name]));
+/**
+ * Every name a booking can carry — ours, and the other desks'.
+ *
+ * `mockClients` is the signed-in IC's book, so it cannot name the clients whose
+ * bookings share a basket with ours; see `OTHER_DESK_CLIENT_NAMES`.
+ */
+const nameById: Record<string, string> = {
+  ...Object.fromEntries(mockClients.map((c) => [c.id, c.name])),
+  ...OTHER_DESK_CLIENT_NAMES,
+};
+
+/**
+ * The name a client id belongs to, or `undefined` for one nobody knows.
+ *
+ * Exported so a row the store writes at runtime names a client from the same
+ * table the seeds do — a record whose name came from a screen's own copy of the
+ * roster is a record that can disagree with every seeded row beside it.
+ */
+export function clientNameById(clientId: string): string | undefined {
+  return nameById[clientId];
+}
 
 /**
  * A seed's `daysAgo` turned into an ISO timestamp.
@@ -83,6 +108,15 @@ type BookingSeed = {
   amount: number;
   daysAgo: number;
   status?: string;
+  /**
+   * Whose booking it is. Omitted means the signed-in IC.
+   *
+   * A basket is shared across the desk, so a book holds more than one IC's
+   * clients — and every figure that separates "mine" from "the deal's" is
+   * unreadable in a fixture where they are always equal. A couple of seeds
+   * carry another name so the distinction is visible.
+   */
+  createdBy?: string;
 };
 
 type SubmissionSeed = {
@@ -93,18 +127,74 @@ type SubmissionSeed = {
   backendRef: string;
 };
 
+/**
+ * The proof of instruction a seeded basket booking carries, derived from its id.
+ *
+ * Every basket booking needs one — see `Booking.evidence` — and sixty of them
+ * hand-written into `order-books.json` would bury the bookings they belong to.
+ * So this follows the same inversion the timestamps do: the id's character sum
+ * picks the channel, and the file name is built from the channel, the client and
+ * the booking's own date. Stable across renders, identical on the server and in
+ * the browser, and spread across all three channels without a fixture edit.
+ *
+ * `undefined` on a quota booking: those desks do not ask for one, and giving
+ * them one would put a block on the receipt that the form never collected.
+ */
+const EVIDENCE_SEED: { channel: EvidenceChannel; ext: string; bytes: number }[] = [
+  { channel: "call", ext: "m4a", bytes: 1_100_000 },
+  { channel: "email", ext: "eml", bytes: 42_000 },
+  { channel: "chat", ext: "png", bytes: 310_000 },
+];
+
+const EVIDENCE_TYPE: Record<string, string> = {
+  m4a: "audio/mp4",
+  eml: "message/rfc822",
+  png: "image/png",
+};
+
+function evidenceFor(
+  id: string,
+  clientId: string,
+  createdAt: string,
+  isBasket: boolean,
+): OrderEvidence | undefined {
+  if (!isBasket) return undefined;
+  const seed = [...id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  const { channel, ext, bytes } = EVIDENCE_SEED[seed % EVIDENCE_SEED.length];
+  const day = createdAt.slice(0, 10);
+  return {
+    channel,
+    fileName: `${channel}-${clientId}-${day}.${ext}`,
+    // Varied a little per booking, so the column does not read as one file
+    // copied sixty times.
+    fileSize: bytes + (seed % 97) * 1_024,
+    fileType: EVIDENCE_TYPE[ext] ?? "",
+    // The client asked before the IC booked, so the file predates the booking.
+    attachedAt: createdAt,
+  };
+}
+
 /** Every seeded booking, flattened — the book each belongs to is on the row. */
 export const seedBookings: Booking[] = orderBooksRaw.books.flatMap((book) =>
-  (book.bookings as BookingSeed[]).map((b) => ({
-    id: b.id,
-    productId: book.productId,
-    clientId: b.clientId,
-    clientName: nameById[b.clientId] ?? b.clientId,
-    amount: b.amount,
-    createdAt: stampFromDaysAgo(b.daysAgo, b.id),
-    createdBy: ORDER_ACTOR,
-    status: (b.status ?? "booked") as Booking["status"],
-  })),
+  (book.bookings as BookingSeed[]).map((b) => {
+    const createdAt = stampFromDaysAgo(b.daysAgo, b.id);
+    return {
+      id: b.id,
+      productId: book.productId,
+      clientId: b.clientId,
+      clientName: nameById[b.clientId] ?? b.clientId,
+      amount: b.amount,
+      createdAt,
+      createdBy: b.createdBy ?? ORDER_ACTOR,
+      status: (b.status ?? "booked") as Booking["status"],
+      evidence: evidenceFor(
+        b.id,
+        b.clientId,
+        createdAt,
+        bookingModeForId(book.productId) === "basket",
+      ),
+    };
+  }),
 );
 
 /**
@@ -136,11 +226,43 @@ export const seedSubmissions: OrderSubmission[] = orderBooksRaw.books.flatMap(
         submittedBy: ORDER_ACTOR,
         status: s.status as OrderSubmission["status"],
         backendRef: s.backendRef,
-        // One still processing has no settlement date to show, which is what
-        // the "กำลังดำเนินการ" row on the book reads off.
-        settledAt: s.status === "processing" ? null : settledAfter(submittedAt, s.id),
+        // One the back office has not answered has no settlement date to show,
+        // which is what the in-flight rows on the book read off. `sent` as well
+        // as `processing`: it has not even reached them yet.
+        settledAt:
+          s.status === "processing" || s.status === "sent"
+            ? null
+            : settledAfter(submittedAt, s.id),
       };
     }),
+);
+
+type ProposalSeed = {
+  id: string;
+  clientId: string;
+  daysAgo: number;
+};
+
+/**
+ * Every seeded proposal — one product's documents sent to one client.
+ *
+ * `daysAgo` against the bookings' own `daysAgo` is what the fixture is really
+ * saying, because that comparison is the whole of `proposalOutcome`: a proposal
+ * older than a booking by the same client converted, a newer one did not. The
+ * seeds below are written to cover each answer, `_note` says which.
+ */
+export const seedProposals: ProposalLog[] = orderBooksRaw.books.flatMap((book) =>
+  ((book.proposals ?? []) as ProposalSeed[]).map((p) => ({
+    id: p.id,
+    productId: book.productId,
+    clientId: p.clientId,
+    clientName: nameById[p.clientId] ?? p.clientId,
+    sentAt: stampFromDaysAgo(p.daysAgo, p.id),
+    sentBy: ORDER_ACTOR,
+    // Both, always — see `ProposalLog`. Not in the seed, because a fixture that
+    // could say otherwise would be describing a delivery this app cannot make.
+    channels: ["app", "email"],
+  })),
 );
 
 export const seedRequirementRequests: RequirementRequest[] =

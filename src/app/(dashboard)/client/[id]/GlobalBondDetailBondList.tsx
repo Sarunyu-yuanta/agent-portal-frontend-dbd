@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState } from "react";
 import { Button } from "@sarunyu/system-one";
-import { CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react";
+import { CaretDownIcon, CaretUpIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
 import {
   findBookableGlobalBond,
   globalBondToBookableProduct,
@@ -56,6 +56,46 @@ function IssuerLogo({ src }: { src: string }) {
 export const GlobalBondBookingContext = createContext<
   ((product: BookableProduct) => void) | null
 >(null);
+
+/**
+ * Where a bond row's Proposal is sent from — provided by the page that owns the
+ * send dialog (`useSendProposal`). Null means the page does not offer it, and
+ * the row shows no send action.
+ *
+ * A second context rather than one carrying both: the booking flow is already
+ * threaded this way, and a page can legitimately offer one without the other
+ * (the catalogue lists offer a booking with no product page behind them).
+ */
+export const GlobalBondProposalContext = createContext<
+  ((product: BookableProduct) => void) | null
+>(null);
+
+/**
+ * Send this bond's Proposal, where the page offers it and the row resolves to
+ * an issuer's bond. Secondary to the row's own CTA: the offer comes before the
+ * order, but the order is what the row is for.
+ */
+function ProposalButton({ row, fullWidth }: { row: GlobalBondRow; fullWidth?: boolean }) {
+  const onSend = useContext(GlobalBondProposalContext);
+  const match = onSend ? findBookableGlobalBond(row) : undefined;
+  if (!onSend || !match) return null;
+  const product = globalBondToBookableProduct(match.issuer, match.row);
+  return (
+    <Button
+      variant="outline"
+      size={fullWidth ? "lg" : "xs"}
+      className={fullWidth ? "w-full max-w-[343px]" : "whitespace-nowrap"}
+      leftIcon={<PaperPlaneTiltIcon size={fullWidth ? 16 : 14} weight="fill" />}
+      onClick={(e) => {
+        // The row itself expands; this is a separate action on it.
+        e.stopPropagation();
+        onSend(product);
+      }}
+    >
+      ส่ง Proposal
+    </Button>
+  );
+}
 
 /**
  * Detail-page CTA. Books the bond straight in when the page provides a
@@ -194,6 +234,7 @@ export function GlobalBondDetailAccordion({ bonds }: { bonds: GlobalBondRow[] })
                   <DetailRow label="ระยะเวลา (ปี)" value={row.duration} />
                 </div>
                 <InvestButton row={row} fullWidth />
+                <ProposalButton row={row} fullWidth />
               </div>
             )}
           </div>
@@ -399,9 +440,13 @@ export function GlobalBondDetailTable({ bonds }: { bonds: GlobalBondRow[] }) {
             {bonds.map((row, i) => (
               <div
                 key={row.id}
-                className="flex flex-1 items-center justify-center px-4 py-[11px] min-h-[52px]"
+                className="flex flex-1 items-center justify-center gap-1.5 px-4 py-[11px] min-h-[52px]"
                 style={cellBorder({ bottom: isLastRow(i) })}
               >
+                {/* The offer first, the order second — left to right in the
+                    order they happen. Both `xs`, so the pair fits the cell the
+                    single button was sized for. */}
+                <ProposalButton row={row} />
                 <InvestButton row={row} />
               </div>
             ))}
