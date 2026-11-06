@@ -13,7 +13,6 @@ import {
   ChartLineDownIcon,
   EyeIcon,
   InfoIcon,
-  ShieldWarningIcon,
   UserFocusIcon,
   WarningCircleIcon,
   XCircleIcon,
@@ -31,7 +30,6 @@ export const SEVERITY_ORDER: RiskSeverity[] = ["critical", "warning", "watch"];
 /** The order of the category tabs. */
 export const RISK_CATEGORY_ORDER: RiskAlertCategory[] = [
   "margin",
-  "aml",
   "suitability",
   "conduct",
 ];
@@ -115,12 +113,11 @@ export const RISK_CATEGORY_META: Record<
   { label: string; Icon: ElementType }
 > = {
   margin: { label: "มาร์จิ้น/วงเงิน", Icon: ChartLineDownIcon },
-  aml: { label: "AML/บัญชีม้า", Icon: ShieldWarningIcon },
   suitability: { label: "ความเหมาะสมการลงทุน", Icon: UserFocusIcon },
   conduct: { label: "พฤติกรรมการซื้อขาย", Icon: EyeIcon },
 };
 
-/** What the category strip is made of — "ทั้งหมด" and then the four families.
+/** What the category strip is made of — "ทั้งหมด" and then the three families.
  *  Built here rather than in the component so the card and the sub page cannot
  *  end up offering different tabs. */
 export const RISK_CATEGORY_TABS: {

@@ -193,7 +193,10 @@ export function OrderRecordsTable({
   mode,
   step,
   isLoading,
+  clientId,
 }: {
+  /** One client's rows only — see the panels' `clientId`. */
+  clientId?: string;
   /** Already narrowed to one desk by the panel, which applied `step` too. */
   books: OrderBook[];
   /** This desk's booking mode — what the fill line reads. */
@@ -229,7 +232,8 @@ export function OrderRecordsTable({
   const readiness = useRosterReadiness(clients, openedProduct ?? FALLBACK_PRODUCT);
 
   const rows = useMemo(() => {
-    const built = buildRows(books, isPrivate, step, proposals);
+    const all = buildRows(books, isPrivate, step, proposals);
+    const built = clientId ? all.filter((r) => r.clientId === clientId) : all;
     if (sort.dir === "none") return built;
     const sign = sort.dir === "asc" ? 1 : -1;
     return [...built].sort((a, b) => {
@@ -237,7 +241,7 @@ export function OrderRecordsTable({
       const bv = sortValue(b, sort.key);
       return sign * (av < bv ? -1 : av > bv ? 1 : 0);
     });
-  }, [books, isPrivate, step, proposals, sort]);
+  }, [books, isPrivate, step, proposals, sort, clientId]);
 
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   // Clamped rather than reset: a filter that shortens the list past the current

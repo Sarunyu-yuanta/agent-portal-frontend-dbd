@@ -17,7 +17,7 @@
  * arithmetic it will run against a backend that returns a date.
  *
  * ─── Backend handoff ─────────────────────────────────────────────────────────
- * These rows are what the firm's margin, AML and surveillance engines would
+ * These rows are what the firm's margin, suitability and surveillance engines would
  * push. What the *IC* then does with one — acknowledging it — is not here; it
  * is a user preference, held through `useStoredIds`. See
  * `app/(dashboard)/command-center/risk-feed`.
@@ -49,11 +49,6 @@ export const RISK_CATEGORY_OF_KIND: Record<RiskAlertKind, RiskAlertCategory> = {
   "force-sell": "margin",
   "settlement-overdue": "margin",
   "credit-limit": "margin",
-  "unusual-flow": "aml",
-  "third-party-transfer": "aml",
-  "dormant-reactivated": "aml",
-  "shared-device": "aml",
-  "sanctions-pep": "aml",
   "risk-profile-breach": "suitability",
   "suitability-expired": "suitability",
   concentration: "suitability",

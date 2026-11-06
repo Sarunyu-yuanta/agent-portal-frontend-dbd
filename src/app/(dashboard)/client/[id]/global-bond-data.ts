@@ -267,6 +267,11 @@ export function getBookableGlobalBond(id: string): StructuredProduct | undefined
   return BOOKABLE_BY_ID.get(id);
 }
 
+/** Every bookable global bond — what Order Management books from. */
+export function allBookableGlobalBonds(): StructuredProduct[] {
+  return [...BOOKABLE_BY_ID.values()];
+}
+
 /** The issuer page a bookable bond lives on. */
 export function globalBondIssuerIdForBookable(id: string): GlobalBondIssuerId | undefined {
   return ISSUER_BONDS.find(({ row }) => globalBondBookableId(row) === id)?.issuer.id;

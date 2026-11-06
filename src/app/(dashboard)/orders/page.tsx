@@ -19,6 +19,7 @@ import { setQueryState, withQuery } from "@/lib/query-state";
 import { BasketBooksPanel } from "./BasketBooksPanel";
 import { QuotaBooksPanel } from "./QuotaBooksPanel";
 import { TransactionsPanel } from "./TransactionsPanel";
+import { AllOrdersPanel } from "./AllOrdersPanel";
 import { DEFAULT_ORDER_TAB, ORDER_TABS, normalizeOrderTab } from "./order-tabs";
 
 export default function OrdersPage() {
@@ -61,7 +62,9 @@ function OrdersPageInner() {
       </div>
 
       <FadeIn key={tab.id}>
-        {tab.kind === "basket" ? (
+        {tab.kind === "all" ? (
+          <AllOrdersPanel />
+        ) : tab.kind === "basket" ? (
           <BasketBooksPanel desk={tab.desk} catalogHref={catalogListHref(tab.id)} />
         ) : tab.kind === "quota" ? (
           <QuotaBooksPanel desk={tab.desk} catalogHref={catalogListHref(tab.id)} />

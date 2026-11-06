@@ -45,6 +45,7 @@ import {
   clientNameById,
   seedBookings,
   seedProposals,
+  seedOfferedProposals,
   seedRequirementRequests,
   seedSubmissions,
 } from "@/lib/order-mock-data";
@@ -53,7 +54,7 @@ import {
   findBookableProduct,
 } from "@/app/(dashboard)/orders/bookable-products";
 import { orderTargetFor } from "@/app/(dashboard)/orders/order-book";
-import { evidenceRequired } from "@/app/(dashboard)/orders/order-evidence";
+import { evidenceComplete, evidenceRequired } from "@/app/(dashboard)/orders/order-evidence";
 import type {
   Booking,
   OrderEvidence,
@@ -88,15 +89,6 @@ const SUBMISSION_TURNAROUND_MS = 12_000;
  */
 const BACKOFFICE_PICKUP_MS = 10_000;
 
-/**
- * Where every proposal goes — the client's app and their email, always.
- *
- * One array shared by every row rather than a literal per row: nothing varies
- * it, and a per-row copy would invite a future edit to vary one without meaning
- * to. A fresh array per row would also make two rows from the same send
- * compare unequal for no reason.
- */
-const CHANNELS: ProposalChannel[] = ["app", "email"];
 
 type BookingDraft = {
   productId: string;
@@ -174,6 +166,8 @@ type OrdersContextValue = {
   sendProposal: (input: {
     productId: string;
     clientIds: string[];
+    /** Where it goes. `app` is added if missing — every send lands there. */
+    channels: ProposalChannel[];
   }) => Promise<ProposalLog[]>;
 };
 
@@ -192,7 +186,10 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   const [submissions, setSubmissions] = useState<OrderSubmission[]>(seedSubmissions);
   const [requirementRequests, setRequirementRequests] =
     useState<RequirementRequest[]>(seedRequirementRequests);
-  const [proposals, setProposals] = useState<ProposalLog[]>(seedProposals);
+  const [proposals, setProposals] = useState<ProposalLog[]>(() => [
+    ...seedProposals,
+    ...seedOfferedProposals,
+  ]);
 
   /**
    * Every pending stand-in timer, cleared on unmount.
@@ -271,7 +268,9 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   );
 
   const sendProposal = useCallback<OrdersContextValue["sendProposal"]>(
-    async ({ productId, clientIds }) => {
+    async ({ productId, clientIds, channels: picked }) => {
+      // One array shared by every row of this send: they went the same way.
+      const channels: ProposalChannel[] = picked.includes("app") ? picked : ["app", ...picked];
       // Ids resolved against the roster here rather than taken from the caller:
       // the log carries the name it was sent under, and a caller passing a
       // stale one would put a name in the compliance record that nobody sent
@@ -288,8 +287,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
           clientName,
           sentAt,
           sentBy: ORDER_ACTOR,
-          // Both, always — the two places a proposal lands. See `ProposalLog`.
-          channels: CHANNELS,
+          channels,
         });
       }
       // Appended, never merged into an existing row: a second proposal to the
@@ -400,8 +398,10 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       // it. The form disables its button without one, but a disabled button is
       // a courtesy and this is where the endpoint will enforce it — the same
       // reasoning `shareMaterial` spells out in `contexts/campaigns-context`.
-      if (evidenceRequired(mode) && !draft.evidence) {
-        throw new Error("A booking on this desk needs evidence of the client's instruction.");
+      if (evidenceRequired(mode) && !evidenceComplete(draft.evidence)) {
+        throw new Error(
+          "A booking on this desk needs evidence of the client's instruction (and a note, for \"other\").",
+        );
       }
       const booking: Booking = {
         id: localId("bk"),

@@ -31,9 +31,12 @@ import type {
   RequirementStatus,
 } from "@/types/domain";
 import { mockClients } from "@/lib/mock-data";
+import { getCallLogs } from "@/data/call-log-data";
 import { OTHER_DESK_CLIENT_NAMES } from "@/data/client-profiles";
 import { NOTE_AUTHOR } from "@/app/(dashboard)/notes/note-constants";
-import { bookingModeForId } from "@/app/(dashboard)/orders/bookable-products";
+import { offeredProductId } from "@/app/(dashboard)/orders/offered-products";
+import { STOCK_TOP_PICK } from "@/app/(dashboard)/client/[id]/stock-data";
+import { getTopPerformers } from "@/app/(dashboard)/client/[id]/mutual-fund-data";
 
 /**
  * Who every booking, request and submission is attributed to.
@@ -137,8 +140,7 @@ type SubmissionSeed = {
  * the booking's own date. Stable across renders, identical on the server and in
  * the browser, and spread across all three channels without a fixture edit.
  *
- * `undefined` on a quota booking: those desks do not ask for one, and giving
- * them one would put a block on the receipt that the form never collected.
+ * Every desk's bookings carry one — see `evidenceRequired`.
  */
 const EVIDENCE_SEED: { channel: EvidenceChannel; ext: string; bytes: number }[] = [
   { channel: "call", ext: "m4a", bytes: 1_100_000 },
@@ -156,14 +158,21 @@ function evidenceFor(
   id: string,
   clientId: string,
   createdAt: string,
-  isBasket: boolean,
-): OrderEvidence | undefined {
-  if (!isBasket) return undefined;
+): OrderEvidence {
   const seed = [...id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
   const { channel, ext, bytes } = EVIDENCE_SEED[seed % EVIDENCE_SEED.length];
   const day = createdAt.slice(0, 10);
+  // Every few phone bookings point at the client's Call Log instead of a
+  // recording, and some carry a note — so the receipt shows each shape.
+  const note = seed % 5 === 0 ? "ลูกค้ายืนยันยอดและเงื่อนไขทางโทรศัพท์แล้ว" : undefined;
+  const call = getCallLogs(clientId)[0];
+  if (channel === "call" && seed % 2 === 0 && call) {
+    return { channel, source: "call-log", callLog: { ...call }, note, attachedAt: createdAt };
+  }
   return {
     channel,
+    source: "file",
+    note,
     fileName: `${channel}-${clientId}-${day}.${ext}`,
     // Varied a little per booking, so the column does not read as one file
     // copied sixty times.
@@ -187,12 +196,7 @@ export const seedBookings: Booking[] = orderBooksRaw.books.flatMap((book) =>
       createdAt,
       createdBy: b.createdBy ?? ORDER_ACTOR,
       status: (b.status ?? "booked") as Booking["status"],
-      evidence: evidenceFor(
-        b.id,
-        b.clientId,
-        createdAt,
-        bookingModeForId(book.productId) === "basket",
-      ),
+      evidence: evidenceFor(b.id, b.clientId, createdAt),
     };
   }),
 );
@@ -264,6 +268,42 @@ export const seedProposals: ProposalLog[] = orderBooksRaw.books.flatMap((book) =
     channels: ["app", "email"],
   })),
 );
+
+/**
+ * A few Proposals on stocks and funds — products offered but never booked —
+ * so Order Management's Stock and Mutual Fund tabs have a "ส่ง Proposal แล้ว"
+ * to show before the IC sends one. Symbols are the catalogue's own, the same
+ * lists the transaction seeds draw from.
+ */
+const OFFERED_SEEDS: {
+  id: string;
+  productId: string;
+  clientIndex: number;
+  daysAgo: number;
+  channels: ProposalLog["channels"];
+}[] = [
+  { id: "prp-stk-01", productId: offeredProductId("stock", STOCK_TOP_PICK[0].symbol), clientIndex: 0, daysAgo: 0, channels: ["app", "line"] },
+  { id: "prp-stk-02", productId: offeredProductId("stock", STOCK_TOP_PICK[1].symbol), clientIndex: 2, daysAgo: 1, channels: ["app", "email"] },
+  { id: "prp-stk-03", productId: offeredProductId("stock", STOCK_TOP_PICK[0].symbol), clientIndex: 4, daysAgo: 3, channels: ["app", "voice-ai"] },
+  { id: "prp-mf-01", productId: offeredProductId("mutual-fund", getTopPerformers("global-equity")[0].symbol), clientIndex: 1, daysAgo: 0, channels: ["app", "email", "line"] },
+  { id: "prp-mf-02", productId: offeredProductId("mutual-fund", getTopPerformers("global-equity")[1].symbol), clientIndex: 3, daysAgo: 2, channels: ["app"] },
+];
+
+export const seedOfferedProposals: ProposalLog[] = OFFERED_SEEDS.flatMap((s) => {
+  const client = mockClients[s.clientIndex];
+  if (!client) return [];
+  return [
+    {
+      id: s.id,
+      productId: s.productId,
+      clientId: client.id,
+      clientName: client.name,
+      sentAt: stampFromDaysAgo(s.daysAgo, s.id),
+      sentBy: ORDER_ACTOR,
+      channels: s.channels,
+    },
+  ];
+});
 
 export const seedRequirementRequests: RequirementRequest[] =
   orderBooksRaw.requirementRequests.map((r) => ({

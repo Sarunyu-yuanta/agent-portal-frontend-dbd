@@ -24,6 +24,7 @@
  */
 
 import {
+  allStructuredProducts,
   findProductById,
   type StructuredProduct,
 } from "../client/[id]/structured-product-data";
@@ -38,6 +39,7 @@ import {
   fixedIncomeToBookableProduct,
 } from "../client/[id]/fixed-income-data";
 import {
+  allBookableGlobalBonds,
   getBookableGlobalBond,
   globalBondIssuerIdForBookable,
 } from "../client/[id]/global-bond-data";
@@ -122,6 +124,20 @@ export function findBookableProduct(id: string): BookableProduct | undefined {
       return getBookableGlobalBond(id);
     case "Global Structured":
       return findProductById(id);
+  }
+}
+
+/** Every product a desk can book — the list Order Management's "สร้าง Order" picks from. */
+export function bookableProductsForDesk(desk: Desk): BookableProduct[] {
+  switch (desk) {
+    case "Thai Structured":
+      return [...THAI_BY_ID.values()];
+    case "Fixed Income":
+      return [...FIXED_INCOME_BY_ID.values()];
+    case "Global Bond":
+      return allBookableGlobalBonds();
+    case "Global Structured":
+      return allStructuredProducts();
   }
 }
 

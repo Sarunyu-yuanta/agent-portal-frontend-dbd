@@ -27,7 +27,8 @@ import { FadeIn } from "@/components/ui/fade-in";
 import { maskName } from "@/lib/mask-name";
 import { setQueryState, withQuery } from "@/lib/query-state";
 import { OrderRecordsTable } from "./OrderRecordsTable";
-import { bookingPhaseSteps } from "./order-book";
+import { CreateOrderButton } from "./CreateOrderButton";
+import { bookingPhaseSteps, ownBookings } from "./order-book";
 import { hasOwnWorkAt } from "./order-proposals";
 import { IC_NAME } from "@/lib/current-ic";
 import { useOrders } from "@/contexts/orders-context";
@@ -36,9 +37,16 @@ import { bookingModeForDesk, type Desk } from "./bookable-products";
 
 export function BasketBooksPanel({
   desk,
+  clientId,
   catalogHref,
 }: {
   desk: Desk;
+  /**
+   * One client's records only — the client profile's Order tab, which mounts
+   * this same panel so its chips, search and table match Order Management.
+   * Booking from it ("สร้าง Order") books for this client.
+   */
+  clientId?: string;
   /** Where the empty state sends the IC to start a booking — the desk's catalogue tab. */
   catalogHref: string;
 }) {
@@ -73,13 +81,13 @@ export function BasketBooksPanel({
     // the table groups by, so the two cannot disagree about whether a desk is
     // empty. See `hasOwnWorkAt`.
     const ofType = books.filter(
-      (book) => book.desk === desk && hasOwnWorkAt(book, IC_NAME, step_, proposals),
+      (book) => book.desk === desk && hasOwnWorkAt(book, IC_NAME, step_, proposals, clientId),
     );
     const query = search.trim().toLowerCase();
     if (!query) return ofType;
     return ofType.filter((book) =>
       [
-        ...book.allBookings.flatMap((b) => [
+        ...ownBookings(book, IC_NAME).flatMap((b) => [
           b.clientId,
           maskName(b.clientName, isPrivate),
           getClientProfile(b.clientId).accountNo,
@@ -90,7 +98,7 @@ export function BasketBooksPanel({
         ...book.submissions.map((s) => s.backendRef),
       ].some((text) => text.toLowerCase().includes(query)),
     );
-  }, [books, desk, search, isPrivate, step_, proposals]);
+  }, [books, desk, search, isPrivate, step_, proposals, clientId]);
 
 
 
@@ -118,17 +126,21 @@ export function BasketBooksPanel({
             characters, and a bar as wide as the page read as the page's
             main control. Width on the wrapper — the library's own `.w-full`
             outranks a Tailwind width set on the component. */}
-        <div className="lg:w-[280px] lg:shrink-0">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            onClear={() => setSearch("")}
-            // The same words as the transaction tabs' box: all seven tabs of
-            // Order Management search the same two things, and "Search All" was
-            // the only English left on the page.
-            placeholder="ค้นหาสินค้า หรือลูกค้า"
-            className="w-full"
-          />
+        <div className="flex items-stretch gap-2.5 lg:shrink-0">
+          <div className="min-w-0 flex-1 lg:w-[220px] lg:flex-none">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              onClear={() => setSearch("")}
+              // The same words as the transaction tabs' box: all seven tabs of
+              // Order Management search the same two things, and "Search All" was
+              // the only English left on the page.
+              placeholder="ค้นหาสินค้า หรือลูกค้า"
+              className="w-full"
+            />
+          </div>
+          {/* Bookable desks only — see `CreateOrderButton`. */}
+          <CreateOrderButton desk={desk} clientId={clientId} />
         </div>
       </div>
 
@@ -160,7 +172,7 @@ export function BasketBooksPanel({
         // Keyed on the step, so switching it replays the fade — the rows change
         // completely.
         <FadeIn key={step.id}>
-          <OrderRecordsTable books={matching} mode={mode} step={step_} />
+          <OrderRecordsTable books={matching} mode={mode} step={step_} clientId={clientId} />
         </FadeIn>
       )}
     </div>

@@ -84,9 +84,8 @@ export const PROPOSAL_OUTCOME_VARIANT: Record<"won" | "lost", "green" | "gray"> 
 /**
  * One product's proposals, newest first.
  *
- * Every IC's, not just the signed-in one: a product page is a view of the
- * product, the same scope `ProductOrderSection` takes. Order Management is
- * where an IC's own work is listed.
+ * Every IC's, not just the signed-in one — callers narrow it to one client
+ * (see `latestProposal`) or to the IC's own clients before anything is shown.
  */
 export function proposalsFor(proposals: ProposalLog[], productId: string): ProposalLog[] {
   return proposals
@@ -185,10 +184,15 @@ export function hasOwnWorkAt(
   icName: string,
   step: OrderStepFilter,
   proposals: ProposalLog[],
+  /** One client's work only — a client profile's Order tab. */
+  clientId?: string,
 ): boolean {
-  if (step === "offered") return openOffersFor(proposals, book, icName).length > 0;
-  if (ownBookings(book, icName, step).length > 0) return true;
+  const theirs = <T extends { clientId: string }>(rows: T[]) =>
+    clientId ? rows.filter((r) => r.clientId === clientId) : rows;
+  const offers = () => theirs(openOffersFor(proposals, book, icName)).length > 0;
+  if (step === "offered") return offers();
+  if (theirs(ownBookings(book, icName, step)).length > 0) return true;
   // "ทั้งหมด" takes offers too: a client with an offer and no booking is still
   // one of this IC's, and the step that lists them is part of this list.
-  return step === null && openOffersFor(proposals, book, icName).length > 0;
+  return step === null && offers();
 }

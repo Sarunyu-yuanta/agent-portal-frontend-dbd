@@ -13,6 +13,7 @@ import { useToasts } from "@/hooks/use-toasts";
 import { OrderBookingModal } from "@/app/(dashboard)/orders/OrderBookingModal";
 import { ProductOrderNotice } from "@/app/(dashboard)/orders/ProductOrderNotice";
 import { ProductOrderSection } from "@/app/(dashboard)/orders/ProductOrderSection";
+import { DealProgress } from "@/app/(dashboard)/orders/DealProgress";
 import { ProposalTallyLine } from "@/app/(dashboard)/orders/ProposalTallyLine";
 import { useSendProposal } from "@/app/(dashboard)/orders/useSendProposal";
 import { useOrderBook } from "@/app/(dashboard)/orders/use-order-books";
@@ -250,6 +251,7 @@ export function StructuredProductDetail({
           {tab === "detail" ? (
           <div className="flex flex-col gap-3 items-center w-full">
             <DetailTable rows={detailRows} />
+            <DealProgress productId={product.id} />
             {round && book ? (
               <AllocationSummary
                 requestNotionalSize={`${money(round.amount)} / ${money(book.targetAmount)}`}

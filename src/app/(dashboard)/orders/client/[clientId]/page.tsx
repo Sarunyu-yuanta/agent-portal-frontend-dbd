@@ -53,9 +53,9 @@ function ClientOrdersPageInner({
   const tab = normalizeOrderTab(searchParams.get("tab"));
 
   // A client page only means something under a booking desk: the three
-  // transaction tabs have no bookings to list, and a link that landed here
-  // from one would have nothing to show.
-  if (tab.kind === "transactions" || !client) {
+  // transaction tabs and "ทั้งหมด" have no one desk's bookings to list, and a
+  // link that landed here from one would have nothing to show.
+  if (tab.kind === "transactions" || tab.kind === "all" || !client) {
     return (
       <CatalogNotFound
         message={client ? "หมวดนี้ไม่มีรายการจอง" : "ไม่พบลูกค้ารายนี้"}

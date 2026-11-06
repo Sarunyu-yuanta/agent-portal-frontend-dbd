@@ -32,7 +32,7 @@ import { useRiskCta } from "./use-risk-cta";
 export const RISK_ALERTS_TITLE = "Proactive Compliance Alerts";
 
 /**
- * What the book is exposed to right now: margin, AML, suitability and market
+ * What the book is exposed to right now: margin, suitability and market
  * conduct, in one ranked list.
  *
  * Distinct from the rail's `KycAlertsPanel` on purpose. That card answers
@@ -112,14 +112,14 @@ export function RiskAlertsPanel({
             />
           }
           title="ไม่มีรายการความเสี่ยงค้างอยู่"
-          body="ระบบจะแจ้งเตือนทันทีเมื่อพบความเสี่ยงด้านมาร์จิ้น บัญชีม้า ความเหมาะสมของการลงทุน หรือพฤติกรรมการซื้อขาย"
+          body="ระบบจะแจ้งเตือนทันทีเมื่อพบความเสี่ยงด้านมาร์จิ้น ความเหมาะสมของการลงทุน หรือพฤติกรรมการซื้อขาย"
         />
       </div>
     );
   }
 
   /** Family counts come off the *whole* list — a tab has to keep saying how
-   *  many AML findings there are while you are reading the margin ones, or
+   *  many conduct findings there are while you are reading the margin ones, or
    *  picking one would blank out the other three. */
   const categoryCounts = countRiskByCategory(rows);
   /** Severity counts follow the chosen family, so the chips under the tabs

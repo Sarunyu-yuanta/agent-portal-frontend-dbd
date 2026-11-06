@@ -1,6 +1,7 @@
 import {
   CALL_LOG_ENABLED,
   NOTES_ENABLED,
+  ORDER_BOOKING_ENABLED,
   REMINDERS_ENABLED,
 } from "@/lib/feature-flags";
 
@@ -20,6 +21,9 @@ export const CLIENT_TAB_ITEMS = [
   { id: "overview", title: "Overview" },
   { id: "kyc", title: "KYC" },
   { id: "assets", title: "Assets" },
+  // This client's orders, every asset — Order Management's "ทั้งหมด" for one
+  // client (`AllOrdersPanel` with `clientId`).
+  ...(ORDER_BOOKING_ENABLED ? [{ id: "orders", title: "Order" }] : []),
   ...(CALL_LOG_ENABLED ? [{ id: "call-log", title: "Call Log" }] : []),
   ...(REMINDERS_ENABLED ? [{ id: "reminders", title: "Reminders" }] : []),
   ...(NOTES_ENABLED ? [{ id: "notes", title: "Notes" }] : []),

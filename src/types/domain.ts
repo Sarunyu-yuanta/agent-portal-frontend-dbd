@@ -133,7 +133,7 @@ export type ClientReadiness = {
 };
 
 /** How a client asked for an order — see {@link OrderEvidence}. */
-export type EvidenceChannel = "call" | "email" | "chat";
+export type EvidenceChannel = "call" | "email" | "chat" | "other";
 
 /**
  * Proof that the client asked for this order, and down which channel.
@@ -141,9 +141,10 @@ export type EvidenceChannel = "call" | "email" | "chat";
  * The four checks on `ClientReadiness` say a client is *allowed* to buy. None
  * of them says this client asked to buy *this*, for *this much*, today — and on
  * the basket desks the IC places the order on their behalf, so that gap is the
- * whole of what a compliance review would ask about. A phone order attaches the
- * call recording; an emailed reply attaches the mail; a chat attaches the
- * thread.
+ * whole of what a compliance review would ask about. A phone order picks the
+ * call off the client's Call Log or attaches the recording; an emailed reply
+ * attaches the mail; a chat attaches the thread; anything else is "other",
+ * with whatever file proves it. Any of them may carry a note.
  *
  * ─── Backend handoff ─────────────────────────────────────────────────────────
  * **The file is not stored anywhere.** There is no upload endpoint and no
@@ -154,12 +155,36 @@ export type EvidenceChannel = "call" | "email" | "chat";
  */
 export type OrderEvidence = {
   channel: EvidenceChannel;
-  fileName: string;
+  /**
+   * What the proof is: a file the IC attached, or a call picked off the
+   * client's Call Log (phone only). Exactly one of the file fields or
+   * {@link OrderEvidence.callLog} is set, matching this.
+   */
+  source: "file" | "call-log";
+  fileName?: string;
   /** Bytes. Shown back, so a two-second mis-recording is visible as one. */
-  fileSize: number;
+  fileSize?: number;
   /** The browser's MIME type, or `""` where it could not tell. */
-  fileType: string;
+  fileType?: string;
+  /**
+   * The call, copied as it stood when booked — not just its id. The log is a
+   * record of calls and may be re-summarised later; the booking keeps what the
+   * IC pointed at.
+   */
+  callLog?: EvidenceCall;
+  /** The IC's own words about it. Optional on every channel. */
+  note?: string;
   attachedAt: string;
+};
+
+/** One Call Log entry, as an {@link OrderEvidence} keeps it. */
+export type EvidenceCall = {
+  id: string;
+  date: string;
+  time: string;
+  duration: string;
+  direction: "inbound" | "outbound";
+  summary: string;
 };
 
 export type Booking = {
@@ -175,10 +200,10 @@ export type Booking = {
   /**
    * Proof of the client's instruction — see {@link OrderEvidence}.
    *
-   * Optional on the type because a **quota** booking has none: on Fixed Income
-   * and Global Bond the press is the order and the requirement names the
-   * structured desks only. Required on a basket booking, by the form and by
-   * `placeOrder`, which refuses a basket draft without one.
+   * Required on every desk, by the form and by `placeOrder`, which refuses a
+   * draft without one (see `evidenceRequired`). Still optional on the type: a
+   * booking recorded before the bond desks asked for it has none, and the
+   * receipt simply leaves the block out.
    */
   evidence?: OrderEvidence;
   /**
@@ -648,8 +673,11 @@ export type ShareLog = {
   sentAt: string;
 };
 
-/** Where a proposal was delivered. Both, today — see {@link ProposalLog}. */
-export type ProposalChannel = "app" | "email";
+/**
+ * Where a proposal was delivered. `app` (YSInvest) on every send; the rest are
+ * the IC's choice per send — see `orders/proposal-channels`.
+ */
+export type ProposalChannel = "app" | "email" | "line" | "voice-ai";
 
 /**
  * One product's documents, sent to one client — an offer, and the record of it.
@@ -677,10 +705,10 @@ export type ProposalLog = {
   /**
    * Where it was delivered.
    *
-   * Both today, always — the client's app and their email are the two places a
-   * proposal lands. Stored as a list rather than assumed, because which one the
-   * client acted through is half of how the Performance report will read this
-   * (the other half being {@link Booking.placedVia}).
+   * Always includes `app` (YSInvest); email, LINE and Voice AI are added per
+   * send by the IC. Stored as a list because which one the client acted
+   * through is half of how the Performance report will read this (the other
+   * half being {@link Booking.placedVia}).
    */
   channels: ProposalChannel[];
 };
@@ -707,7 +735,7 @@ export type Note = {
 
 // ── Risk & compliance alerts ─────────────────────────────────────────────────
 //
-// What the firm's margin, AML and surveillance systems raise against the book,
+// What the firm's margin, suitability and surveillance systems raise against the book,
 // merged into one list an IC works through each morning.
 //
 // Distinct from two things it sits beside. A KYC expiry is a *record* lapsing
@@ -715,8 +743,8 @@ export type Note = {
 // down. Every row here is a rule that fired on its own, against behaviour
 // nobody planned.
 
-/** The four filter tabs. Derived from {@link RiskAlertKind}, never authored. */
-export type RiskAlertCategory = "margin" | "aml" | "suitability" | "conduct";
+/** The three filter tabs. Derived from {@link RiskAlertKind}, never authored. */
+export type RiskAlertCategory = "margin" | "suitability" | "conduct";
 
 /**
  * What actually fired. {@link RiskAlertCategory} is the axis the list filters
@@ -738,12 +766,6 @@ export type RiskAlertKind =
   | "force-sell"
   | "settlement-overdue"
   | "credit-limit"
-  // AML / บัญชีม้า
-  | "unusual-flow"
-  | "third-party-transfer"
-  | "dormant-reactivated"
-  | "shared-device"
-  | "sanctions-pep"
   // suitability
   | "risk-profile-breach"
   | "suitability-expired"
@@ -818,7 +840,7 @@ export type RiskAlert = {
   severity: RiskSeverity;
 
   /**
-   * The rule that fired — "MR-02", "AML-07".
+   * The rule that fired — "MR-02", "MC-01".
    *
    * A compliance alert that cannot say which rule produced it is an opinion,
    * and this is the join key to a real surveillance engine.
@@ -867,13 +889,11 @@ export type RiskAlert = {
   /**
    * Whether the IC may ring the client about this.
    *
-   * `false` on most AML rows: asking a client where ฿12.4M of cash deposits
-   * came from is tipping-off, an offence under พ.ร.บ. ปปง. The detail panel
-   * drops the contact button entirely and prints {@link RiskAlert.contactNote}.
-   *
-   * Authored per row rather than derived from `category === "aml"`, because
-   * `dormant-reactivated` is the opposite case — re-verifying identity by
-   * phone, against the number already on file, *is* the control.
+   * `false` where ringing the client would itself be the problem — e.g. a
+   * surveillance referral the client must not be tipped off about. The detail
+   * panel drops the contact button entirely and prints
+   * {@link RiskAlert.contactNote}. Authored per row, not derived from the
+   * category, because the same family holds both cases.
    */
   contactAllowed: boolean;
   /** Why not, when {@link RiskAlert.contactAllowed} is false. */

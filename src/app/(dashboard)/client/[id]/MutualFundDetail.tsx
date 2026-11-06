@@ -16,6 +16,8 @@ import {
   MutualFundDividendHistoryModal,
 } from "./MutualFundDividendHistoryModal";
 import { AllocationDonut } from "@/components/allocation-donut";
+import { SendProposalButton } from "@/app/(dashboard)/orders/SendProposalButton";
+import { offeredProductId } from "@/app/(dashboard)/orders/offered-products";
 
 const DETAIL_TABS = ["ภาพรวม", "ผลตอบแทน", "สัดส่วนการลงทุน", "ข้อมูลกองทุน"] as const;
 
@@ -748,6 +750,13 @@ export function MutualFundDetail({
           >
             <DetailBody fund={fund} activeTab={activeTab} />
           </div>
+
+          {/* Offered, never booked — see `SendProposalButton`. Under every
+              tab, since all four are about the one fund. */}
+          <SendProposalButton
+            subject={{ id: offeredProductId("mutual-fund", fund.symbol), underlying: fund.symbol, documents: "Fund Fact Sheet" }}
+            className="pt-6"
+          />
         </div>
       </div>
     </div>

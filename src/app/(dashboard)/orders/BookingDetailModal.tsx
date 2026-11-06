@@ -52,7 +52,7 @@ import {
   type BookingPhase,
 } from "./order-book";
 import { ORDER_WORDS } from "./order-words";
-import { EVIDENCE_CHANNEL, formatFileSize } from "./order-evidence";
+import { CALL_DIRECTION_LABEL, EVIDENCE_CHANNEL, formatFileSize } from "./order-evidence";
 import { STATUS_CHIP } from "./OrderBookingModal";
 import type { BookingStatusTag } from "./booking-status";
 
@@ -275,7 +275,7 @@ function Body({
 
             {/* Proof of the client's instruction, above the checks because it
                 answers the earlier question: the checks say the client was
-                allowed to buy, this says they asked to. Basket desks only —
+                allowed to buy, this says they asked to. Every desk asks for it —
                 see `evidenceRequired`. */}
             {booking.evidence && (
               <>
@@ -290,14 +290,43 @@ function Body({
                       {EVIDENCE_CHANNEL[booking.evidence.channel].label}
                     </span>
                   </SheetRow>
-                  {/* The name wraps rather than truncates: a recording called
-                      `call-110002-2026-11-03.m4a` is only useful whole. */}
-                  <SheetRow label="ไฟล์">
-                    <span className="text-right text-[13px] font-bold break-all text-foreground">
-                      {booking.evidence.fileName}
-                    </span>
-                  </SheetRow>
-                  <SheetRow label="ขนาด" value={formatFileSize(booking.evidence.fileSize)} />
+                  {booking.evidence.source === "call-log" && booking.evidence.callLog ? (
+                    <>
+                      <SheetRow
+                        label="สายจาก Call Log"
+                        value={`${booking.evidence.callLog.date} ${booking.evidence.callLog.time}`}
+                      />
+                      <SheetRow
+                        label="ประเภทสาย"
+                        value={`${CALL_DIRECTION_LABEL[booking.evidence.callLog.direction]} · ${booking.evidence.callLog.duration}`}
+                      />
+                      <SheetRow label="สรุปการสนทนา">
+                        <span className="text-right text-[13px] font-bold text-foreground">
+                          {booking.evidence.callLog.summary}
+                        </span>
+                      </SheetRow>
+                    </>
+                  ) : (
+                    <>
+                      {/* The name wraps rather than truncates: a recording called
+                          `call-110002-2026-11-03.m4a` is only useful whole. */}
+                      <SheetRow label="ไฟล์">
+                        <span className="text-right text-[13px] font-bold break-all text-foreground">
+                          {booking.evidence.fileName}
+                        </span>
+                      </SheetRow>
+                      {booking.evidence.fileSize != null && (
+                        <SheetRow label="ขนาด" value={formatFileSize(booking.evidence.fileSize)} />
+                      )}
+                    </>
+                  )}
+                  {booking.evidence.note && (
+                    <SheetRow label="หมายเหตุ">
+                      <span className="text-right text-[13px] font-bold whitespace-pre-line text-foreground">
+                        {booking.evidence.note}
+                      </span>
+                    </SheetRow>
+                  )}
                   <SheetRow label="แนบเมื่อ" value={formatLogTime(booking.evidence.attachedAt)} />
                 </SheetBlock>
               </>

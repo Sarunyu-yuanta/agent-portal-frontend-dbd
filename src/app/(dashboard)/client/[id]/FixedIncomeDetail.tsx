@@ -13,6 +13,7 @@ import { BORDER_COLOR, ACTION_LABELS, StatusTag, BondLogo } from "./fixed-income
 import { fixedIncomeToBookableProduct } from "./fixed-income-data";
 import { ORDER_BOOKING_ENABLED } from "@/lib/feature-flags";
 import { ProductOrderSection } from "@/app/(dashboard)/orders/ProductOrderSection";
+import { DealProgress } from "@/app/(dashboard)/orders/DealProgress";
 import { ProposalTallyLine } from "@/app/(dashboard)/orders/ProposalTallyLine";
 import { useSendProposal } from "@/app/(dashboard)/orders/useSendProposal";
 import { QuotaBookButton, useQuotaBooking } from "@/app/(dashboard)/orders/useQuotaBooking";
@@ -186,6 +187,7 @@ export function FixedIncomeDetail({
             {tab === "detail" ? (
               <div className="flex flex-col gap-3 items-center w-full">
                 <DetailTable bond={bond} />
+                <DealProgress productId={adapted.id} />
                 <p className="text-sm leading-5 text-[#6a7282] text-center whitespace-nowrap">
                   อัปเดตล่าสุด {bond.updatedAt}
                 </p>

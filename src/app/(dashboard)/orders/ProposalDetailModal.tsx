@@ -25,10 +25,8 @@
 
 import {
   CheckIcon,
-  EnvelopeSimpleIcon,
   PaperPlaneTiltIcon,
   XIcon,
-  DeviceMobileIcon,
 } from "@phosphor-icons/react";
 import { Tag } from "@sarunyu/system-one";
 import { ResponsiveBottomSheetModal } from "@/components/ResponsiveBottomSheetModal";
@@ -36,7 +34,8 @@ import { usePrivacy } from "@/contexts/privacy-context";
 import { useOrders } from "@/contexts/orders-context";
 import { getClientProfile } from "@/data/client-profiles";
 import { maskName } from "@/lib/mask-name";
-import type { OrderBook, ProposalChannel, ProposalLog } from "@/types/domain";
+import type { OrderBook, ProposalLog } from "@/types/domain";
+import { PROPOSAL_CHANNEL_META } from "./proposal-channels";
 import type { BookableProduct } from "./bookable-products";
 import {
   ClientRow,
@@ -72,10 +71,6 @@ const OUTCOME_DISC: Record<ProposalOutcome, { tone: Tone; glyph: React.ReactNode
   lost: { tone: "gray", glyph: <XIcon size={30} weight="bold" /> },
 };
 
-const CHANNEL_LABEL: Record<ProposalChannel, string> = {
-  app: "แอปของลูกค้า",
-  email: "อีเมล",
-};
 
 export function ProposalDetailModal({
   proposal,
@@ -170,19 +165,18 @@ function Body({
               </SheetRow>
               <SheetRow label="ช่องทางที่ส่ง">
                 <div className="flex flex-wrap items-center justify-end gap-1">
-                  {proposal.channels.map((c) => (
-                    <span
-                      key={c}
-                      className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-[var(--border-default)] bg-white px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
-                    >
-                      {c === "app" ? (
-                        <DeviceMobileIcon size={11} weight="fill" className="shrink-0" />
-                      ) : (
-                        <EnvelopeSimpleIcon size={11} weight="fill" className="shrink-0" />
-                      )}
-                      {CHANNEL_LABEL[c]}
-                    </span>
-                  ))}
+                  {proposal.channels.map((c) => {
+                    const { label, Icon } = PROPOSAL_CHANNEL_META[c];
+                    return (
+                      <span
+                        key={c}
+                        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-[var(--border-default)] bg-white px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
+                      >
+                        <Icon size={11} weight="fill" className="shrink-0" />
+                        {label}
+                      </span>
+                    );
+                  })}
                 </div>
               </SheetRow>
             </SheetBlock>

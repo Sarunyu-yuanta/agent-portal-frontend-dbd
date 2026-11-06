@@ -3,8 +3,9 @@
 /**
  * Sending a product's Proposal, from any page that shows a product.
  *
- * Four surfaces offer it — both structured product pages, a bond's page, and a
- * bond row on an issuer's page — and each would otherwise stand up its own
+ * Six surfaces offer it — both structured product pages, a bond's page, a
+ * bond row on an issuer's page, and a mutual fund's and a stock's page (offered
+ * only, never booked — see `SendProposalButton`) — and each would otherwise stand up its own
  * dialog, its own `<Toaster>` and its own "how many went" wording. One hook per
  * page instead, the shape {@link useQuotaBooking} already established: `send`
  * opens it, `ui` renders the dialog and the toasts, `notice` reports into the
@@ -16,8 +17,7 @@ import { Toaster, type ToastStatus } from "@sarunyu/system-one";
 import { useToasts } from "@/hooks/use-toasts";
 import { useOrders } from "@/contexts/orders-context";
 import { ORDER_BOOKING_ENABLED } from "@/lib/feature-flags";
-import type { BookableProduct } from "./bookable-products";
-import { SendProposalDialog } from "./SendProposalDialog";
+import { SendProposalDialog, type ProposalSubject } from "./SendProposalDialog";
 import { useOrderBook } from "./use-order-books";
 
 export function useSendProposal(options?: {
@@ -32,14 +32,14 @@ export function useSendProposal(options?: {
   onNotice?: (message: string, status: ToastStatus) => void;
 }): {
   /** Opens the dialog on this product. */
-  send: (product: BookableProduct) => void;
+  send: (product: ProposalSubject) => void;
   /** Reports into whichever stack this page is using. */
   notice: (message: string, status: ToastStatus) => void;
   /** The dialog, and its toasts unless the page owns them. */
   ui: ReactNode;
 } {
   const { toasts, addToast, removeToast } = useToasts();
-  const [product, setProduct] = useState<BookableProduct | null>(null);
+  const [product, setProduct] = useState<ProposalSubject | null>(null);
   const own = options?.onNotice;
   const notice = own ?? ((message: string, status: ToastStatus) => addToast({ message, status }));
 
@@ -69,7 +69,7 @@ function Opened({
   onClose,
   onNotice,
 }: {
-  product: BookableProduct;
+  product: ProposalSubject;
   onClose: () => void;
   onNotice: (message: string, status: ToastStatus) => void;
 }) {
@@ -84,11 +84,11 @@ function Opened({
       }}
       product={product}
       book={book}
-      onConfirm={(clientIds) => {
+      onConfirm={(clientIds, channels) => {
         void (async () => {
           // The rows actually written, not the ids asked for — the store drops
           // an id it cannot name, and reporting the request would overstate it.
-          const rows = await sendProposal({ productId: product.id, clientIds });
+          const rows = await sendProposal({ productId: product.id, clientIds, channels });
           onClose();
           onNotice(
             rows.length === 1

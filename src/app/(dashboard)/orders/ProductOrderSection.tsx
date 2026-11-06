@@ -14,19 +14,17 @@
  * One kind of row — one booking. Clicking it opens `BookingDetailModal`. Chips
  * above the table sort them by phase; see `bookingPhase`.
  *
- * **Every IC's bookings, not just the signed-in one.** A basket is shared
- * across the desk: this is the deal, and the deal is what fills. Filtering to
- * one IC was tried and was wrong — it left "ยอดจองทั้งดีล" as a figure that
- * could not be reconciled with the rows above it. The `IC Name` column is what
- * makes the mixture readable, and the two pairs of totals are what separate
- * the IC's own share from the deal's.
- *
- * Order Management's own list is the opposite scope — the IC's clients only —
- * because that is a list of *their* work, where this is a view of one deal.
+ * **The signed-in IC's bookings only.** A basket is shared across the desk,
+ * but another IC's clients — their names, accounts, checks and amounts — are
+ * not this IC's to see. The rows are filtered with `ownBookings`, and the
+ * booking modal can only open one of those rows. The deal's progress is still
+ * shown, as aggregate figures in the totals ("ยอดจองทั้งดีล", "สำเร็จทั้งดีล")
+ * that name nobody — so those figures are expected to exceed the sum of the
+ * rows above them.
 
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Avatar,
   Button,
@@ -46,6 +44,7 @@ import {
   CheckCircleIcon,
   ClockIcon,
   PlusIcon,
+  UsersThreeIcon,
   WarningCircleIcon,
   XCircleIcon,
 } from "@phosphor-icons/react";
@@ -69,6 +68,7 @@ import {
   bookingPhase,
   bookingPhaseSteps,
   isBookingOpen,
+  ownBookings,
   type BookingPhase,
 } from "./order-book";
 import { BookingDetailModal } from "./BookingDetailModal";
@@ -118,6 +118,9 @@ const CHECK_COLUMNS: { key: RequirementKey; title: string }[] = [
   { key: "kyc", title: "KYC Status" },
   { key: "risk-profile", title: "Risk Profile Status" },
 ];
+
+/** ลูกค้า, the four checks, then Notional, Currency, Deal, Payment and Email. */
+const TOTAL_COLUMNS = 1 + CHECK_COLUMNS.length + 5;
 
 /** Same icon and colour per state as the booking form's status cards. */
 const CHECK_ICON: Record<RequirementStatus, { icon: typeof CheckCircleIcon; fg: string }> = {
@@ -184,10 +187,22 @@ export function ProductOrderSection({
   // By id rather than the row itself, so a cancel from inside the modal shows
   // up in it straight away instead of in a stale copy.
   const [openId, setOpenId] = useState<string | null>(null);
+  // The table box's visible width, so the other-ICs row can pin its content to
+  // the middle of what is on screen rather than of the full scrolled width.
+  const [viewWidth, setViewWidth] = useState(0);
+  const measureView = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    const observer = new ResizeObserver(() => setViewWidth(node.clientWidth));
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  // Only the signed-in IC's bookings — see the module note.
+  const own = useMemo(() => (book ? ownBookings(book, IC_NAME) : []), [book]);
 
   const rows = useMemo(() => {
     if (!book) return [] as OrderRow[];
-    const all: OrderRow[] = book.allBookings
+    const all: OrderRow[] = own
       .map((b) => ({ at: b.createdAt, booking: b }))
       .sort((a, b) => b.at.localeCompare(a.at));
     const inPhase = phase ? all.filter((r) => bookingPhase(r.booking, book) === phase) : all;
@@ -202,7 +217,25 @@ export function ProductOrderSection({
         getClientProfile(clientId).accountNo.includes(query)
       );
     });
-  }, [book, phase, search, isPrivate]);
+  }, [book, own, phase, search, isPrivate]);
+
+  /**
+   * Every other IC's bookings, folded into one nameless line under the table —
+   * how many and how much, never whose. Follows the phase chip like the rows
+   * above it, and is dropped while searching: a search is for a client, and
+   * none of these can be one the IC is looking for.
+   */
+  const others = useMemo(() => {
+    if (!book || search.trim()) return null;
+    const inPhase = book.allBookings.filter(
+      (b) => b.createdBy !== IC_NAME && (!phase || bookingPhase(b, book) === phase),
+    );
+    if (inPhase.length === 0) return null;
+    // Cancelled amounts only count on the cancelled chip — anywhere else they
+    // are not part of what fills the deal.
+    const counted = phase === "cancelled" ? inPhase : inPhase.filter((b) => b.status !== "cancelled");
+    return { count: inPhase.length, amount: counted.reduce((sum, b) => sum + b.amount, 0) };
+  }, [book, phase, search]);
 
   if (!book) return null;
 
@@ -228,8 +261,12 @@ export function ProductOrderSection({
 
   const money = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
   const canBook = variant === "product" && isBookingOpen(book);
-  const isEmpty = rows.length === 0;
-  const opened = book.allBookings.find((b) => b.id === openId) ?? null;
+  // Empty only when there is nothing at all to draw — a page of other ICs'
+  // summary alone still explains where the deal's figure comes from.
+  const isEmpty = rows.length === 0 && !others;
+  // Last page only, so it reads as the foot of the whole list.
+  const showOthers = others !== null && current === totalPages;
+  const opened = own.find((b) => b.id === openId) ?? null;
 
   return (
     // No card and no heading of its own — it is a tab inside the product's
@@ -293,6 +330,7 @@ export function ProductOrderSection({
       </div>
 
       <div
+        ref={measureView}
         // `table-scroll` re-exposes the scrollbar the library's <Table> hides on
         // its own scroller (see globals.css) — ten columns rarely fit, and
         // a hidden scrollbar left the right half of the row undiscoverable.
@@ -312,9 +350,9 @@ export function ProductOrderSection({
                   {/* No product column — every row on this page is the product
                       named in the header above.
 
-                      One ลูกค้า column where there were three. "IC Name" went
-                      because the table is filtered to the signed-in IC, so every
-                      cell in it held the same string; Account No and
+                      One ลูกค้า column where there were three. No "IC Name":
+                      the table is filtered to the signed-in IC, so every cell
+                      in it would hold the same string; Account No and
                       Full Name (TH) fold into the caption under the name, which
                       is the shape Order Management's own list uses. Three
                       columns of identity on a table already ten wide was the
@@ -331,10 +369,6 @@ export function ProductOrderSection({
                   >
                     ลูกค้า
                   </TableHeaderCell>
-                  {/* After the client, not before it as it used to be: the
-                      basket is shared, so whose client this is matters — but it
-                      qualifies the name rather than leading it. */}
-                  <TableHeaderCell style={FIT} sortable={false}>IC Name</TableHeaderCell>
                   {CHECK_COLUMNS.map((c) => (
                     <TableHeaderCell style={CENTER} key={c.key} sortable={false}>
                       {c.title}
@@ -357,8 +391,6 @@ export function ProductOrderSection({
                   const payment = paymentStatus(b, book);
                   const email = emailStatus(b, book);
                   const cancelled = b.status === "cancelled";
-                  /** The signed-in IC's own row, which is what they came to find. */
-                  const mine = b.createdBy === IC_NAME;
                   /* A booking carries the checks it was placed against; the
                      client's live ones only stand in for a seeded one. */
                   const live = readiness.get(clientId)?.items ?? [];
@@ -406,15 +438,6 @@ export function ProductOrderSection({
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell style={FIT}>
-                        <span
-                          className={`type-body-2 ${
-                            mine ? "!font-semibold text-foreground" : "text-muted-foreground"
-                          }`}
-                        >
-                          {b.createdBy}
-                        </span>
-                      </TableCell>
                       {CHECK_COLUMNS.map((c) => (
                         <TableCell style={CENTER} key={c.key}>
                           <div className="flex justify-center">
@@ -451,6 +474,33 @@ export function ProductOrderSection({
                     </TableRow>
                   );
                 })}
+                {showOthers && (
+                  // Not a booking, so not clickable: it says the rest of the
+                  // deal exists, and nothing about who is in it. One cell across
+                  // every column, its content pinned to the middle of what is
+                  // on screen — it stays put while the rows above it scroll.
+                  <TableRow className="bg-[var(--fill-gray-100)]">
+                    <TableCell
+                      colSpan={TOTAL_COLUMNS}
+                      style={{ minWidth: 0, padding: 0 }}
+                    >
+                      <div
+                        className="type-caption sticky left-0 flex items-center justify-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-muted-foreground"
+                        style={{ width: viewWidth || undefined }}
+                      >
+                        {/* One quiet line — a note at the foot of the table,
+                            not a row competing with the IC's own clients. */}
+                        <UsersThreeIcon size={14} weight="fill" className="shrink-0" />
+                        <span>
+                          ลูกค้าของ IC อื่น {others.count} รายการ · ยอดรวม{" "}
+                          <span className="font-semibold tabular-nums">
+                            {money(others.amount)} {book.currency}
+                          </span>
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </>
@@ -486,7 +536,8 @@ export function ProductOrderSection({
               "ทั้งดีล" only on a basket: that desk's bookings add up to one
               deal that has to reach a notional. A bond has no deal — the third
               cell is the issue's quota being drawn down, which is a different
-              claim about the same arithmetic. */}
+              claim about the same arithmetic. The split of that figure between
+              this IC and the rest is on the Detail tab — see `DealProgress`. */}
           <Total label={`ยอด${words.record}ของฉัน`} value={money(notionalIc)} />
           <Total label="สำเร็จของฉัน" value={money(confirmedIc)} tone="green" />
           <Total

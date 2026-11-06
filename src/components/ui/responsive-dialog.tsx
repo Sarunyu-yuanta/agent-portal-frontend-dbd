@@ -1,6 +1,7 @@
 "use client";
 
 import { BottomSheet, Button, Modal } from "@sarunyu/system-one";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 /**
@@ -13,6 +14,7 @@ export function ResponsiveDialog({
   onOpenChange,
   title,
   headerAction,
+  onBack,
   mobileContentClassName,
   desktopContentClassName,
   closeOnBackdrop = false,
@@ -32,6 +34,12 @@ export function ResponsiveDialog({
    * own on both sides so there is one answer at every width.
    */
   headerAction?: { label: string; onClick: () => void };
+  /**
+   * A back arrow before the title, for a dialog with steps — set on every step
+   * after the first. Drawn by this component on both halves, for the same
+   * reason as {@link headerAction}.
+   */
+  onBack?: () => void;
   /** Applied to the BottomSheet body on mobile. */
   mobileContentClassName?: string;
   /** Applied to the wrapper inside the Modal on desktop. */
@@ -54,6 +62,25 @@ export function ResponsiveDialog({
     </Button>
   ) : null;
 
+  const backButton = onBack ? (
+    // Black and 20px, the same as the booking modal's own back arrow
+    // (`BackButton` in `OrderBookingModal`) — the two sit one step apart in
+    // the same flow, and a blue arrow then a black one read as two controls.
+    <Button
+      variant="plain-black"
+      size="icon-sm"
+      className="-ml-1 shrink-0"
+      onClick={onBack}
+      aria-label="ย้อนกลับ"
+      title="ย้อนกลับ"
+    >
+      <ArrowLeftIcon size={20} />
+    </Button>
+  ) : null;
+
+  /** The sheet's and the modal's own headers only know a plain title. */
+  const customHeader = Boolean(headerAction || onBack);
+
   if (isMobile) {
     return (
       <BottomSheet
@@ -64,15 +91,18 @@ export function ResponsiveDialog({
         // The sheet's own header is suppressed when there is an action, and
         // replaced below, so the button matches the desktop one exactly. The
         // title keeps the sheet's own type, so only the control changes.
-        showHeader={!headerAction}
+        showHeader={!customHeader}
         rightSide="none"
         contentClassName={mobileContentClassName}
       >
-        {headerAction && (
+        {customHeader && (
           <div className="flex items-center justify-between gap-4 pr-2">
-            <p className="min-w-0 flex-1 truncate text-base font-bold leading-6 text-foreground">
-              {title}
-            </p>
+            <div className="flex min-w-0 flex-1 items-center gap-1">
+              {backButton}
+              <p className="min-w-0 flex-1 truncate text-base font-bold leading-6 text-foreground">
+                {title}
+              </p>
+            </div>
             {actionButton}
           </div>
         )}
@@ -108,15 +138,18 @@ export function ResponsiveDialog({
          * case that needs it: if that structure ever changes the action simply
          * stops being pushed over, rather than anything breaking.
          */
-        className={headerAction ? "[&>div:first-child>p]:flex-1" : undefined}
+        className={customHeader ? "[&>div:first-child>p]:flex-1" : undefined}
         title={
-          headerAction
+          customHeader
             ? // `title` is typed `string` but rendered as a child, so a node
               // works. Phrasing content only — it lands inside a `<p>`, and a
               // `<button>` is allowed there.
               ((
                 <span className="flex items-center justify-between gap-4">
-                  <span className="min-w-0 truncate">{title}</span>
+                  <span className="flex min-w-0 items-center gap-1">
+                    {backButton}
+                    <span className="min-w-0 truncate">{title}</span>
+                  </span>
                   {actionButton}
                 </span>
               ) as unknown as string)

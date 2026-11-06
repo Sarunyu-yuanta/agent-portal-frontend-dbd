@@ -89,116 +89,6 @@
     "detectedMinutesAgo": 75,
     "dueOffset": 0
   },
-
-  {
-    "id": "ra-05",
-    "kind": "unusual-flow",
-    "severity": "critical",
-    "ruleCode": "AML-02",
-    "clientId": "110006",
-    "accountLabel": "Cash a/c 11000622",
-    "title": "ฝาก-ถอนผิดปกติ ไม่สอดคล้องกับรายได้ที่แจ้ง",
-    "message": "มีการฝากเงินสดหลายครั้งภายใน 5 วันทำการ แล้วถอนออกเกือบทั้งหมดภายใน 48 ชั่วโมง โดยไม่มีคำสั่งซื้อขายรองรับ และไม่สอดคล้องกับรายได้ที่แจ้งไว้ในเอกสาร KYC",
-    "metrics": [
-      { "label": "ยอดฝากรวม 5 วันทำการ", "amountThb": 12400000, "emphasis": true },
-      { "label": "จำนวนครั้งที่ฝาก", "value": "8 ครั้ง" },
-      { "label": "ถอนออกภายใน 48 ชม.", "amountThb": 11160000, "emphasis": true },
-      { "label": "รายได้ที่แจ้งไว้ใน KYC", "value": "฿ 250,000 / เดือน" }
-    ],
-    "recommendedAction": "ห้ามสอบถามที่มาของเงินกับลูกค้าโดยตรง — ส่งเรื่องให้ฝ่ายกำกับภายในวันนี้เพื่อพิจารณารายงาน STR",
-    "contactAllowed": false,
-    "contactNote": "ห้ามเปิดเผยกับลูกค้าว่าอยู่ระหว่างตรวจสอบ AML (tipping-off)",
-    "dismissible": false,
-    "detectedMinutesAgo": 1000,
-    "dueOffset": null
-  },
-  {
-    "id": "ra-06",
-    "kind": "third-party-transfer",
-    "severity": "warning",
-    "ruleCode": "AML-04",
-    "clientId": "110008",
-    "accountLabel": "Cash a/c 11000822",
-    "title": "รับโอนเงินจากบุคคลที่สาม",
-    "message": "รับโอนเงินเข้าบัญชีจากผู้โอนที่ไม่ปรากฏในเอกสาร KYC และไม่ใช่สมาชิกครอบครัวที่แจ้งไว้ ต้องได้เอกสารแสดงความสัมพันธ์และที่มาของเงินก่อนนำไปลงทุน",
-    "metrics": [
-      { "label": "ยอดรับโอนรวม", "amountThb": 3500000, "emphasis": true },
-      { "label": "จำนวนผู้โอน", "value": "2 ราย" },
-      { "label": "ความสัมพันธ์ที่แจ้งไว้", "value": "ไม่พบ", "emphasis": true }
-    ],
-    "recommendedAction": "ขอเอกสาร Source of Funds ผ่านฝ่ายกำกับ — อย่าระบุกับลูกค้าว่าเป็นการตรวจสอบ AML",
-    "contactAllowed": false,
-    "contactNote": "ห้ามเปิดเผยกับลูกค้าว่าอยู่ระหว่างตรวจสอบ AML (tipping-off)",
-    "dismissible": false,
-    "detectedMinutesAgo": 2800,
-    "dueOffset": null
-  },
-  {
-    "id": "ra-07",
-    "kind": "dormant-reactivated",
-    "severity": "watch",
-    "ruleCode": "AML-06",
-    "clientId": "110003",
-    "accountLabel": "Cash Balance a/c 11000322",
-    "title": "บัญชี Dormant กลับมาเคลื่อนไหวผิดปกติ",
-    "message": "บัญชีไม่มีความเคลื่อนไหว 14 เดือน แล้วกลับมาส่งคำสั่งซื้อขายจำนวนมากภายใน 3 วัน รูปแบบการซื้อขายต่างจากประวัติเดิมของลูกค้าอย่างมีนัยสำคัญ",
-    "metrics": [
-      { "label": "ระยะเวลาที่ Dormant", "value": "14 เดือน" },
-      { "label": "คำสั่งซื้อขายใน 3 วัน", "value": "23 รายการ", "emphasis": true },
-      { "label": "มูลค่าซื้อขายรวม", "amountThb": 6800000 }
-    ],
-    "recommendedAction": "ยืนยันตัวตนลูกค้าผ่านเบอร์โทรที่บันทึกไว้ใน KYC ก่อนรับคำสั่งถัดไป",
-    "contactAllowed": true,
-    "contactNote": null,
-    "dismissible": true,
-    "detectedMinutesAgo": 4300,
-    "dueOffset": null
-  },
-  {
-    "id": "ra-08",
-    "kind": "shared-device",
-    "severity": "warning",
-    "ruleCode": "AML-09",
-    "clientId": "110005",
-    "accountLabel": null,
-    "title": "Login ซ้ำ Device / IP กับบัญชีลูกค้ารายอื่น",
-    "message": "ตรวจพบการเข้าสู่ระบบจาก Device ID เดียวกันกับบัญชีลูกค้ารายอื่นที่ไม่มีความสัมพันธ์กันในช่วง 7 วันที่ผ่านมา เข้าข่ายลักษณะการใช้บัญชีแทนกัน (บัญชีม้า)",
-    "metrics": [
-      { "label": "บัญชีที่ใช้ Device เดียวกัน", "value": "5 บัญชี", "emphasis": true },
-      { "label": "จำนวนครั้งที่เข้าสู่ระบบ", "value": "31 ครั้ง / 7 วัน", "emphasis": true },
-      { "label": "Device ID", "value": "d41d8c…a7f3" },
-      { "label": "IP ล่าสุด", "value": "171.96.xxx.84" }
-    ],
-    "recommendedAction": "ส่งเรื่องให้ฝ่ายกำกับตรวจสอบความเชื่อมโยงของทั้ง 5 บัญชี และระงับการทำรายการออนไลน์ชั่วคราว",
-    "contactAllowed": false,
-    "contactNote": "ห้ามเปิดเผยกับลูกค้าว่าอยู่ระหว่างตรวจสอบ AML (tipping-off)",
-    "dismissible": false,
-    "detectedMinutesAgo": 320,
-    "dueOffset": null
-  },
-  {
-    "id": "ra-09",
-    "kind": "sanctions-pep",
-    "severity": "critical",
-    "ruleCode": "AML-01",
-    "clientId": null,
-    "clientLabel": "ยังระบุตัวตนไม่ได้",
-    "accountLabel": null,
-    "title": "Sanctions / PEP — พบชื่อตรงบางส่วน",
-    "message": "การคัดกรองรายชื่อประจำวันพบชื่อตรงบางส่วนกับรายชื่อ PEP ของ UN Consolidated List ยังไม่สามารถยืนยันได้ว่าเป็นบุคคลเดียวกัน จึงระงับการเปิดบัญชีและการทำรายการไว้ก่อน",
-    "metrics": [
-      { "label": "ความใกล้เคียงของชื่อ", "value": "92%", "emphasis": true },
-      { "label": "รายการที่ตรวจพบ", "value": "UN Consolidated List" },
-      { "label": "สถานะบัญชี", "value": "ระงับชั่วคราว", "emphasis": true }
-    ],
-    "recommendedAction": "ส่งต่อฝ่ายกำกับเพื่อทำ Enhanced Due Diligence — IC ไม่มีสิทธิปิดการแจ้งเตือนนี้",
-    "contactAllowed": false,
-    "contactNote": "ยังระบุตัวตนลูกค้าไม่ได้ จึงยังไม่มีช่องทางติดต่อ",
-    "dismissible": false,
-    "detectedMinutesAgo": 400,
-    "dueOffset": null
-  },
-
   {
     "id": "ra-10",
     "kind": "concentration",
@@ -285,7 +175,6 @@
     "detectedMinutesAgo": 95,
     "dueOffset": 3
   },
-
   {
     "id": "ra-14",
     "kind": "cash-balance-stock",

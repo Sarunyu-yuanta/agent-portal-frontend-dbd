@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Button, Chip } from "@sarunyu/system-one";
+import { SendProposalButton } from "@/app/(dashboard)/orders/SendProposalButton";
+import { offeredProductId } from "@/app/(dashboard)/orders/offered-products";
 import {
   ArrowLeftIcon,
   CaretDownIcon,
@@ -868,6 +870,11 @@ export function StockProductDetail({
           ) : (
             <PlaceholderTab label={activeTab} />
           )}
+
+          {/* Offered, never booked — see `SendProposalButton`. */}
+          <SendProposalButton
+            subject={{ id: offeredProductId("stock", detail.symbol), underlying: detail.symbol, documents: "บทวิเคราะห์หุ้น" }}
+          />
         </div>
       </div>
     </div>

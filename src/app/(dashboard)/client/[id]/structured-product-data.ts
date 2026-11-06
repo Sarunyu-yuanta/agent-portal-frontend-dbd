@@ -110,3 +110,8 @@ for (const product of [
 export function findProductById(id: string): StructuredProduct | undefined {
   return PRODUCTS_BY_ID.get(id);
 }
+
+/** Every global structured product once, by id — what Order Management books from. */
+export function allStructuredProducts(): StructuredProduct[] {
+  return [...PRODUCTS_BY_ID.values()];
+}

@@ -14,11 +14,12 @@
 
 import {
   ChatCircleDotsIcon,
+  DotsThreeCircleIcon,
   EnvelopeSimpleIcon,
   PhoneIcon,
   type Icon,
 } from "@phosphor-icons/react";
-import type { EvidenceChannel } from "@/types/domain";
+import type { EvidenceChannel, OrderEvidence } from "@/types/domain";
 import type { BookingMode } from "./bookable-products";
 
 export const EVIDENCE_CHANNEL: Record<
@@ -41,6 +42,7 @@ export const EVIDENCE_CHANNEL: Record<
 > = {
   call: {
     label: "โทรศัพท์",
+    // The file half only — the Call Log half has its own words in the form.
     hint: "ไฟล์เสียงที่อัดไว้ตอนคุยกับลูกค้า",
     accept: "audio/*,.mp3,.wav,.m4a,.aac,.ogg",
     icon: PhoneIcon,
@@ -61,23 +63,53 @@ export const EVIDENCE_CHANNEL: Record<
     accept: "image/*,application/pdf,.pdf,.txt",
     icon: ChatCircleDotsIcon,
   },
+  other: {
+    label: "อื่นๆ",
+    hint: "เอกสารหรือไฟล์อื่นที่ยืนยันคำสั่งของลูกค้า",
+    // No filter: "other" is for whatever the three above do not cover, and a
+    // list here would only be a guess at what that is.
+    accept: "",
+    icon: DotsThreeCircleIcon,
+  },
 };
 
 /** In the order the picker offers them — most common first. */
-export const EVIDENCE_CHANNELS: EvidenceChannel[] = ["call", "email", "chat"];
+export const EVIDENCE_CHANNELS: EvidenceChannel[] = ["call", "email", "chat", "other"];
+
+/**
+ * Channels whose evidence needs a note to count. "อื่นๆ" is a file the form
+ * cannot describe on its own — the note is what says what it is and how the
+ * client asked.
+ */
+export function noteRequired(channel: EvidenceChannel): boolean {
+  return channel === "other";
+}
+
+/** Whether this evidence is enough to book on: the proof, plus a note where required. */
+export function evidenceComplete(e: OrderEvidence | null | undefined): boolean {
+  if (!e) return false;
+  return !noteRequired(e.channel) || Boolean(e.note?.trim());
+}
+
+export const CALL_DIRECTION_LABEL: Record<"inbound" | "outbound", string> = {
+  inbound: "สายเข้า",
+  outbound: "โทรออก",
+};
 
 /**
  * Whether a booking on this desk needs evidence before it can be placed.
  *
- * A function rather than `mode === "basket"` at each call site: three surfaces
- * ask, and the quota desks are one requirement away from asking it too — at
- * which point this is the line that changes rather than three of them.
+ * **Every bookable desk.** Anything the IC books on a client's behalf needs
+ * proof the client asked for it — the structured desks and the bond desks
+ * alike. It was basket-only at first, on the reasoning that a bond press *is*
+ * the order; the requirement since is that whatever can be booked carries
+ * evidence.
  *
- * **Basket only.** On Fixed Income and Global Bond the press *is* the order,
- * and the requirement named the structured desks.
+ * Kept as a function of the mode, though it no longer varies by it: three
+ * surfaces ask, and a desk that is ever exempted again is this one line.
  */
-export function evidenceRequired(mode: BookingMode): boolean {
-  return mode === "basket";
+export function evidenceRequired(_mode: BookingMode): boolean {
+  return true;
 }
 
 /** `1536` → `"1.5 KB"`. Rounded to one decimal from KB up; bytes stay whole. */

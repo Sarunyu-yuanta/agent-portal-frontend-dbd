@@ -17,11 +17,14 @@ import type { Desk } from "./bookable-products";
 import type { TransactionAsset } from "@/types/domain";
 
 export type OrderTab =
+  | { id: string; title: string; kind: "all" }
   | { id: string; title: string; kind: "basket"; desk: Desk }
   | { id: string; title: string; kind: "quota"; desk: Desk }
   | { id: string; title: string; kind: "transactions"; asset: TransactionAsset };
 
 export const ORDER_TABS: OrderTab[] = [
+  // First and the default: every asset in one list — see `AllOrdersPanel`.
+  { id: "all", title: "ทั้งหมด", kind: "all" },
   { id: "stock", title: "Stock", kind: "transactions", asset: "stock" },
   { id: "tfex", title: "TFEX", kind: "transactions", asset: "tfex" },
   { id: "mutual-fund", title: "Mutual Fund", kind: "transactions", asset: "mutual-fund" },
@@ -36,7 +39,7 @@ export const ORDER_TABS: OrderTab[] = [
  * a specific desk carry their own `?tab=` (`ORDER_TAB_BY_DESK` in
  * `bookable-products.ts`), so only a bare `/orders` lands here.
  */
-export const DEFAULT_ORDER_TAB = "stock";
+export const DEFAULT_ORDER_TAB = "all";
 
 export function normalizeOrderTab(value: string | null | undefined): OrderTab {
   return (

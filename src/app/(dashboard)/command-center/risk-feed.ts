@@ -158,7 +158,6 @@ export function countRiskByCategory(
 ): Record<RiskAlertCategory, number> {
   const out: Record<RiskAlertCategory, number> = {
     margin: 0,
-    aml: 0,
     suitability: 0,
     conduct: 0,
   };

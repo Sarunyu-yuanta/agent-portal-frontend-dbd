@@ -34,8 +34,14 @@ export function useQuotaBooking(options?: {
    */
   onPlaced?: (booking: Booking) => void;
 }): {
-  /** Opens the order modal on this bond. */
-  book: (product: BookableProduct) => void;
+  /**
+   * Opens the order modal on this product. `onBack` gives the client list a
+   * back arrow to the step that opened it — see `CreateOrderButton`.
+   */
+  book: (
+    product: BookableProduct,
+    options?: { onBack?: () => void; clientId?: string },
+  ) => void;
   /**
    * Reports into this page's one toast stack.
    *
@@ -50,6 +56,8 @@ export function useQuotaBooking(options?: {
   const router = useRouter();
   const { toasts, addToast, removeToast } = useToasts();
   const [product, setProduct] = useState<BookableProduct | null>(null);
+  const [onBack, setOnBack] = useState<(() => void) | null>(null);
+  const [fixedClientId, setFixedClientId] = useState<string | undefined>(undefined);
   // Set by `onBooked`, which the modal calls just before its success notice —
   // by then `product` has already been cleared by the close.
   const bookedId = useRef<string | null>(null);
@@ -73,6 +81,15 @@ export function useQuotaBooking(options?: {
           open
           product={product}
           onClose={() => setProduct(null)}
+          fixedClientId={fixedClientId}
+          onBack={
+            onBack
+              ? () => {
+                  setProduct(null);
+                  onBack();
+                }
+              : undefined
+          }
           onNotice={notice}
           onBooked={(booking) => {
             bookedId.current = booking.productId;
@@ -84,7 +101,17 @@ export function useQuotaBooking(options?: {
     </>
   );
 
-  return { book: setProduct, notice, ui };
+  const book = (
+    next: BookableProduct,
+    options?: { onBack?: () => void; clientId?: string },
+  ) => {
+    // Wrapped: a function handed to a state setter is called as an updater.
+    setOnBack(() => options?.onBack ?? null);
+    setFixedClientId(options?.clientId);
+    setProduct(next);
+  };
+
+  return { book, notice, ui };
 }
 
 /**

@@ -32,6 +32,7 @@ import { CallLogTable } from "./ClientSections";
 import { ClientNotesTab } from "./ClientNotesTab";
 import { FadeIn } from "@/components/ui/fade-in";
 import { ClientRemindersTab } from "./ClientRemindersTab";
+import { ClientOrdersTab } from "@/app/(dashboard)/orders/ClientOrdersTab";
 import { KycTab } from "./KycTab";
 import { OverviewTab } from "./OverviewTab";
 
@@ -276,6 +277,15 @@ function ClientPageInner({ id }: { id: string }) {
                 setLiabilitiesOpen(true);
               }}
             />
+          </div>
+        ) : activeTab === "orders" ? (
+          <div className="pt-8 w-full">
+            <Card variant="default">
+              <div className="flex flex-col gap-4">
+                <h6 className="type-h6 text-foreground">Order</h6>
+                <ClientOrdersTab clientId={client.id} />
+              </div>
+            </Card>
           </div>
         ) : activeTab === "call-log" ? (
           <div className="pt-8 w-full">
