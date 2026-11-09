@@ -13,6 +13,9 @@ import { MutualFundLegendModal } from "./MutualFundLegendSheet";
 
 import { MutualFundTagLegend } from "./mutual-fund-ui";
 import {
+  filterFundsByTag,
+  fundHasHighlightTag,
+  fundHasViewTag,
   MUTUAL_FUND_THEME_IDS,
   MOBILE_PERFORMANCE_PERIODS,
   TOP_PERFORMERS_LIST_UPDATED_AT,
@@ -94,10 +97,11 @@ export function MutualFundThemeDetailPage({
     [],
   );
   const funds = useMemo(() => getThemeGridFunds(themeId, false, 16), [themeId]);
-  const listCountLabel = `${funds.length} รายการ`;
   const bothOrNeitherTag = viewActive === highlightActive;
   const showViewTag = bothOrNeitherTag || viewActive;
   const showHighlightTag = bothOrNeitherTag || highlightActive;
+  const tagFunds = filterFundsByTag(funds, viewActive, highlightActive);
+  const listCountLabel = `${tagFunds.length} รายการ`;
 
   return (
     <>
@@ -132,18 +136,18 @@ export function MutualFundThemeDetailPage({
         countLabel={listCountLabel}
       >
         <div className="grid w-full grid-cols-2 gap-x-4 gap-y-6">
-          {funds.map((fund, index) => (
+          {tagFunds.map((fund, index) => (
             <div key={`${fund.id}-${index}`} className="min-w-0">
               <MutualFundListCard
                 fund={fund}
                 onSelect={onFundSelect}
-                showView={showViewTag}
-                showHighlight={showHighlightTag}
+                showView={showViewTag && fundHasViewTag(fund)}
+                showHighlight={showHighlightTag && fundHasHighlightTag(fund)}
               />
             </div>
           ))}
         </div>
-        {funds.length === 0 ? (
+        {tagFunds.length === 0 ? (
           <p className="px-3 text-center text-sm font-normal text-[#6a7282]">ไม่พบกองทุนในธีมนี้</p>
         ) : null}
       </CatalogTabbedDetailView>

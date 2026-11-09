@@ -89,8 +89,9 @@ export function NotificationBell({
   const closePanel = () => setOpen(false);
 
   /**
-   * The grouped rows. No per-row date: each heading is already the exact day,
-   * so printing it again per row read as a second, contradictory date.
+   * The grouped rows. A row prints `item.time` only when it has one — the
+   * shell sets it in the buckets that span several days, and leaves it empty
+   * under "วันนี้"/"เมื่อวาน", where the heading is already the exact day.
    */
   const renderGroups = () =>
     groups.map((group, gi) => (
@@ -121,8 +122,15 @@ export function NotificationBell({
               {item.icon}
             </span>
             <span className="min-w-0 flex-1 space-y-1">
-              <span className="line-clamp-2 block text-base leading-6 font-semibold text-foreground">
-                {item.title}
+              <span className="flex items-start gap-2">
+                <span className="line-clamp-2 min-w-0 flex-1 text-base leading-6 font-semibold text-foreground">
+                  {item.title}
+                </span>
+                {item.time && (
+                  <span className="shrink-0 whitespace-nowrap text-xs leading-6 text-muted-foreground">
+                    {item.time}
+                  </span>
+                )}
               </span>
               <span className="line-clamp-3 block text-sm leading-5 text-muted-foreground">
                 {item.description}

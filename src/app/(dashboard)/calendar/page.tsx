@@ -87,7 +87,7 @@ function CalendarPageInner() {
       {/* Sticky against the shell's `main`, which is what scrolls on the
           Calendar tab. It needs its own surface (the page's grey) or the grid
           reads through it, and `z-20` keeps it above the cells' popovers'
-          anchors while staying under the top bar (`z-30`). `xl:-top-6` cancels
+          anchors while staying under the top bar (`z-40`). `xl:-top-6` cancels
           `main`'s `xl:p-6`: sticky offsets are measured from inside the
           padding, so a plain `top-0` would park the strip 24px below the bar. */}
       <div className="sticky max-xl:top-0 xl:-top-6 z-20 shrink-0 bg-[var(--bg-default-secondary)] px-1 xl:px-0">

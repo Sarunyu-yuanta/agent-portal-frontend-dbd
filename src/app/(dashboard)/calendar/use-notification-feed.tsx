@@ -59,9 +59,16 @@ export function useNotificationFeed(notes: Note[], clients: { id: string; name: 
           .map((id) => clients.find((c) => c.id === id)?.name ?? id)
           .join(", ");
         const badge = itemBadge(item);
+        // A note's reminder has a time of day; a corporate action or desk
+        // event only has its date, so it is stamped by day alone.
+        const reminderAt = item.noteId
+          ? notes.find((n) => n.id === item.noteId)?.reminderAt
+          : null;
+        const at = reminderAt ? new Date(reminderAt) : undefined;
         rows.push({
           zone,
           daysLeft: daysDiff,
+          at: at && !Number.isNaN(at.getTime()) ? at : undefined,
           item: {
             id: item.id,
             title: item.title,

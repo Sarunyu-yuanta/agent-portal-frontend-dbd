@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
-import { Button, Toggle } from "@sarunyu/system-one";
+import { Button, SearchInput } from "@sarunyu/system-one";
 import {
   ArrowLeftIcon,
 } from "@phosphor-icons/react";
@@ -12,9 +11,12 @@ import {
 import { MutualFundGroupHeroGraphic } from "./MutualFundGroupHero";
 import { MutualFundTopPerformersMobile } from "./MutualFundTopPerformersMobile";
 import { MutualFundLegendModal } from "./MutualFundLegendSheet";
-import { MF_ASSETS } from "./mutual-fund-assets";
 import { MutualFundTagLegend } from "./mutual-fund-ui";
 import {
+  filterFundsByTag,
+  searchFunds,
+  fundHasHighlightTag,
+  fundHasViewTag,
   getMobileGroupGridFunds,
   MOBILE_FUND_GROUPS,
   MOBILE_PERFORMANCE_PERIODS,
@@ -99,11 +101,11 @@ export function MutualFundTopPerformersPage({
   onFundSelect?: (fundId: string) => void;
 }) {
   const [groupId, setGroupId] = useState<MobileFundGroupId>(initialGroupId);
-  const [pickOnly, setPickOnly] = useState(false);
   const [period, setPeriod] = useState<MobilePerformancePeriod>("1M");
   const [legendOpen, setLegendOpen] = useState(false);
   const [viewActive, setViewActive] = useState(false);
   const [highlightActive, setHighlightActive] = useState(false);
+  const [query, setQuery] = useState("");
 
   const group = MOBILE_FUND_GROUPS.find((g) => g.id === groupId) ?? MOBILE_FUND_GROUPS[0];
   const heroTitle = group.id === "all" ? "กองทุนทั้งหมด" : group.label;
@@ -118,14 +120,15 @@ export function MutualFundTopPerformersPage({
   }, [groupId]);
 
   const funds = useMemo(
-    () => getMobileGroupGridFunds(groupId, pickOnly, 16),
-    [groupId, pickOnly],
+    () => getMobileGroupGridFunds(groupId, false, 16),
+    [groupId],
   );
 
-  const listCountLabel = `${funds.length} รายการ`;
   const bothOrNeitherTag = viewActive === highlightActive;
   const showViewTag = bothOrNeitherTag || viewActive;
   const showHighlightTag = bothOrNeitherTag || highlightActive;
+  const tagFunds = searchFunds(filterFundsByTag(funds, viewActive, highlightActive), query);
+  const listCountLabel = `${tagFunds.length} รายการ`;
 
   return (
     <>
@@ -179,35 +182,40 @@ export function MutualFundTopPerformersPage({
                 onToggleView={() => setViewActive((v) => !v)}
                 onToggleHighlight={() => setHighlightActive((v) => !v)}
                 onShowLegend={() => setLegendOpen(true)}
-              />
-              <div className="flex w-full items-center justify-end gap-2 px-3">
-                <p className="min-w-0 flex-1 text-sm font-normal leading-5 text-[#101828]">{listCountLabel}</p>
-                <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-white p-0.5">
-                  <div className="flex aspect-square size-4 shrink-0 items-center overflow-hidden">
-                    <Image src={MF_ASSETS.performersTagHighlight} alt="" width={16} height={16} className="size-4 shrink-0" />
+                trailing={
+                  <div className="min-w-0 flex-1 lg:w-[320px] lg:flex-none">
+                    <SearchInput
+                      value={query}
+                      onChange={setQuery}
+                      onClear={() => setQuery("")}
+                      placeholder="ค้นหากองทุน"
+                      size="sm"
+                      className="w-full"
+                    />
                   </div>
-                  <span className="text-sm font-normal leading-5 text-[#101828]">Pick</span>
-                </div>
-                <Toggle size="sm" checked={pickOnly} onChange={setPickOnly} ariaLabel="Pick" />
-              </div>
+                }
+              />
+              <p className="w-full px-3 text-sm font-normal leading-5 text-[#101828]">{listCountLabel}</p>
               <PerformancePeriodTabs active={period} onChange={setPeriod} />
             </div>
 
             <div className="grid w-full grid-cols-2 gap-x-4 gap-y-6">
-              {funds.map((fund, index) => (
+              {tagFunds.map((fund, index) => (
                 <div key={`${fund.id}-${index}`} className="min-w-0">
                   <MutualFundListCard
                     fund={fund}
                     onSelect={onFundSelect}
-                    showView={showViewTag}
-                    showHighlight={showHighlightTag}
+                    showView={showViewTag && fundHasViewTag(fund)}
+                    showHighlight={showHighlightTag && fundHasHighlightTag(fund)}
                   />
                 </div>
               ))}
             </div>
 
-            {funds.length === 0 ? (
-              <p className="px-3 text-center text-sm font-normal text-[#6a7282]">ไม่พบกองทุนในหมวดนี้</p>
+            {tagFunds.length === 0 ? (
+              <p className="px-3 text-center text-sm font-normal text-[#6a7282]">
+                {query.trim() ? `ไม่พบกองทุนที่ตรงกับ "${query.trim()}"` : "ไม่พบกองทุนในหมวดนี้"}
+              </p>
             ) : null}
           </div>
         </div>

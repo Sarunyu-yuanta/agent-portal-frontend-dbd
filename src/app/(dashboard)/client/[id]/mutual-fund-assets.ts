@@ -6,8 +6,16 @@ export const MF_ASSETS = {
   bookOpen: "/products/mutual-fund/book-open-text.svg",
   arrowRightBlue: "/products/mutual-fund/arrow-right-blue.svg",
   sparkline: "/products/mutual-fund/sparkline-positive.svg",
-  filterIllustration: "/products/mutual-fund/filter-illustration.png",
-  taxIllustration: "/products/mutual-fund/tax-illustration.png",
+  /** Figma 360:77101 / 360:77110 — quick-action cards (ค้นหากองทุน / ลดหย่อนภาษี). */
+  quickAction: {
+    arrow: "/products/mutual-fund/quick-action-arrow.svg",
+    search: "/products/mutual-fund/quick-action-search.png",
+    searchRingOuter: "/products/mutual-fund/quick-action-search-ring-outer.svg",
+    searchRingInner: "/products/mutual-fund/quick-action-search-ring-inner.svg",
+    tax: "/products/mutual-fund/quick-action-tax.png",
+    taxRingOuter: "/products/mutual-fund/quick-action-tax-ring-outer.svg",
+    taxRingInner: "/products/mutual-fund/quick-action-tax-ring-inner.svg",
+  },
   navPriceIcon: "/products/mutual-fund/nav-price-icon.svg",
   coinsIcon: "/products/mutual-fund/coins-icon.svg",
   filePdfIcon: "/products/mutual-fund/file-pdf-icon.svg",

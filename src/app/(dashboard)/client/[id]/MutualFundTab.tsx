@@ -39,11 +39,15 @@ export function MutualFundTab({
 
   return (
     <div className="flex w-full flex-col bg-white">
-      <div className="mx-auto w-full max-w-[1280px] px-4 pt-6 md:px-8 lg:px-6">
-        {/* Figma 40135:224236 — mobile: performers → quick actions → insights */}
+      <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-3 px-4 pt-8 md:px-8 lg:px-6 lg:pt-10">
+        <MutualFundQuickActions />
+        <MutualFundThemesSection themes={data.themes} onFundSelect={onFundSelect} onThemeSeeAll={onThemeSeeAll} />
+      </div>
+
+      <div className="mx-auto mt-3 w-full max-w-[1280px] px-4 pb-10 md:px-8 lg:mt-6 lg:px-6">
+        {/* Figma 40135:224236 — mobile: performers → insights (quick actions moved to the top of the tab) */}
         <div className="flex flex-col gap-2 lg:hidden">
           {topPerformers}
-          <MutualFundQuickActions className="pt-3" />
           <div className="mt-3">{insights}</div>
         </div>
 
@@ -52,10 +56,6 @@ export function MutualFundTab({
           {topPerformers}
           {insights}
         </div>
-      </div>
-
-      <div className="mx-auto mt-3 w-full max-w-[1280px] px-4 md:px-8 lg:mt-6 lg:px-6">
-        <MutualFundThemesSection themes={data.themes} onFundSelect={onFundSelect} onThemeSeeAll={onThemeSeeAll} />
       </div>
     </div>
   );

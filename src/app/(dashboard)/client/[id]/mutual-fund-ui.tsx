@@ -33,13 +33,55 @@ export function MutualFundTagLegend({
   onToggleView,
   onToggleHighlight,
   onShowLegend,
+  trailing,
 }: {
   viewActive: boolean;
   highlightActive: boolean;
   onToggleView: () => void;
   onToggleHighlight: () => void;
   onShowLegend: () => void;
+  /**
+   * Controls pinned to the row's right edge (the filter-results page puts search + filter here).
+   * When set, "ดูคำอธิบาย" moves left next to the chips; on mobile the trailing controls wrap
+   * onto their own full-width line.
+   */
+  trailing?: React.ReactNode;
 }) {
+  const legendLink = (
+    <Button
+      variant="plain"
+      size="xs"
+      onClick={onShowLegend}
+      leftIcon={<InfoIcon size={16} />}
+      className="shrink-0 !px-0"
+    >
+      ดูคำอธิบาย
+    </Button>
+  );
+
+  if (trailing) {
+    return (
+      <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-3 px-3">
+        <div className="flex items-center gap-2">
+          <TagFilterChip
+            icon={MF_ASSETS.performersTagView}
+            label="View"
+            active={viewActive}
+            onClick={onToggleView}
+          />
+          <TagFilterChip
+            icon={MF_ASSETS.performersTagHighlight}
+            label="Highlight"
+            active={highlightActive}
+            onClick={onToggleHighlight}
+          />
+          <span className="ml-2">{legendLink}</span>
+        </div>
+        <div className="flex w-full items-center gap-2 lg:ml-auto lg:w-auto">{trailing}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex w-full items-center justify-between gap-2 px-3">
       <div className="flex items-center gap-2">
@@ -56,15 +98,7 @@ export function MutualFundTagLegend({
           onClick={onToggleHighlight}
         />
       </div>
-      <Button
-        variant="plain"
-        size="xs"
-        onClick={onShowLegend}
-        leftIcon={<InfoIcon size={16} />}
-        className="shrink-0 !px-0"
-      >
-        ดูคำอธิบาย
-      </Button>
+      {legendLink}
     </div>
   );
 }

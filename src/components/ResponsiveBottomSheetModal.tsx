@@ -69,7 +69,7 @@ export function ResponsiveBottomSheetModal({
    * or filtered ancestor creates a stacking context, and everything inside it —
    * `z-[60]` included — is ranked only against its siblings. The Dashboard's
    * right rail is `position: sticky`, so a modal opened from a card in it sat
-   * under the app header's `z-30` no matter how high its own z-index went.
+   * under the app header's `z-40` no matter how high its own z-index went.
    *
    * The mobile branch above has never had the problem: `BottomSheet` is a vaul
    * drawer and portals itself.

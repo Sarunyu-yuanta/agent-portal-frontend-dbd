@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button, PaginationBanner } from "@sarunyu/system-one";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
-import { MutualFundQuickActionsDesktop } from "./MutualFundQuickActions";
 import { MutualFundSeeMoreIcon, MutualFundSymbolTag } from "./MutualFundCard";
 import { MF_ASSETS } from "./mutual-fund-assets";
 import {
@@ -182,7 +181,8 @@ export function MutualFundInsightsSection({
 
   return (
     <section className="relative flex w-full min-w-0 flex-col gap-4">
-      <div className="relative flex min-h-[342px] flex-col gap-4 overflow-hidden py-4 lg:gap-8 lg:py-0">
+      {/* lg:flex-1 — stretch to the desktop grid row so the background matches the performers column's height */}
+      <div className="relative flex min-h-[342px] flex-col gap-4 overflow-hidden py-4 lg:flex-1 lg:gap-8 lg:py-0">
         <Image
           src={MF_ASSETS.insightsSectionBgMobile}
           alt=""
@@ -194,7 +194,9 @@ export function MutualFundInsightsSection({
           src={MF_ASSETS.insightsSectionBg}
           alt=""
           fill
-          className="pointer-events-none hidden object-cover object-left-top lg:block"
+          // Anchor right: the cream stripes live on the image's right side, and the box is now taller
+          // than the 568×342 art, so object-cover scales it up and would crop the stripes off a left anchor.
+          className="pointer-events-none hidden object-cover object-right-top lg:block"
           sizes="568px"
         />
 
@@ -297,8 +299,6 @@ export function MutualFundInsightsSection({
           </Link>
         </div>
       </div>
-
-      <MutualFundQuickActionsDesktop />
     </section>
   );
 }

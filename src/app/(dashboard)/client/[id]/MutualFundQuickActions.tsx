@@ -4,7 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRightIcon } from "@phosphor-icons/react";
 import { useIsMobile } from "@sarunyu/system-one";
 import { MF_ASSETS } from "./mutual-fund-assets";
 import {
@@ -17,65 +16,106 @@ import { navWrite } from "@/lib/nav-session";
 
 export const MUTUAL_FUND_FILTER_STATE_KEY = "nav:mutual-fund-filter-state";
 
+type QuickActionVariant = "search" | "tax";
+
+/** Decorative rings + illustration, positioned per Figma 360:77101 (search) / 360:77110 (tax). */
+function QuickActionArt({ variant }: { variant: QuickActionVariant }) {
+  const a = MF_ASSETS.quickAction;
+  const isSearch = variant === "search";
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={isSearch ? a.searchRingOuter : a.taxRingOuter}
+        alt=""
+        aria-hidden
+        className={`pointer-events-none absolute bottom-[-33px] block size-[88px] max-w-none ${isSearch ? "right-[-24.5px]" : "right-[-25px]"}`}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={isSearch ? a.searchRingInner : a.taxRingInner}
+        alt=""
+        aria-hidden
+        className={`pointer-events-none absolute bottom-[-26px] block size-[68px] max-w-none ${isSearch ? "right-[-17.5px]" : "right-[-18px]"}`}
+      />
+      {isSearch ? (
+        <span className="pointer-events-none absolute bottom-0 right-[4.5px] size-[42px] overflow-hidden origin-bottom-right transition-transform duration-200 ease-out group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={a.search} alt="" className="absolute left-[-45.3%] top-[-44.7%] block size-[190%] max-w-none" />
+        </span>
+      ) : (
+        <Image
+          src={a.tax}
+          alt=""
+          width={45}
+          height={45}
+          className="pointer-events-none absolute bottom-[3px] right-[6px] size-[45px] max-w-none object-cover object-bottom origin-bottom-right transition-transform duration-200 ease-out group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+        />
+      )}
+    </>
+  );
+}
+
 function QuickActionCard({
+  variant,
   title,
-  illustration,
   href,
   onClick,
-  compact = false,
 }: {
-  title: string;
-  illustration: string;
+  variant: QuickActionVariant;
+  /** Two lines, as in the design. */
+  title: [string, string];
   href?: string;
   onClick?: () => void;
-  compact?: boolean;
 }) {
   const body = (
     <div
-      className={
-        compact
-          ? "relative flex h-[72px] flex-col gap-1 overflow-hidden rounded bg-gradient-to-b from-[#f3f8fe] to-white py-4 pl-4 pr-4"
-          : "relative flex h-[92px] flex-col gap-1 overflow-hidden rounded bg-gradient-to-b from-[#f3f8fe] to-white py-4 pl-4 pr-4"
-      }
+      className={`relative flex flex-col gap-1 overflow-clip rounded bg-gradient-to-b to-white px-3 py-2 ${
+        variant === "search" ? "from-[#f3f8fe]" : "from-[#fafafa]"
+      }`}
     >
-      <p className="text-sm font-bold leading-5 text-[#101828]">{title}</p>
-      <ArrowRightIcon size={16} className="text-[#4a5565]" />
-      <Image
-        src={illustration}
+      <QuickActionArt variant={variant} />
+      <p className="relative text-sm font-bold leading-5 text-[#101828]">
+        {title[0]}
+        <br />
+        {title[1]}
+      </p>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={MF_ASSETS.quickAction.arrow}
         alt=""
-        width={compact ? 42 : 68}
-        height={compact ? 42 : 68}
-        className={
-          compact
-            ? "pointer-events-none absolute bottom-0 right-3 size-[42px] object-contain"
-            : "pointer-events-none absolute bottom-0 right-3 size-[68px] object-contain"
-        }
+        className="relative block size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
       />
     </div>
   );
 
-  const className = "min-w-0 flex-1 rounded-lg bg-white p-1 no-underline text-inherit";
-  const style = {
-    boxShadow: "0px 0px 1px rgba(102, 102, 102, 0.16), 0px 4px 4px rgba(102, 102, 102, 0.12)",
-  };
+  // Hover: lift 2px + deeper shadow; arrow nudges right and the art grows (see QuickActionArt).
+  // Trailing `!` on hover utilities — system-one's unlayered CSS otherwise wins over `hover:`.
+  const className =
+    "group min-w-0 flex-1 rounded-lg bg-white p-1 no-underline text-inherit lg:w-[280px] lg:flex-none " +
+    "shadow-[0px_0px_1px_rgba(102,102,102,0.16),0px_4px_4px_rgba(102,102,102,0.12)] " +
+    "transition-[transform,box-shadow] duration-200 ease-out " +
+    "hover:-translate-y-0.5! hover:shadow-[0px_0px_2px_rgba(102,102,102,0.2),0px_8px_16px_rgba(102,102,102,0.18)]! " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6ee7] " +
+    "motion-reduce:transition-none motion-reduce:hover:translate-y-0!";
 
   if (href) {
     return (
-      <Link href={href} className={className} style={style}>
+      <Link href={href} className={className}>
         {body}
       </Link>
     );
   }
 
   return (
-    <button type="button" onClick={onClick} className={`${className} cursor-pointer text-left`} style={style}>
+    <button type="button" onClick={onClick} className={`${className} cursor-pointer text-left`}>
       {body}
     </button>
   );
 }
 
 /** Opens the filter panel in place; only navigates to the results page once "ตกลง" is pressed. */
-function FilterEntryTile({ compact }: { compact?: boolean }) {
+function FilterEntryTile() {
   const router = useRouter();
   const isPhone = useIsMobile();
   const [open, setOpen] = useState(false);
@@ -88,9 +128,8 @@ function FilterEntryTile({ compact }: { compact?: boolean }) {
   return (
     <>
       <QuickActionCard
-        title="ตัวกรองกองทุน"
-        illustration={MF_ASSETS.filterIllustration}
-        compact={compact}
+        variant="search"
+        title={["ค้นหากองทุน", "ที่คุณสนใจ"]}
         onClick={() => setOpen(true)}
       />
       {isPhone ? (
@@ -115,25 +154,11 @@ function FilterEntryTile({ compact }: { compact?: boolean }) {
 /** Figma 40135:224276 (mobile) / 40118:77384 (desktop) */
 export function MutualFundQuickActions({ className = "" }: { className?: string }) {
   return (
-    <div className={`flex w-full gap-2.5 lg:gap-8 ${className}`.trim()}>
-      <FilterEntryTile compact />
-      <QuickActionCard
-        title="วางแผนภาษี"
-        illustration={MF_ASSETS.taxIllustration}
-        href="/product-catalog/mutual-fund/tools/tax-planning"
-        compact
-      />
-    </div>
-  );
-}
-
-export function MutualFundQuickActionsDesktop() {
-  return (
-    <div className="relative hidden w-full gap-8 lg:flex">
+    <div className={`flex w-full gap-2.5 lg:justify-center lg:gap-8 ${className}`.trim()}>
       <FilterEntryTile />
       <QuickActionCard
-        title="วางแผนภาษี"
-        illustration={MF_ASSETS.taxIllustration}
+        variant="tax"
+        title={["แนะนำกองทุน", "ลดหย่อนภาษี"]}
         href="/product-catalog/mutual-fund/tools/tax-planning"
       />
     </div>

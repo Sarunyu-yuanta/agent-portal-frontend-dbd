@@ -28,6 +28,8 @@ export type MutualFund = {
   changeAbs: string;
   changePct: string;
   isPick: boolean;
+  /** Theme card "View" tag (Figma 360:76695) — only set on theme funds. */
+  isView?: boolean;
 };
 
 export type MutualFundCategory = {
@@ -435,12 +437,19 @@ export function getThemeDescription(themeId: MutualFundThemeId): string {
   return THEME_DESCRIPTIONS[themeId] ?? "";
 }
 
-/** Figma 39910:727252 — "ตัวกรอง" filter panel: category chips (catalog categories plus a UI-only "อื่นๆ"). */
-export type FilterCategoryOption = { id: string; label: string };
-export const FILTER_CATEGORY_OPTIONS: FilterCategoryOption[] = [
-  ...MUTUAL_FUND_CATEGORIES.map((c) => ({ id: c.id as string, label: c.label })),
-  { id: "others", label: "อื่นๆ" },
-];
+/**
+ * Figma 360:78470 — "ค้นหากองทุนที่คุณสนใจ" category chips: the same groups as the
+ * mobile performers tabs (minus "ทั้งหมด"). Each option pools catalog categories;
+ * "tax-saving" matches any fund with a tax-saving type, "others" funds outside the catalog.
+ */
+export type FilterCategoryOption = { id: MobileFundGroupId; label: string; categoryIds?: string[] };
+export const FILTER_CATEGORY_OPTIONS: FilterCategoryOption[] = MOBILE_FUND_GROUPS.filter((g) => g.id !== "all").map(
+  (g) => ({
+    id: g.id,
+    label: g.label,
+    categoryIds: g.id === "others" ? ["others"] : g.categoryIds,
+  }),
+);
 
 export const TAX_SAVING_FUND_TYPES = ["RMF", "TESG", "TESGX"] as const;
 export type TaxSavingFundType = (typeof TAX_SAVING_FUND_TYPES)[number];
@@ -454,7 +463,12 @@ export function normalizeTaxSavingFundType(value: string): TaxSavingFundType {
 
 export const DIVIDEND_POLICY_OPTIONS = ["จ่าย", "ไม่จ่าย"] as const;
 export const INVESTMENT_POLICY_OPTIONS = ["เชิงรุก", "เชิงรับ"] as const;
-export const FUND_RISK_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+/** 9 stands for "8+" (Figma 360:78597) — funds riskier than level 8. */
+export const FUND_RISK_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
+
+export function fundRiskLevelLabel(level: number): string {
+  return level >= 9 ? "Level 8+" : `Level ${level}`;
+}
 
 /** Figma 39910:727252 — "บริษัทจัดการกองทุน" chip row; icon looked up via MF_ASSETS.amcLogo[id]. */
 export const FUND_MANAGEMENT_COMPANIES = [
@@ -497,6 +511,33 @@ function hashString(value: string): number {
     hash = (hash * 31 + value.charCodeAt(i)) | 0;
   }
   return Math.abs(hash);
+}
+
+/**
+ * "View" / "Highlight" tags per fund. Highlight is the house pick (`isPick`); View comes from
+ * `isView` when the catalog sets it, otherwise a stable mock so some funds carry no tag at all.
+ */
+export function fundHasViewTag(fund: MutualFund): boolean {
+  return fund.isView ?? hashString(`view-${fund.id}`) % 2 === 0;
+}
+
+export function fundHasHighlightTag(fund: MutualFund): boolean {
+  return fund.isPick;
+}
+
+/** Search box on the fund list pages: case-insensitive match on the fund code or full name. */
+export function searchFunds(funds: MutualFund[], query: string): MutualFund[] {
+  const term = query.trim().toLowerCase();
+  if (!term) return funds;
+  return funds.filter((fund) => fund.symbol.toLowerCase().includes(term) || fund.name.toLowerCase().includes(term));
+}
+
+/** The View/Highlight toggles: neither on → every fund; otherwise funds carrying any active tag. */
+export function filterFundsByTag(funds: MutualFund[], viewActive: boolean, highlightActive: boolean): MutualFund[] {
+  if (!viewActive && !highlightActive) return funds;
+  return funds.filter(
+    (fund) => (viewActive && fundHasViewTag(fund)) || (highlightActive && fundHasHighlightTag(fund)),
+  );
 }
 
 const FUND_CATEGORY_MAP: Map<string, MutualFundCategoryId[]> = (() => {

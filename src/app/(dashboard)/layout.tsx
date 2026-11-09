@@ -9,7 +9,7 @@ import {
 import { ListIcon } from "@phosphor-icons/react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { NotificationBell } from "@/components/layout/NotificationBell";
-import { daysAgoLabelTh } from "./notification-zones";
+import { notificationStampEn, pastBucketTh, PAST_BUCKETS_TH } from "./notification-zones";
 import { FadeIn } from "@/components/ui/fade-in";
 import { NavStateMemory } from "@/components/layout/NavStateMemory";
 import { Sheet, SheetContent, SheetOverlay } from "@/components/ui/sheet";
@@ -79,9 +79,9 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
    * so a KYC expiring today and a reminder due today land in the same group
    * instead of under two headings in two languages.
    *
-   * Only what is already due reaches the bell, and it is dated by day rather
-   * than sorted into zones: "วันนี้", then "เมื่อวาน", "2 วันก่อน" and so on
-   * down the panel, newest first. Nothing still ahead is listed — the bell
+   * Only what is already due reaches the bell, grouped newest first under
+   * "วันนี้", "เมื่อวาน", "7 วันที่ผ่านมา" and "ก่อนหน้านี้", each row stamped
+   * by `notificationStampEn` ("9:43 AM", "Fri 11:43 AM", "Thu 11/5"). Nothing still ahead is listed — the bell
    * says what needs doing now, and the Calendar is where the future lives.
    */
   const notificationGroups = useMemo(() => {
@@ -90,11 +90,19 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       ...(KYC_ALERTS_ENABLED ? kycNotificationRows : []),
       ...(ORDER_BOOKING_ENABLED ? orderNotificationRows : []),
     ].filter((r) => r.daysLeft <= 0);
-    const days = [...new Set(rows.map((r) => r.daysLeft))].sort((a, b) => b - a);
-    return days.map((daysLeft) => ({
-      label: daysAgoLabelTh(-daysLeft),
-      items: rows.filter((r) => r.daysLeft === daysLeft).map((r) => r.item),
-    }));
+    // Newest first: by day, then by exact moment where the source has one.
+    const sorted = [...rows].sort(
+      (a, b) =>
+        b.daysLeft - a.daysLeft || (b.at?.getTime() ?? 0) - (a.at?.getTime() ?? 0),
+    );
+    return PAST_BUCKETS_TH.map((label) => ({
+      label,
+      items: sorted
+        .filter((r) => pastBucketTh(-r.daysLeft) === label)
+        // Every row's `time` is set here, overriding whatever a feed put
+        // there, so all three feeds stamp the same way.
+        .map((r) => ({ ...r.item, time: notificationStampEn(-r.daysLeft, r.at) })),
+    })).filter((g) => g.items.length > 0);
   }, [notificationRows, kycNotificationRows, orderNotificationRows]);
 
   const handleNotificationClick = (notifItem: NotificationItem) => {
@@ -146,7 +154,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col flex-1 min-w-0">
           {/* Top bar */}
           <header
-            className={`shrink-0 min-h-[60px] flex items-center justify-between gap-4 px-4 border-b border-border bg-background z-30 relative ${
+            className={`shrink-0 min-h-[60px] flex items-center justify-between gap-4 px-4 border-b border-border bg-background z-40 relative ${
               headerSlot ? "xl:grid xl:grid-cols-[1fr_minmax(0,28rem)_1fr]" : ""
             }`}
           >

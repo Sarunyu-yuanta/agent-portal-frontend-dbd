@@ -79,13 +79,21 @@ export function useOrderNotificationFeed() {
       daysAgo: number,
       href: string,
       item: Omit<ZonedNotification["item"], "id">,
+      /** When it happened, if this is an event rather than a standing state. */
+      atIso?: string,
     ) => {
       const daysLeft = -daysAgo;
       const zone = zoneForDays(daysLeft);
       // Past the bell's 15-day horizon an event stops being news. It is still
       // in the book's own log, which is where history belongs.
       if (!zone) return;
-      rows.push({ zone, daysLeft, item: { ...item, id } });
+      const at = atIso ? new Date(atIso) : undefined;
+      rows.push({
+        zone,
+        daysLeft,
+        at: at && !Number.isNaN(at.getTime()) ? at : undefined,
+        item: { ...item, id },
+      });
       targets.set(id, href);
     };
 
@@ -106,6 +114,7 @@ export function useOrderNotificationFeed() {
           time: "",
           icon: iconFor("green", <IdentificationCardIcon size={15} weight="fill" />),
         },
+        request.completedAt,
       );
     }
 
@@ -130,6 +139,7 @@ export function useOrderNotificationFeed() {
               ? iconFor("green", <CheckCircleIcon size={15} weight="fill" />)
               : iconFor("red", <WarningCircleIcon size={15} weight="fill" />),
           },
+          submission.settledAt,
         );
       }
 

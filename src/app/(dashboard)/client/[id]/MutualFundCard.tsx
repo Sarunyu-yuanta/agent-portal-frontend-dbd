@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Tag } from "@sarunyu/system-one";
-import type { MutualFund } from "./mutual-fund-data";
+import { fundHasHighlightTag, fundHasViewTag, type MutualFund } from "./mutual-fund-data";
 import { MF_ASSETS, mutualFundRiskMeterSrc } from "./mutual-fund-assets";
 
 const LIST_CARD_CLASS =
@@ -434,7 +434,64 @@ export function MutualFundPerformerStack({
   );
 }
 
-/** Theme list card — single white container with row dividers (Figma 40118:77418, 300×276). */
+/** Figma 360:76672 — theme card row: symbol (no fund name), sparkline, price, then risk + View/Highlight tags. */
+function MutualFundThemeRow({
+  fund,
+  onSelect,
+}: {
+  fund: MutualFund;
+  onSelect?: (fundId: string) => void;
+}) {
+  const href = mutualFundDetailHref(fund.id);
+  const className =
+    "block w-full p-3 text-left no-underline text-inherit cursor-pointer hover:bg-black/[0.02] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6ee7] focus-visible:ring-inset";
+
+  return (
+    <Link
+      href={href}
+      className={className}
+      onClick={
+        onSelect
+          ? (e) => {
+              e.preventDefault();
+              onSelect(fund.id);
+            }
+          : undefined
+      }
+    >
+      <div className="flex flex-col gap-2">
+        <div className="flex w-full items-center gap-2">
+          <span className="min-w-0 flex-1 self-start break-words text-sm font-bold leading-5 text-[#101828]">
+            {fund.symbol}
+          </span>
+          <Sparkline />
+          <ListCardPriceChange fund={fund} />
+        </div>
+        <div className="flex h-5 w-full items-center gap-1">
+          <RiskBadge risk={fund.risk} inline />
+          {fundHasViewTag(fund) ? (
+            <ListCardMetaTag
+              iconSrc={MF_ASSETS.performersTagView}
+              label="View"
+              className="bg-[#f6f3ef]"
+              labelClassName="text-[#935737]"
+            />
+          ) : null}
+          {fundHasHighlightTag(fund) ? (
+            <ListCardMetaTag
+              iconSrc={MF_ASSETS.performersTagHighlight}
+              label="Highlight"
+              className="bg-[#eff6ff]"
+              labelClassName="text-[#0a6ee7]"
+            />
+          ) : null}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/** Theme list card — single white container with row dividers (Figma 360:76670). */
 export function MutualFundThemeList({
   funds,
   onFundSelect,
@@ -444,10 +501,10 @@ export function MutualFundThemeList({
 }) {
   const visible = funds.slice(0, 3);
   return (
-    <div className="h-[276px] w-full shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
+    <div className="w-full shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
       {visible.map((fund, i) => (
         <div key={fund.id} className={i > 0 ? "border-t border-black/10" : ""}>
-          <MutualFundCard fund={fund} onSelect={onFundSelect} />
+          <MutualFundThemeRow fund={fund} onSelect={onFundSelect} />
         </div>
       ))}
     </div>

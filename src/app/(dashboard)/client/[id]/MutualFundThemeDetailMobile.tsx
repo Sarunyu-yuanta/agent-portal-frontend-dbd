@@ -13,6 +13,9 @@ import { MutualFundLegendBottomSheet, MutualFundLegendModal } from "./MutualFund
 
 import { MobilePeriodTabs, MutualFundTagLegend } from "./mutual-fund-ui";
 import {
+  filterFundsByTag,
+  fundHasHighlightTag,
+  fundHasViewTag,
   MUTUAL_FUND_THEME_IDS,
   TOP_PERFORMERS_LIST_UPDATED_AT,
   getMutualFundTheme,
@@ -110,10 +113,11 @@ export function MutualFundThemeDetailMobile({
   }, [themeId]);
 
   const funds = useMemo(() => getThemeGridFunds(themeId, false, 16), [themeId]);
-  const listCountLabel = `${funds.length} รายการ`;
   const bothOrNeitherTag = viewActive === highlightActive;
   const showViewTag = bothOrNeitherTag || viewActive;
   const showHighlightTag = bothOrNeitherTag || highlightActive;
+  const tagFunds = filterFundsByTag(funds, viewActive, highlightActive);
+  const listCountLabel = `${tagFunds.length} รายการ`;
 
   return (
     <div className="flex w-full flex-1 flex-col bg-white">
@@ -146,20 +150,20 @@ export function MutualFundThemeDetailMobile({
         <p className="px-3 text-sm leading-5 text-[#101828]">{listCountLabel}</p>
 
         <div className="flex w-full flex-col">
-          {funds.map((fund, index) => (
+          {tagFunds.map((fund, index) => (
             <div key={`${fund.id}-${index}`}>
               {index > 0 ? <div className="mx-3 h-px bg-black/10" /> : null}
               <MutualFundListCardMobile
                 fund={fund}
                 onSelect={onFundSelect}
-                showView={showViewTag}
-                showHighlight={showHighlightTag}
+                showView={showViewTag && fundHasViewTag(fund)}
+                showHighlight={showHighlightTag && fundHasHighlightTag(fund)}
               />
             </div>
           ))}
         </div>
 
-        {funds.length === 0 ? (
+        {tagFunds.length === 0 ? (
           <p className="px-3 text-center text-sm text-[#6a7282]">ไม่พบกองทุนในธีมนี้</p>
         ) : null}
       </div>

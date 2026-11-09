@@ -9,6 +9,7 @@ import {
   FUND_MANAGEMENT_COMPANIES,
   FUND_RISK_LEVELS,
   INVESTMENT_POLICY_OPTIONS,
+  fundRiskLevelLabel,
   TAX_SAVING_FUND_TYPES,
   getFundCategoryIds,
   getFundDividendPolicy,
@@ -57,9 +58,15 @@ export function applyMutualFundFilter(funds: MutualFund[], filter: MutualFundFil
   if (isEmptyFilterState(filter)) return funds;
 
   return funds.filter((fund) => {
-    if (filter.categories.length > 0) {
+    const categoryOptions = FILTER_CATEGORY_OPTIONS.filter((o) => filter.categories.includes(o.id));
+    if (categoryOptions.length > 0) {
       const categories = getFundCategoryIds(fund.id);
-      if (!filter.categories.some((c) => categories.includes(c))) return false;
+      const matches = categoryOptions.some((option) =>
+        option.id === "tax-saving"
+          ? getFundTaxSavingType(fund.id) !== null
+          : (option.categoryIds ?? []).some((c) => categories.includes(c)),
+      );
+      if (!matches) return false;
     }
     if (filter.taxTypes.length > 0) {
       const taxType = getFundTaxSavingType(fund.id);
@@ -80,11 +87,56 @@ export function applyMutualFundFilter(funds: MutualFund[], filter: MutualFundFil
     ) {
       return false;
     }
-    if (filter.riskLevels.length > 0 && !filter.riskLevels.includes(fund.risk)) {
+    if (filter.riskLevels.length > 0 && !filter.riskLevels.includes(Math.min(fund.risk, 9))) {
       return false;
     }
     return true;
   });
+}
+
+type AmcId = keyof typeof MF_ASSETS.amcLogo;
+
+/**
+ * Figma 155:19536 "Mutual Fund_Icon Symbol" — 20px logo per AMC. Most logos fill the circle;
+ * the ones below sit inset on a white disc, with the box (px) and optional crop taken from Figma.
+ */
+const AMC_INSET_LOGOS: Partial<
+  Record<AmcId, { w: number; h: number; top: number; left: number; crop?: React.CSSProperties }>
+> = {
+  eastspring: { w: 13.84, h: 13.84, top: 3.12, left: 2.84 },
+  aberdeen: { w: 13.84, h: 13.84, top: 2.84, left: 2.64 },
+  pamc: { w: 13.86, h: 13.86, top: 3, left: 3 },
+  talisam: { w: 13.8, h: 13.86, top: 3.07, left: 3.12 },
+  principal: { w: 12.12, h: 14.84, top: 2.88, left: 3.4 },
+  bcap: { w: 12.88, h: 16.44, top: 1.76, left: 3.56, crop: { width: "179.5%", height: "140.63%", left: "-40.99%", top: "-20.19%" } },
+  mfc: { w: 16.08, h: 5.84, top: 7.08, left: 1.96, crop: { width: "102.66%", height: "100%", left: "-0.21%", top: 0 } },
+};
+
+function AmcLogo({ id }: { id: string }) {
+  const src = MF_ASSETS.amcLogo[id as AmcId];
+  if (!src) return null;
+  const inset = AMC_INSET_LOGOS[id as AmcId];
+  return (
+    <span className="relative size-5 shrink-0 overflow-clip rounded-full bg-white">
+      {inset ? (
+        <span
+          className="absolute overflow-hidden"
+          style={{ width: inset.w, height: inset.h, top: inset.top, left: inset.left }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src}
+            alt=""
+            className={inset.crop ? "absolute block max-w-none" : "absolute inset-0 block size-full max-w-none object-cover"}
+            style={inset.crop}
+          />
+        </span>
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" className="absolute inset-0 block size-full max-w-none object-cover" />
+      )}
+    </span>
+  );
 }
 
 function FilterChip({
@@ -96,26 +148,21 @@ function FilterChip({
   label: string;
   active: boolean;
   onClick: () => void;
-  icon?: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm leading-5 transition-colors ${
+      className={`flex h-9 w-full cursor-pointer items-center justify-center gap-1 rounded-full border py-2 pl-2 pr-3 text-sm leading-5 transition-colors ${
         active
           ? "border-[#0a6ee7] bg-[#f3f8fe] text-[#0a6ee7] hover:bg-[#e4f0fd]!"
           : "border-black/10 bg-white text-[#4a5565] hover:bg-black/[0.03]!"
       }`}
     >
-      {icon ? (
-        <span className="relative size-5 shrink-0 overflow-hidden rounded-full">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={icon} alt="" className="absolute inset-0 block size-full object-cover" />
-        </span>
-      ) : null}
-      <span className="min-w-0 flex-1 truncate">{label}</span>
+      {icon}
+      <span className={`min-w-0 truncate text-center ${icon ? "flex-1" : ""}`}>{label}</span>
     </button>
   );
 }
@@ -124,13 +171,16 @@ function FilterSection({
   title,
   onClear,
   children,
+  compact = false,
 }: {
   title: string;
   onClear: () => void;
   children: React.ReactNode;
+  /** Figma 360:78475 — the category block sits 12px under its header; the rest use 16px. */
+  compact?: boolean;
 }) {
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className={`flex w-full flex-col ${compact ? "gap-3" : "gap-4"}`}>
       <div className="flex w-full items-center justify-between gap-2">
         <p className="text-sm font-bold leading-5 text-[#101828]">{title}</p>
         <Button variant="plain" size="xs" onClick={onClear} className="shrink-0">
@@ -142,8 +192,13 @@ function FilterSection({
   );
 }
 
+/** Figma 360:78489 — 1px rule centered in an 8px band. */
 function FilterDivider() {
-  return <div className="h-px w-full bg-black/10" />;
+  return (
+    <div className="flex h-2 w-full items-center">
+      <div className="h-px w-full bg-black/10" />
+    </div>
+  );
 }
 
 function MutualFundFilterContent({
@@ -155,8 +210,8 @@ function MutualFundFilterContent({
 }) {
   return (
     <div className="flex w-full flex-col gap-6">
-      <FilterSection title="หมวดหมู่" onClear={() => setDraft((prev) => ({ ...prev, categories: [] }))}>
-        <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
+      <FilterSection title="หมวดหมู่" compact onClear={() => setDraft((prev) => ({ ...prev, categories: [] }))}>
+        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
           {FILTER_CATEGORY_OPTIONS.map((option) => (
             <FilterChip
               key={option.id}
@@ -173,7 +228,7 @@ function MutualFundFilterContent({
       <FilterDivider />
 
       <FilterSection title="กองทุนลดหย่อนภาษี" onClear={() => setDraft((prev) => ({ ...prev, taxTypes: [] }))}>
-        <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
           {TAX_SAVING_FUND_TYPES.map((type) => (
             <FilterChip
               key={type}
@@ -191,7 +246,7 @@ function MutualFundFilterContent({
         title="นโยบายการจ่ายปันผล"
         onClear={() => setDraft((prev) => ({ ...prev, dividendPolicies: [] }))}
       >
-        <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
           {DIVIDEND_POLICY_OPTIONS.map((option) => (
             <FilterChip
               key={option}
@@ -214,7 +269,7 @@ function MutualFundFilterContent({
         title="นโยบายการลงทุน"
         onClear={() => setDraft((prev) => ({ ...prev, investmentPolicies: [] }))}
       >
-        <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
           {INVESTMENT_POLICY_OPTIONS.map((option) => (
             <FilterChip
               key={option}
@@ -237,12 +292,12 @@ function MutualFundFilterContent({
         title="บริษัทจัดการกองทุน"
         onClear={() => setDraft((prev) => ({ ...prev, managementCompanies: [] }))}
       >
-        <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
           {FUND_MANAGEMENT_COMPANIES.map((company) => (
             <FilterChip
               key={company.id}
               label={company.label}
-              icon={MF_ASSETS.amcLogo[company.id as keyof typeof MF_ASSETS.amcLogo]}
+              icon={<AmcLogo id={company.id} />}
               active={draft.managementCompanies.includes(company.id)}
               onClick={() =>
                 setDraft((prev) => ({
@@ -258,11 +313,11 @@ function MutualFundFilterContent({
       <FilterDivider />
 
       <FilterSection title="ระดับความเสี่ยง" onClear={() => setDraft((prev) => ({ ...prev, riskLevels: [] }))}>
-        <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
           {FUND_RISK_LEVELS.map((level) => (
             <FilterChip
               key={level}
-              label={`Level ${level}`}
+              label={fundRiskLevelLabel(level)}
               active={draft.riskLevels.includes(level)}
               onClick={() =>
                 setDraft((prev) => ({ ...prev, riskLevels: toggleValue(prev.riskLevels, level) }))
@@ -283,7 +338,7 @@ function FilterFooter({
   onApply: () => void;
 }) {
   return (
-    <div className="flex w-full gap-4">
+    <div className="flex w-full gap-3">
       <Button variant="outline" size="xl" className="flex-1" onClick={onClear}>
         ล้างทั้งหมด
       </Button>
@@ -294,7 +349,7 @@ function FilterFooter({
   );
 }
 
-/** Figma 39910:727252 — "ตัวกรอง", mobile bottom sheet. */
+/** Figma 360:78470 — "ค้นหากองทุนที่คุณสนใจ", mobile bottom sheet; footer pinned to the bottom. */
 export function MutualFundFilterBottomSheet({
   open,
   initialState,
@@ -318,31 +373,29 @@ export function MutualFundFilterBottomSheet({
     <BottomSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="ตัวกรอง"
+      title="ค้นหากองทุนที่คุณสนใจ"
       showHandle
       showHeader
       rightSide="icon"
       rightIcon={<XIcon size={18} weight="bold" />}
-      contentClassName="mx-[-16px] flex max-h-[calc(100dvh-8rem)] flex-col gap-6 overflow-y-auto px-4 pb-4"
+      contentClassName="mx-[-16px] flex max-h-[calc(100dvh-8rem)] flex-col overflow-y-auto px-4 pt-4"
     >
-      <div className="flex w-full justify-end">
-        <Button variant="plain" size="xs" onClick={() => setDraft(EMPTY_FILTER_STATE)}>
-          ล้างทั้งหมด
-        </Button>
-      </div>
       <MutualFundFilterContent draft={draft} setDraft={setDraft} />
-      <FilterFooter
-        onClear={() => setDraft(EMPTY_FILTER_STATE)}
-        onApply={() => {
-          onApply(draft);
-          onOpenChange(false);
-        }}
-      />
+      {/* Figma 360:78598 — footer stays pinned while the chips scroll under it */}
+      <div className="sticky bottom-0 z-10 -mx-4 mt-6 bg-white px-4 pb-10 pt-4 shadow-[0px_0px_1px_rgba(102,102,102,0.16),0px_4px_4px_rgba(102,102,102,0.12)]">
+        <FilterFooter
+          onClear={() => setDraft(EMPTY_FILTER_STATE)}
+          onApply={() => {
+            onApply(draft);
+            onOpenChange(false);
+          }}
+        />
+      </div>
     </BottomSheet>
   );
 }
 
-/** Figma 39910:727252 — "ตัวกรอง", desktop centered modal. */
+/** Desktop centered modal — same content as the mobile sheet (Figma 360:78470). */
 export function MutualFundFilterModal({
   open,
   initialState,
@@ -373,14 +426,9 @@ export function MutualFundFilterModal({
       }}
     >
       <div className="relative" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="absolute right-12 top-4 z-10">
-          <Button variant="plain" size="xs" onClick={() => setDraft(EMPTY_FILTER_STATE)}>
-            ล้างทั้งหมด
-          </Button>
-        </div>
         <Modal
           variant="content"
-          title="ตัวกรอง"
+          title="ค้นหากองทุนที่คุณสนใจ"
           showClose
           onClose={onClose}
           className="!max-w-[726px] w-[calc(100vw-3rem)]"

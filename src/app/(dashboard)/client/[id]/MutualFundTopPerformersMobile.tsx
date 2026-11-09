@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, useIsMobile } from "@sarunyu/system-one";
+import { Button, SearchInput, useIsMobile } from "@sarunyu/system-one";
 import {
   ArrowLeftIcon,
 } from "@phosphor-icons/react";
@@ -13,6 +13,10 @@ import { MutualFundLegendBottomSheet, MutualFundLegendModal } from "./MutualFund
 
 import { MobilePeriodTabs, MutualFundTagLegend } from "./mutual-fund-ui";
 import {
+  filterFundsByTag,
+  searchFunds,
+  fundHasHighlightTag,
+  fundHasViewTag,
   MOBILE_FUND_GROUPS,
   TOP_PERFORMERS_HERO_SUBTITLE,
   TOP_PERFORMERS_LIST_UPDATED_AT,
@@ -82,13 +86,15 @@ export function MutualFundTopPerformersMobile({
   const [legendOpen, setLegendOpen] = useState(false);
   const [viewActive, setViewActive] = useState(false);
   const [highlightActive, setHighlightActive] = useState(false);
+  const [query, setQuery] = useState("");
   const isPhone = useIsMobile();
 
   const funds = useMemo(() => getMobileGroupGridFunds(groupId, false, 16), [groupId]);
-  const listCountLabel = `${funds.length} รายการ`;
   const bothOrNeitherTag = viewActive === highlightActive;
   const showViewTag = bothOrNeitherTag || viewActive;
   const showHighlightTag = bothOrNeitherTag || highlightActive;
+  const tagFunds = searchFunds(filterFundsByTag(funds, viewActive, highlightActive), query);
+  const listCountLabel = `${tagFunds.length} รายการ`;
 
   return (
     <div className="flex w-full flex-1 flex-col bg-white">
@@ -120,27 +126,41 @@ export function MutualFundTopPerformersMobile({
           onToggleView={() => setViewActive((v) => !v)}
           onToggleHighlight={() => setHighlightActive((v) => !v)}
           onShowLegend={() => setLegendOpen(true)}
+          trailing={
+            <div className="min-w-0 flex-1 lg:w-[320px] lg:flex-none">
+              <SearchInput
+                value={query}
+                onChange={setQuery}
+                onClear={() => setQuery("")}
+                placeholder="ค้นหากองทุน"
+                size="sm"
+                className="w-full"
+              />
+            </div>
+          }
         />
         <MobilePeriodTabs active={period} onChange={setPeriod} />
 
         <p className="px-3 text-sm leading-5 text-[#101828]">{listCountLabel}</p>
 
         <div className="flex w-full flex-col">
-          {funds.map((fund, index) => (
+          {tagFunds.map((fund, index) => (
             <div key={`${fund.id}-${index}`}>
               {index > 0 ? <div className="mx-3 h-px bg-black/10" /> : null}
               <MutualFundListCardMobile
                 fund={fund}
                 onSelect={onFundSelect}
-                showView={showViewTag}
-                showHighlight={showHighlightTag}
+                showView={showViewTag && fundHasViewTag(fund)}
+                showHighlight={showHighlightTag && fundHasHighlightTag(fund)}
               />
             </div>
           ))}
         </div>
 
-        {funds.length === 0 ? (
-          <p className="px-3 text-center text-sm text-[#6a7282]">ไม่พบกองทุนในหมวดนี้</p>
+        {tagFunds.length === 0 ? (
+          <p className="px-3 text-center text-sm text-[#6a7282]">
+                {query.trim() ? `ไม่พบกองทุนที่ตรงกับ "${query.trim()}"` : "ไม่พบกองทุนในหมวดนี้"}
+              </p>
         ) : null}
       </div>
 
