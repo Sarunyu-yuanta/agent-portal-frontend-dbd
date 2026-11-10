@@ -312,12 +312,6 @@ function DashboardPageInner() {
             {/* Stacked — each card full width. Flex not grid for the reason the
                 hero row gives about `system-one`'s `.grid-cols-1`. */}
             <div className="flex flex-col gap-4 xl:gap-5">
-              <NbaComingSoonCard
-                rows={nbaRows}
-                message={NBA_MESSAGE_BOOK}
-                onDismiss={dismissNba}
-              />
-
               <Card variant="default" className="gap-4">
                 <RiskAlertsPanel
                   rows={riskRows}
@@ -330,6 +324,12 @@ function DashboardPageInner() {
                   onSeverityChange={(next) => updateQuery({ risk: next })}
                 />
               </Card>
+
+              <NbaComingSoonCard
+                rows={nbaRows}
+                message={NBA_MESSAGE_BOOK}
+                onDismiss={dismissNba}
+              />
             </div>
 
           </div>
