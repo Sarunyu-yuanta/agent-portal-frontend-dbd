@@ -51,10 +51,10 @@ function RecommendedBondCard({
         <div className="flex w-full items-start gap-2">
           <CardLogo card={card} />
           <div className="flex min-w-0 flex-1 flex-col items-start">
-            <p className="w-full truncate text-sm font-semibold leading-[22px] text-[rgba(0,0,0,0.75)]">
+            <p className="w-full truncate text-sm font-semibold leading-[26px] text-[rgba(0,0,0,0.75)]">
               {card.title}
             </p>
-            <div className="flex w-full items-start gap-0.5 whitespace-nowrap text-xs leading-[18px] text-[rgba(0,0,0,0.6)]">
+            <div className="flex w-full items-start gap-0.5 whitespace-nowrap text-xs leading-[22px] text-[rgba(0,0,0,0.6)]">
               <span>Ticker:</span>
               <span>{card.ticker}</span>
             </div>
@@ -63,19 +63,19 @@ function RecommendedBondCard({
 
         <div className="flex w-full shrink-0 items-start justify-center gap-4 rounded-lg bg-[#f9f9f9] p-2">
           <div className="flex min-w-0 flex-1 flex-col items-center self-stretch text-center">
-            <p className="w-full text-xs leading-[18px] text-[rgba(0,0,0,0.4)]">
+            <p className="w-full text-xs leading-[22px] text-[rgba(0,0,0,0.4)]">
               ผลตอบแทนโดยประมาณ
             </p>
-            <p className="w-full text-sm font-semibold leading-[22px] text-[rgba(0,0,0,0.75)]">
+            <p className="w-full text-sm font-semibold leading-[26px] text-[rgba(0,0,0,0.75)]">
               {card.estimatedYield}
             </p>
           </div>
           <div className="w-px shrink-0 self-stretch bg-black/10" />
           <div className="flex min-w-0 flex-1 flex-col items-center self-stretch text-center">
-            <p className="w-full text-xs leading-[18px] text-[rgba(0,0,0,0.4)]">
+            <p className="w-full text-xs leading-[22px] text-[rgba(0,0,0,0.4)]">
               วันครบกำหนด
             </p>
-            <p className="w-full text-sm font-semibold leading-[22px] text-[rgba(0,0,0,0.75)]">
+            <p className="w-full text-sm font-semibold leading-[26px] text-[rgba(0,0,0,0.75)]">
               {card.maturityRange}
             </p>
           </div>
@@ -114,7 +114,7 @@ export function GlobalBondDetailRecommended({
           src="/products/global-bond/global-bond-sparkle.svg"
           className="size-5 shrink-0"
         />
-        <h3 className="text-sm font-semibold leading-[22px] text-[rgba(0,0,0,0.85)] md:text-xl md:font-bold md:leading-7 md:tracking-[-0.5px]">
+        <h3 className="text-sm font-semibold leading-[26px] text-[rgba(0,0,0,0.85)] md:text-xl md:font-bold md:leading-[32px] md:tracking-[-0.5px]">
           Recommended Bonds
         </h3>
       </div>

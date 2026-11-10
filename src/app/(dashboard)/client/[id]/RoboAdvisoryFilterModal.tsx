@@ -19,7 +19,7 @@ import type { RoboRiskTier } from "./robo-risk-level";
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex w-full flex-col gap-2">
-      <p className="text-base leading-5 text-[#4a5565]">{title}</p>
+      <p className="text-base leading-[24px] text-[#4a5565]">{title}</p>
       {children}
     </div>
   );
@@ -169,7 +169,7 @@ export function RoboAdvisoryFilterModal({ open, filters, onClose, onApply }: Rob
         actionLabel="Close"
         onActionClick={onClose}
         showHandle
-        contentClassName="flex max-h-[calc(100dvh-8rem)] flex-col gap-6 overflow-y-auto pb-2"
+        contentClassName="flex max-h-[calc(var(--dvh)*100-8rem)] flex-col gap-6 overflow-y-auto pb-2"
       >
         <FilterContent {...filterContentProps} />
         <FilterFooter onClear={clearDraft} onApply={applyDraft} />
@@ -194,7 +194,7 @@ export function RoboAdvisoryFilterModal({ open, filters, onClose, onApply }: Rob
         aria-labelledby="robo-advisory-filter-title"
       >
         <div className="flex w-full items-center gap-4 px-4 pt-4">
-          <p id="robo-advisory-filter-title" className="min-w-0 flex-1 text-lg font-bold leading-6 text-[#101828]">
+          <p id="robo-advisory-filter-title" className="min-w-0 flex-1 text-lg font-bold leading-[28px] text-[#101828]">
             {title}
           </p>
           <button

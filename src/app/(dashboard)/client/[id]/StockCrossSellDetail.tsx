@@ -68,7 +68,7 @@ export function StockCrossSellDetail({
             <p className="text-2xl font-bold leading-9 text-white [text-shadow:0px_1px_3px_rgba(0,0,0,0.05),0px_1px_2px_rgba(0,0,0,0.1)]">
               {config.title}
             </p>
-            <p className="whitespace-pre-line text-base leading-5 text-white">{config.description}</p>
+            <p className="whitespace-pre-line text-base leading-[24px] text-white">{config.description}</p>
           </div>
           <div
             className="pointer-events-none absolute right-0 top-[18px] hidden size-[237px] rounded-full bg-white/20 md:block"
@@ -108,7 +108,7 @@ export function StockCrossSellDetail({
                 Filter
               </span>
               {filterCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-[#0a6ee7] text-[10px] font-medium text-white">
+                <span className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-[#0a6ee7] text-meta font-medium text-white">
                   {filterCount}
                 </span>
               )}

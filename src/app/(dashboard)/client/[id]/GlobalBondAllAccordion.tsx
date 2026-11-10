@@ -80,16 +80,16 @@ export function GlobalBondAllAccordion({ bonds }: { bonds: GlobalBondRow[] }) {
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <IssuerLogo src={row.logo} />
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate text-sm font-bold leading-5 text-[#4a5565]">
+                  <span className="truncate text-sm font-bold leading-[24px] text-[#4a5565]">
                     {row.name}
                   </span>
                   <div className="flex min-h-[18px] items-center gap-0.5">
-                    <span className="text-xs leading-4 text-[#4a5565]">{row.isin}</span>
+                    <span className="text-xs leading-[20px] text-[#4a5565]">{row.isin}</span>
                     {row.topPick && <TopPickTag small />}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
-                  <span className="text-sm font-normal leading-5 text-[#4a5565]">{row.yieldPct}</span>
+                  <span className="text-sm font-normal leading-[24px] text-[#4a5565]">{row.yieldPct}</span>
                   {expanded ? (
                     <CaretUpIcon size={22} className="text-[#4a5565]" />
                   ) : (
@@ -107,7 +107,7 @@ export function GlobalBondAllAccordion({ bonds }: { bonds: GlobalBondRow[] }) {
                   <DetailRow label="ผลตอบแทนโดยประมาณ" value={row.yieldPct} />
                   <DetailRow label="วันครบกำหนด" value={row.maturity} />
                   <DetailRow label="ระยะเวลา (ปี)" value={row.duration} />
-                  <div className="flex w-full items-start gap-3 text-sm leading-5">
+                  <div className="flex w-full items-start gap-3 text-sm leading-[24px]">
                     <span className="flex-1 text-[#4a5565]">เอกสารที่เกี่ยวข้อง</span>
                     <button
                       type="button"

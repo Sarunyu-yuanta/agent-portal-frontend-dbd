@@ -34,7 +34,7 @@ export function EmptyState({
           <button
             type="button"
             onClick={action.onClick}
-            className="mt-1 text-[13px] font-medium text-primary-action hover:underline cursor-pointer"
+            className="mt-1 text-body-sm font-medium text-primary-action hover:underline cursor-pointer"
           >
             {action.label}
           </button>

@@ -132,7 +132,7 @@ export function StatusDisc({ variant, children }: { variant: Tone; children: Rea
 export function SheetBlock({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      {title && <p className="pb-1 text-[13px] font-bold text-foreground">{title}</p>}
+      {title && <p className="pb-1 text-body-sm font-bold text-foreground">{title}</p>}
       {children}
     </div>
   );
@@ -175,13 +175,13 @@ export function SheetRow({
           up, since the sentence is the longer of the two. */}
       <span className={`flex flex-col gap-0.5 ${hint ? "min-w-0" : "shrink-0"}`}>
         <span className="flex flex-wrap items-baseline gap-x-2">
-          <span className="text-[12px] text-muted-foreground">{label}</span>
+          <span className="text-label text-muted-foreground">{label}</span>
           {action}
         </span>
-        {hint && <span className="text-[11px] leading-4 text-muted-foreground/80">{hint}</span>}
+        {hint && <span className="text-meta leading-[20px] text-muted-foreground/80">{hint}</span>}
       </span>
       {children ?? (
-        <span className={`truncate text-[13px] font-semibold tabular-nums ${valueClassName}`}>
+        <span className={`truncate text-body-sm font-semibold tabular-nums ${valueClassName}`}>
           {value}
         </span>
       )}
@@ -229,7 +229,7 @@ export function CopyRow({ label, value }: { label: string; value: string }) {
             reader. */}
         <span
           aria-live="polite"
-          className={`truncate text-[13px] font-semibold tabular-nums ${
+          className={`truncate text-body-sm font-semibold tabular-nums ${
             copied ? "text-[var(--fill-green-700)]" : "text-foreground"
           }`}
         >
@@ -265,7 +265,7 @@ export function ClientRow({ clientId, name }: { clientId: string; name: string }
         {/* `getInitial`, not the two-letter helpers: the design system's Avatar
             renders one character and drops the rest. */}
         <Avatar type="text" initials={getInitial(name)} size="xs" />
-        <span className="truncate text-[13px] font-semibold text-foreground">{name}</span>
+        <span className="truncate text-body-sm font-semibold text-foreground">{name}</span>
         <CaretRightIcon size={14} className="shrink-0 text-muted-foreground" />
       </Link>
     </SheetRow>

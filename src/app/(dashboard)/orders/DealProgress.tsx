@@ -42,8 +42,8 @@ export function DealProgress({ productId }: { productId: string }) {
   return (
     <div className="flex w-full flex-col gap-3 rounded-xl border border-black/10 bg-white px-4 py-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-xs uppercase leading-4 tracking-wide text-[#6a7282]">{label}</span>
-        <span className="text-lg font-bold leading-6 tabular-nums text-[#101828]">
+        <span className="text-xs uppercase leading-[20px] tracking-wide text-[#6a7282]">{label}</span>
+        <span className="text-lg font-bold leading-[28px] tabular-nums text-[#101828]">
           {money(used)} / {money(target)}{" "}
           <span className="text-sm font-normal text-[#6a7282]">{book.currency}</span>
         </span>
@@ -56,7 +56,7 @@ export function DealProgress({ productId }: { productId: string }) {
         <div className="h-full bg-primary-action" style={{ width: pct(mine) }} />
         <div className="h-full bg-[var(--fill-emerald-400)]" style={{ width: pct(others) }} />
       </div>
-      <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs leading-4 text-[#6a7282]">
+      <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs leading-[20px] text-[#6a7282]">
         <Legend swatch="bg-primary-action" label="ของฉัน" value={money(mine)} />
         <Legend swatch="bg-[var(--fill-emerald-400)]" label="IC อื่น" value={money(others)} />
         <Legend

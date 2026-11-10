@@ -66,7 +66,7 @@ export function FilterDropdown<T extends string>({
       </select>
       <div className="flex w-full min-h-[32px] items-center gap-1.5 rounded-lg border border-[rgba(0,0,0,0.08)] bg-white px-3 py-2">
         <span
-          className={`min-w-0 flex-1 truncate text-sm leading-[22px] ${
+          className={`min-w-0 flex-1 truncate text-sm leading-[26px] ${
             isPlaceholder ? "text-[rgba(0,0,0,0.3)]" : "text-[#101828]"
           }`}
         >
@@ -108,7 +108,7 @@ export function GlobalBondAllFilterPanel({
       <button
         type="button"
         onClick={onClear}
-        className="self-start cursor-pointer rounded-lg border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-2 text-sm font-medium leading-[22px] text-[#0a6ee7] whitespace-nowrap"
+        className="self-start cursor-pointer rounded-lg border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-2 text-sm font-medium leading-[26px] text-[#0a6ee7] whitespace-nowrap"
       >
         ล้างตัวเลือกทั้งหมด
       </button>

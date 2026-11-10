@@ -89,7 +89,7 @@ export function ProductTable({
               onClick={() => onRowClick(row)}
             >
               <TableCell>
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-body-sm text-muted-foreground">
                   {originalIndexMap.get(row.label) ?? 0}
                 </p>
               </TableCell>
@@ -99,17 +99,17 @@ export function ProductTable({
                     {/* eslint-disable-next-line @next/next/no-img-element -- SVG status dot; the image optimizer rejects SVG */}
                     <img alt="" className="block size-full max-w-none" src={row.statusIcon} />
                   </span>
-                  <p className="text-[14px] font-semibold text-foreground truncate">{displayAssetLabel(row.label)}</p>
+                  <p className="text-body font-semibold text-foreground truncate">{displayAssetLabel(row.label)}</p>
                 </div>
               </TableCell>
               <TableCell>
-                <p className="text-[14px] font-semibold text-foreground">{row.clientCount}</p>
+                <p className="text-body font-semibold text-foreground">{row.clientCount}</p>
               </TableCell>
               <TableCell>
-                <p className="text-[14px] font-semibold text-foreground">{formatThbAmount(row.totalAmountThb)}</p>
+                <p className="text-body font-semibold text-foreground">{formatThbAmount(row.totalAmountThb)}</p>
               </TableCell>
               <TableCell>
-                <p className="text-[14px] font-semibold text-foreground">{row.avgAllocationPct.toFixed(1)}%</p>
+                <p className="text-body font-semibold text-foreground">{row.avgAllocationPct.toFixed(1)}%</p>
               </TableCell>
             </TableRow>
           ))}

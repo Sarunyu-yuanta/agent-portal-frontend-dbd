@@ -45,14 +45,14 @@ function SectorHeroBand({ page }: { page: IndustrySectorPage }) {
         </span>
         <div className="relative flex min-w-0 flex-1 flex-col gap-2">
           <p className="truncate text-2xl font-bold leading-9 text-[#101828]">{sector.name}</p>
-          <p className="text-base leading-5 text-[#4a5565]">{description}</p>
+          <p className="text-base leading-[24px] text-[#4a5565]">{description}</p>
         </div>
         <div className="relative flex shrink-0 items-center gap-2 whitespace-nowrap">
           {trend === "flat" ? (
-            <span className="text-base leading-5 text-[#6a7282]">{sector.changeAmount}</span>
+            <span className="text-base leading-[24px] text-[#6a7282]">{sector.changeAmount}</span>
           ) : (
             <>
-              <span className="text-base leading-5" style={{ color: trend === "up" ? "#016630" : "#c10007" }}>
+              <span className="text-base leading-[24px]" style={{ color: trend === "up" ? "#016630" : "#c10007" }}>
                 {sector.changeAmount}
               </span>
               <HeroPercentPill trend={trend} percentBody={sector.changePercent} />

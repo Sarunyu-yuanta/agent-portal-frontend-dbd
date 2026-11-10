@@ -28,7 +28,7 @@ const NOWRAP = "whitespace-nowrap";
 
 /** Standard right-aligned-value money cell. */
 const money = (n: number) => (
-  <p className="text-[14px] font-semibold text-foreground">{formatThbAmount(n)}</p>
+  <p className="text-body font-semibold text-foreground">{formatThbAmount(n)}</p>
 );
 
 /** A column whose value is a client's amount in one allocation slice. */
@@ -56,7 +56,7 @@ export const CUSTOMER_COLUMNS: CustomerColumn[] = [
     required: true,
     headerClassName: NOWRAP,
     render: (client) => (
-      <p className="text-[13px] text-muted-foreground font-mono">{client.id}</p>
+      <p className="text-body-sm text-muted-foreground font-mono">{client.id}</p>
     ),
   },
   {
@@ -68,7 +68,7 @@ export const CUSTOMER_COLUMNS: CustomerColumn[] = [
     render: (client, { isPrivate }) => (
       <div className="flex items-center gap-3">
         <Avatar type="text" initials={getInitials(maskName(client.name, isPrivate))} size="s" />
-        <p className="text-[14px] font-semibold text-foreground leading-tight truncate">
+        <p className="text-body font-semibold text-foreground leading-tight truncate">
           {maskName(client.name, isPrivate)}
         </p>
       </div>
@@ -103,7 +103,7 @@ export const CUSTOMER_COLUMNS: CustomerColumn[] = [
     sortKey: "plYtd",
     headerClassName: NOWRAP,
     render: (client) => (
-      <p className={`text-[14px] font-semibold leading-tight ${client.plYtdPct >= 0 ? "text-success" : "text-destructive"}`}>
+      <p className={`text-body font-semibold leading-tight ${client.plYtdPct >= 0 ? "text-success" : "text-destructive"}`}>
         {formatPlYtdPct(client.plYtdPct)}
       </p>
     ),

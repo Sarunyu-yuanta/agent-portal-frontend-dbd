@@ -47,7 +47,7 @@ function DetailTable({ bond }: { bond: FixedIncomeBond }) {
       {rows.map((row, i) => (
         <div
           key={row.label}
-          className={`flex gap-3 items-start px-4 py-2 w-full text-base leading-5 ${
+          className={`flex gap-3 items-start px-4 py-2 w-full text-base leading-[24px] ${
             i % 2 === 0 ? "bg-[#f9fafb]" : "bg-white"
           }`}
         >
@@ -58,7 +58,7 @@ function DetailTable({ bond }: { bond: FixedIncomeBond }) {
                 <button
                   key={doc.label}
                   type="button"
-                  className="inline-flex items-center gap-0.5 text-[#2b7fff] underline border-none bg-transparent p-0 cursor-pointer text-base leading-5"
+                  className="inline-flex items-center gap-0.5 text-[#2b7fff] underline border-none bg-transparent p-0 cursor-pointer text-base leading-[24px]"
                 >
                   {doc.label}
                   <FileTextIcon size={14} className="shrink-0" />
@@ -68,7 +68,7 @@ function DetailTable({ bond }: { bond: FixedIncomeBond }) {
           ) : row.link ? (
             <button
               type="button"
-              className="flex-1 min-w-0 text-left text-[#0a6ee7] underline border-none bg-transparent p-0 cursor-pointer text-base leading-5"
+              className="flex-1 min-w-0 text-left text-[#0a6ee7] underline border-none bg-transparent p-0 cursor-pointer text-base leading-[24px]"
             >
               {row.value}
             </button>
@@ -130,7 +130,7 @@ export function FixedIncomeDetail({
         <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="flex-1 min-w-0 text-lg font-bold leading-[26px] text-[#101828] truncate">
+        <h1 className="flex-1 min-w-0 text-lg font-bold leading-[30px] text-[#101828] truncate">
           Fixed Income
         </h1>
       </div>
@@ -145,7 +145,7 @@ export function FixedIncomeDetail({
             onClick={() => onCompanySelect?.(bond.companyName)}
             className="flex gap-1 items-center w-full pb-2 border-b border-black/10 border-solid border-t-0 border-x-0 bg-transparent p-0 cursor-pointer text-left"
           >
-            <span className="flex-1 min-w-0 text-base leading-5 text-[#4a5565] truncate">
+            <span className="flex-1 min-w-0 text-base leading-[24px] text-[#4a5565] truncate">
               {bond.fullCompanyName}
             </span>
             <CaretDoubleRightIcon size={20} className="shrink-0 text-[#101828]" />
@@ -155,17 +155,17 @@ export function FixedIncomeDetail({
             <div className="flex gap-3 items-center w-full">
               <BondLogo src={BOND_LOGOS[bond.logoIdx]} logoCrop={bond.logoCrop} className="size-12 rounded-md" />
               <div className="flex flex-1 min-w-0 flex-col gap-1">
-                <p className="text-lg font-bold leading-6 text-[#101828] truncate w-full">{bond.symbol}</p>
+                <p className="text-lg font-bold leading-[28px] text-[#101828] truncate w-full">{bond.symbol}</p>
                 <div className="flex flex-wrap gap-2 items-center">
                   <StatusTag status={bond.status} label={bond.statusLabel} />
-                  <span className="inline-flex items-center justify-center px-2 py-1 rounded bg-[#f3f4f6] text-xs leading-4 text-[#4a5565] whitespace-nowrap">
+                  <span className="inline-flex items-center justify-center px-2 py-1 rounded bg-[#f3f4f6] text-xs leading-[20px] text-[#4a5565] whitespace-nowrap">
                     {bond.bondCategory}
                   </span>
                 </div>
               </div>
               <div className="flex flex-col gap-1 items-end shrink-0">
-                <p className="text-lg font-bold leading-6 text-[#008236] whitespace-nowrap">{bond.ytm}</p>
-                <p className="text-sm leading-5 text-[#4a5565]">YTM</p>
+                <p className="text-lg font-bold leading-[28px] text-[#008236] whitespace-nowrap">{bond.ytm}</p>
+                <p className="text-sm leading-[24px] text-[#4a5565]">YTM</p>
               </div>
             </div>
 
@@ -188,7 +188,7 @@ export function FixedIncomeDetail({
               <div className="flex flex-col gap-3 items-center w-full">
                 <DetailTable bond={bond} />
                 <DealProgress productId={adapted.id} />
-                <p className="text-sm leading-5 text-[#6a7282] text-center whitespace-nowrap">
+                <p className="text-sm leading-[24px] text-[#6a7282] text-center whitespace-nowrap">
                   อัปเดตล่าสุด {bond.updatedAt}
                 </p>
               </div>

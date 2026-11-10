@@ -19,7 +19,7 @@ function TopPickHeading() {
   return (
     <div className="flex gap-1 items-center w-full px-1 py-0.5 rounded-lg bg-[#fdefe6]">
       <FireIcon size={16} weight="fill" color="#f97316" className="shrink-0" />
-      <span className="text-sm font-bold leading-5 text-[#101828]">Top pick</span>
+      <span className="text-sm font-bold leading-[24px] text-[#101828]">Top pick</span>
     </div>
   );
 }
@@ -42,7 +42,7 @@ export function GlobalBondTab({
       {proposal.ui}
       {/* Tablet + mobile — accordion cards */}
       <div className="lg:hidden flex flex-col gap-6 items-center w-full max-w-[1280px] mx-auto px-4 md:px-8 pt-6 pb-10">
-        <h2 className="w-full text-lg font-bold leading-6 text-[#101828]">
+        <h2 className="w-full text-lg font-bold leading-[28px] text-[#101828]">
           ตราสารหนี้ต่างประเทศแนะนำ
         </h2>
         <div className="flex flex-col gap-2 w-full">
@@ -51,8 +51,8 @@ export function GlobalBondTab({
         </div>
         <div className="flex flex-col gap-3 w-full">
           <div className="flex items-center justify-between w-full gap-3">
-            <h3 className="text-sm font-bold leading-5 text-[#101828]">ตราสารหนี้แนะนำ</h3>
-            <span className="text-xs leading-4 text-[#6a7282] whitespace-nowrap shrink-0">
+            <h3 className="text-sm font-bold leading-[24px] text-[#101828]">ตราสารหนี้แนะนำ</h3>
+            <span className="text-xs leading-[20px] text-[#6a7282] whitespace-nowrap shrink-0">
               อัปเดตล่าสุด 25 Aug 2026 - 09.00
             </span>
           </div>
@@ -71,7 +71,7 @@ export function GlobalBondTab({
 
       {/* Desktop — tables */}
       <div className="hidden lg:flex flex-col gap-6 items-center w-full max-w-[1280px] mx-auto px-4 md:px-8 lg:px-6 pt-6 pb-10">
-        <h2 className="w-full text-lg font-bold leading-6 text-[#101828]">
+        <h2 className="w-full text-lg font-bold leading-[28px] text-[#101828]">
           ตราสารหนี้ต่างประเทศแนะนำ
         </h2>
         <div className="flex flex-col gap-2 w-full">
@@ -80,8 +80,8 @@ export function GlobalBondTab({
         </div>
         <div className="flex flex-col gap-4 w-full">
           <div className="flex items-end justify-between w-full gap-3">
-            <h3 className="text-base font-bold leading-6 text-[#101828]">ตราสารหนี้แนะนำ</h3>
-            <span className="text-sm leading-5 text-[#6a7282] whitespace-nowrap shrink-0">
+            <h3 className="text-base font-bold leading-[28px] text-[#101828]">ตราสารหนี้แนะนำ</h3>
+            <span className="text-sm leading-[24px] text-[#6a7282] whitespace-nowrap shrink-0">
               อัปเดตล่าสุด 25 August 2026 - 09.00
             </span>
           </div>

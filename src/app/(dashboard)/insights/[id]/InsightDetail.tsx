@@ -36,7 +36,7 @@ export function InsightDetail({ id }: { id: string }) {
         <p className="type-subtitle-1 text-foreground">ไม่พบบทวิเคราะห์นี้</p>
         <Link
           href="/insights"
-          className="text-[13px] text-primary-action hover:underline"
+          className="text-body-sm text-primary-action hover:underline"
         >
           กลับไปหน้า Insights
         </Link>
@@ -76,7 +76,7 @@ export function InsightDetail({ id }: { id: string }) {
             รายงานฉบับเต็ม
           </p>
         </div>
-        <p className="text-[12px] text-muted-foreground whitespace-nowrap">
+        <p className="text-label text-muted-foreground whitespace-nowrap">
           อ่านฉบับเต็มในไฟล์ PDF
         </p>
       </div>
@@ -119,10 +119,10 @@ export function InsightDetail({ id }: { id: string }) {
           </p>
         </div>
         <div className="flex flex-col gap-1">
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             บทสรุปจาก AI อ้างอิงโดยบทวิเคราะห์
           </p>
-          <p className="text-[14px] text-foreground leading-relaxed">
+          <p className="text-body text-foreground leading-relaxed">
             {detail.aiSummary}
           </p>
         </div>
@@ -145,10 +145,10 @@ export function InsightDetail({ id }: { id: string }) {
               className="w-16 h-16 rounded-lg object-cover shrink-0"
             />
             <div className="flex flex-col min-w-0">
-              <p className="text-[14px] font-bold text-foreground">
+              <p className="text-body font-bold text-foreground">
                 {analyst.name}
               </p>
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-label text-muted-foreground">
                 {analyst.title}
               </p>
             </div>
@@ -190,7 +190,7 @@ export function InsightDetail({ id }: { id: string }) {
           <p className="type-subtitle-2 text-muted-foreground">
             {detail.subtitle}
           </p>
-          <p className="text-[13px] text-muted-foreground sm:shrink-0">
+          <p className="text-body-sm text-muted-foreground sm:shrink-0">
             {detail.date}
           </p>
         </div>
@@ -207,7 +207,7 @@ export function InsightDetail({ id }: { id: string }) {
             <h2 className="type-subtitle-1 font-bold text-foreground">
               {section.heading}
             </h2>
-            <p className="text-[14px] text-foreground leading-relaxed">
+            <p className="text-body text-foreground leading-relaxed">
               {section.content}
             </p>
             {section.image && (

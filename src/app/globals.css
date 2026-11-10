@@ -234,6 +234,26 @@
         }
     }
 
+    /* The app's own type scale — use these instead of `text-[Npx]`.
+       Sized for the portal's users (many older ICs): nothing below 12px, and
+       about two pixels above the design system's defaults. The names are ones
+       `@sarunyu/system-one` never ships, so its unlayered stylesheet cannot
+       override them the way it overrides a same-named `text-[12px]`. (Check
+       before adding one: the library's `text-caption`, for instance, is a
+       colour.) No line
+       height on purpose: these replaced bare `text-[Npx]` classes, which
+       inherited theirs. `typography.css` raises the library's own sizes to
+       match, and `cn` in `lib/utils.ts` knows these are font sizes. */
+    --text-micro: 12px;
+    --text-meta: 13px;
+    --text-label: 14px;
+    --text-body-sm: 15px;
+    --text-body: 16px;
+    --text-body-lg: 17px;
+    --text-title-sm: 18px;
+    --text-title: 20px;
+    --text-title-lg: 22px;
+
     --font-heading: var(--font-sans);
     --font-sans: var(--font-sans);
     --color-sidebar-ring: var(--sidebar-ring);

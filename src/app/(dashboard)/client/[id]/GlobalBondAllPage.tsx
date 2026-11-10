@@ -153,7 +153,7 @@ export function GlobalBondAllPage({ onBack }: { onBack: () => void }) {
         <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
           <ArrowLeftIcon size={24} />
         </Button>
-        <h1 className="flex-1 min-w-0 text-base font-bold leading-6 text-[#101828] text-center truncate">
+        <h1 className="flex-1 min-w-0 text-base font-bold leading-[28px] text-[#101828] text-center truncate">
           All Overseas Bonds
         </h1>
         <div className="size-6 shrink-0" aria-hidden />
@@ -163,7 +163,7 @@ export function GlobalBondAllPage({ onBack }: { onBack: () => void }) {
         <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="flex-1 min-w-0 text-lg font-bold leading-[26px] text-[#101828] truncate">
+        <h1 className="flex-1 min-w-0 text-lg font-bold leading-[30px] text-[#101828] truncate">
           All Overseas Bonds
         </h1>
       </div>
@@ -189,7 +189,7 @@ export function GlobalBondAllPage({ onBack }: { onBack: () => void }) {
                 <p className="text-2xl font-bold leading-9 text-[rgba(0,0,0,0.85)]">
                   All Overseas Bonds
                 </p>
-                <p className="max-w-[211px] text-sm font-semibold leading-[22px] text-[rgba(0,0,0,0.75)]">
+                <p className="max-w-[211px] text-sm font-semibold leading-[26px] text-[rgba(0,0,0,0.75)]">
                   รวม Overseas bonds ทั้งหมด
                   <br />
                   ที่สามารถทำการซื้อขายได้
@@ -198,7 +198,7 @@ export function GlobalBondAllPage({ onBack }: { onBack: () => void }) {
               <button
                 type="button"
                 onClick={() => setFiltersOpen((open) => !open)}
-                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[rgba(0,0,0,0.08)] bg-white py-2.5 pl-3 pr-4 text-sm font-medium leading-[22px] text-[#0a6ee7] cursor-pointer"
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[rgba(0,0,0,0.08)] bg-white py-2.5 pl-3 pr-4 text-sm font-medium leading-[26px] text-[#0a6ee7] cursor-pointer"
               >
                 <FunnelSimpleIcon size={20} />
                 ตัวกรอง
@@ -211,14 +211,14 @@ export function GlobalBondAllPage({ onBack }: { onBack: () => void }) {
                 <p className="text-2xl font-bold leading-9 text-[rgba(0,0,0,0.85)]">
                   All Overseas Bonds
                 </p>
-                <p className="text-sm font-semibold leading-[22px] text-[rgba(0,0,0,0.75)]">
+                <p className="text-sm font-semibold leading-[26px] text-[rgba(0,0,0,0.75)]">
                   รวม Overseas bonds ทั้งหมด ที่สามารถทำการซื้อขายได้
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setFiltersOpen((open) => !open)}
-                className="inline-flex shrink-0 max-w-[343px] items-center gap-1 rounded-lg border border-[rgba(0,0,0,0.08)] bg-white py-2.5 pl-3 pr-4 text-sm font-medium leading-[22px] text-[#0a6ee7] cursor-pointer"
+                className="inline-flex shrink-0 max-w-[343px] items-center gap-1 rounded-lg border border-[rgba(0,0,0,0.08)] bg-white py-2.5 pl-3 pr-4 text-sm font-medium leading-[26px] text-[#0a6ee7] cursor-pointer"
               >
                 <FunnelSimpleIcon size={20} />
                 ตัวกรอง
@@ -248,7 +248,7 @@ export function GlobalBondAllPage({ onBack }: { onBack: () => void }) {
                 <p className="text-[32px] font-bold leading-[48px] text-[rgba(0,0,0,0.85)]">
                   All Overseas Bonds
                 </p>
-                <p className="text-base font-semibold leading-6 text-[rgba(0,0,0,0.75)]">
+                <p className="text-base font-semibold leading-[28px] text-[rgba(0,0,0,0.75)]">
                   รวม Overseas bonds ทั้งหมด ที่สามารถทำการซื้อขายได้
                 </p>
               </div>
@@ -262,7 +262,7 @@ export function GlobalBondAllPage({ onBack }: { onBack: () => void }) {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="shrink-0 cursor-pointer rounded-lg border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-2 text-sm font-medium leading-[22px] text-[#0a6ee7] whitespace-nowrap"
+                  className="shrink-0 cursor-pointer rounded-lg border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-2 text-sm font-medium leading-[26px] text-[#0a6ee7] whitespace-nowrap"
                 >
                   ล้างตัวเลือกทั้งหมด
                 </button>
@@ -273,10 +273,10 @@ export function GlobalBondAllPage({ onBack }: { onBack: () => void }) {
 
         <div className="flex flex-col gap-3 w-full items-center lg:gap-4">
           <div className="flex items-center justify-between w-full gap-3">
-            <p className="text-sm font-bold leading-5 text-[#101828] md:text-base md:leading-6">
+            <p className="text-sm font-bold leading-[24px] text-[#101828] md:text-base md:leading-[28px]">
               จำนวน {displayCount} รายการ
             </p>
-            <span className="text-xs leading-4 text-[#6a7282] whitespace-nowrap shrink-0 md:text-sm md:leading-5">
+            <span className="text-xs leading-[20px] text-[#6a7282] whitespace-nowrap shrink-0 md:text-sm md:leading-[24px]">
               <span className="md:hidden">อัปเดตล่าสุด {updatedAtMobile}</span>
               <span className="hidden md:inline lg:hidden">อัปเดตล่าสุด {updatedAtTablet}</span>
               <span className="hidden lg:inline">อัปเดตล่าสุด {ALL_OVERSEAS_BONDS_UPDATED_AT}</span>

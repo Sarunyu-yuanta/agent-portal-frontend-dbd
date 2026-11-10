@@ -20,9 +20,9 @@ export function PlaybookCardCompact({ strategy, noBorder }: { strategy: (typeof 
       <div className="w-1 shrink-0" style={{ background: CATEGORY_ACCENT_COLOR[cat] ?? "#6b7280" }} />
       <div className="flex-1 p-4 flex flex-col gap-2">
         <Tag text={cat} variant={CATEGORY_TAG_VARIANT[cat] ?? "gray"} size="small" />
-        <p className="text-[14px] font-bold text-foreground leading-snug">{strategy.name}</p>
+        <p className="text-body font-bold text-foreground leading-snug">{strategy.name}</p>
         {rationale && (
-          <p className="text-[12px] text-muted-foreground leading-relaxed line-clamp-1">{rationale}</p>
+          <p className="text-label text-muted-foreground leading-relaxed line-clamp-1">{rationale}</p>
         )}
       </div>
     </div>

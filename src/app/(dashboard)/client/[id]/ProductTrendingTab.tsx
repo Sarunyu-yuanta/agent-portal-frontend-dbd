@@ -47,14 +47,14 @@ function TrendingRow({
       <span className="flex gap-3 items-center w-full">
         <RankBadge rank={item.rank} />
         <span className="flex flex-col min-w-0 flex-1">
-          <span className="text-[14px] font-bold text-foreground truncate">{item.title}</span>
+          <span className="text-body font-bold text-foreground truncate">{item.title}</span>
           <span className="type-caption text-muted-foreground truncate">{item.subtitle}</span>
         </span>
         {/* Sales figures only where there are sales — on a booked desk the
             fill line below is the whole of the right-hand side. */}
         {item.salesThb !== undefined && (
           <span className="flex flex-col items-end shrink-0 gap-0.5">
-            <span className="text-[14px] font-bold text-foreground whitespace-nowrap">
+            <span className="text-body font-bold text-foreground whitespace-nowrap">
               {formatAumThb(item.salesThb)}
             </span>
             <span className="flex items-center gap-1.5">
@@ -199,7 +199,7 @@ export function ProductTrendingTab({
         <div className="flex flex-col gap-2 w-full">
           <div className="flex items-center gap-2">
             <FireIcon size={20} weight="fill" style={{ color: "#f54a00" }} />
-            <p className="font-bold text-[18px] leading-6" style={{ color: "rgba(0,0,0,0.75)" }}>
+            <p className="font-bold text-title leading-[28px]" style={{ color: "rgba(0,0,0,0.75)" }}>
               Recommended Products
             </p>
           </div>

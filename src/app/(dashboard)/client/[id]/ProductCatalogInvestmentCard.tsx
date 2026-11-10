@@ -131,13 +131,13 @@ export function InvestmentCard({
           <div className="flex flex-col flex-1 min-w-0 whitespace-nowrap">
             <p
               className="font-bold truncate"
-              style={{ color: "#101828", fontSize: 16, lineHeight: "24px" }}
+              style={{ color: "#101828", fontSize: 18, lineHeight: "28px" }}
             >
               {name}
             </p>
             <p
               className="truncate"
-              style={{ color: "#6a7282", fontSize: 12, lineHeight: "16px" }}
+              style={{ color: "#6a7282", fontSize: 14, lineHeight: "20px" }}
             >
               {desc}
             </p>
@@ -168,12 +168,12 @@ export function InvestmentCard({
           }}
         >
           <div className="flex flex-col items-center flex-1 min-w-0 text-center">
-            <p style={{ color: "#6a7282", fontSize: 12, lineHeight: "16px" }}>
+            <p style={{ color: "#6a7282", fontSize: 14, lineHeight: "20px" }}>
               Coupon
             </p>
             <p
               className="font-bold"
-              style={{ color: "#101828", fontSize: 16, lineHeight: "24px" }}
+              style={{ color: "#101828", fontSize: 18, lineHeight: "28px" }}
             >
               {coupon}
             </p>
@@ -186,12 +186,12 @@ export function InvestmentCard({
             }}
           />
           <div className="flex flex-col items-center flex-1 min-w-0 text-center">
-            <p style={{ color: "#6a7282", fontSize: 12, lineHeight: "16px" }}>
+            <p style={{ color: "#6a7282", fontSize: 14, lineHeight: "20px" }}>
               Tenor
             </p>
             <p
               className="font-bold"
-              style={{ color: "#101828", fontSize: 16, lineHeight: "24px" }}
+              style={{ color: "#101828", fontSize: 18, lineHeight: "28px" }}
             >
               {tenor}
             </p>

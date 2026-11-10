@@ -354,7 +354,7 @@ function MoreRow({
       onClick={onOpen}
       className="flex w-full cursor-pointer items-center gap-2 p-3 text-left transition-colors hover:bg-[var(--fill-p1-100)]"
     >
-      <p className="min-w-0 flex-1 truncate text-[13px] text-foreground">
+      <p className="min-w-0 flex-1 truncate text-body-sm text-foreground">
         <span className="font-bold">
           {sole ? "ดูทั้ง" : "ดูอีก"} {rows.length} รายการ
         </span>
@@ -404,17 +404,17 @@ export function KycRow({
       </RowIcon>
 
       <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-        <p className="truncate text-[14px] font-bold text-foreground">
+        <p className="truncate text-body font-bold text-foreground">
           {row.title}
         </p>
-        <p className="truncate text-[11px] text-muted-foreground">
+        <p className="truncate text-meta text-muted-foreground">
           {row.detail}
         </p>
       </div>
 
       {showBadge ? (
         <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${tone}`}
+          className={`shrink-0 rounded-full px-2 py-0.5 text-meta font-semibold tabular-nums ${tone}`}
         >
           {countdownLabel(row.daysLeft)}
         </span>

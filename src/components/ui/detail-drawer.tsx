@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 /** Standard right-side drawer widths used across the dashboard. */
 const SIZE_CLASSES = {
   /** Client / product / nine-box detail drawers. */
-  wide: "md:w-[55vw] md:max-w-[55vw] lg:w-[40vw] lg:max-w-[40vw] xl:w-[30vw] xl:max-w-[30vw]",
+  wide: "md:w-[calc(var(--vw)*55)] md:max-w-[calc(var(--vw)*55)] lg:w-[calc(var(--vw)*40)] lg:max-w-[calc(var(--vw)*40)] xl:w-[calc(var(--vw)*30)] xl:max-w-[calc(var(--vw)*30)]",
   /** Compact side panels (insight / KYC detail). */
   narrow: "sm:w-[400px] sm:max-w-[400px]",
   /** Slightly wider compact panel (client intelligence). */

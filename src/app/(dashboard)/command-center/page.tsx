@@ -300,7 +300,7 @@ function DashboardPageInner() {
                 <h2 className="type-h5 font-bold text-primary-action">
                   Hello, {NOTE_AUTHOR.split(" ")[0]}
                 </h2>
-                <p className="text-[12.5px] text-primary-action/70">{thaiFullDate(today)}</p>
+                <p className="text-label text-primary-action/70">{thaiFullDate(today)}</p>
                 </Card>
               </div>
 

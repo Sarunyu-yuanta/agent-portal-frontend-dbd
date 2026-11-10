@@ -52,7 +52,7 @@ export function CatalogDetailBackHeader({
         >
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="min-w-0 flex-1 truncate text-lg font-bold leading-[26px] text-[#101828] lg:leading-7">
+        <h1 className="min-w-0 flex-1 truncate text-lg font-bold leading-[30px] text-[#101828] lg:leading-7">
           {title}
         </h1>
       </div>
@@ -241,7 +241,7 @@ export function CatalogDetailTextTabs<T extends string>({
               // already where you are, so there is nothing to invite. Trailing
               // `!` because system-one ships its base utilities unlayered,
               // where they outrank a `hover:` variant.
-              className={`flex cursor-pointer items-center justify-center gap-1.5 border-b-[1.5px] px-3 py-2.5 text-sm font-bold leading-5 whitespace-nowrap transition-colors ${
+              className={`flex cursor-pointer items-center justify-center gap-1.5 border-b-[1.5px] px-3 py-2.5 text-sm font-bold leading-[24px] whitespace-nowrap transition-colors ${
                 fill ? "min-w-[80px] flex-1" : "shrink-0"
               } ${
                 active

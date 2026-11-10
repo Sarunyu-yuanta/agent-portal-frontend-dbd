@@ -33,22 +33,22 @@ export function IncomeTracker() {
           <p className="type-caption text-muted-foreground">Est. Commission (YTD)</p>
           <div className="flex items-baseline gap-2.5">
             <p className="type-h3 text-foreground leading-none">฿{total.toFixed(1)}M</p>
-            <span className="text-[11px] text-muted-foreground">+฿2.4M vs last Q</span>
+            <span className="text-meta text-muted-foreground">+฿2.4M vs last Q</span>
           </div>
         </div>
 
         {/* Revenue by product — horizontal bars */}
         <div className="flex flex-col gap-1.5">
-          <p className="text-[11px] font-semibold text-muted-foreground">Revenue by Product Type</p>
+          <p className="text-meta font-semibold text-muted-foreground">Revenue by Product Type</p>
           <div className="flex flex-col gap-2.5 mt-1">
             {mockPerformanceData.incomeByProduct.map((d) => (
               <div key={d.product} className="flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: PRODUCT_COLORS[d.product] }} />
-                    <span className="text-[12px] text-foreground">{d.product}</span>
+                    <span className="text-label text-foreground">{d.product}</span>
                   </div>
-                  <span className="text-[12px] font-semibold text-foreground tabular-nums">฿{d.revenue}M</span>
+                  <span className="text-label font-semibold text-foreground tabular-nums">฿{d.revenue}M</span>
                 </div>
                 <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                   <div
@@ -81,7 +81,7 @@ export function PipelineCoverage() {
         <div className="flex flex-col gap-2 p-3.5 rounded-xl border border-border bg-muted/30">
           <div className="flex items-start gap-2">
             <SparkleIcon size={13} weight="fill" className="text-primary-action shrink-0 mt-0.5" />
-            <p className="text-[12px] text-foreground leading-relaxed">
+            <p className="text-label text-foreground leading-relaxed">
               Your pipeline can cover <span className="font-semibold">90% of your revenue gap</span> if executed. Focus on closing the 2 deals in Negotiation.
             </p>
           </div>
@@ -93,8 +93,8 @@ export function PipelineCoverage() {
             { label: "Weighted Value",   value: "฿8.2M" },
           ].map((s) => (
             <div key={s.label} className="flex flex-col gap-0.5 p-3 rounded-xl bg-muted">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</p>
-              <p className="text-[18px] font-semibold text-foreground leading-none">{s.value}</p>
+              <p className="text-meta font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</p>
+              <p className="text-title font-semibold text-foreground leading-none">{s.value}</p>
             </div>
           ))}
         </div>
@@ -115,14 +115,14 @@ export function CrossSellDiagnostics() {
         <div className="flex flex-col divide-y divide-border">
           <div className="flex items-center justify-between gap-4 py-3.5">
             <div>
-              <p className="text-[13px] font-medium text-foreground">Single Product Clients</p>
+              <p className="text-body-sm font-medium text-foreground">Single Product Clients</p>
               <p className="type-caption text-muted-foreground mt-0.5">High flight risk</p>
             </div>
             <p className="text-[24px] font-semibold text-destructive leading-none">42%</p>
           </div>
           <div className="flex items-center justify-between gap-4 py-3.5">
             <div>
-              <p className="text-[13px] font-medium text-foreground">Multi-Product Clients (3+)</p>
+              <p className="text-body-sm font-medium text-foreground">Multi-Product Clients (3+)</p>
               <p className="type-caption text-muted-foreground mt-0.5">Highly retained</p>
             </div>
             <p className="text-[24px] font-semibold text-success leading-none">18%</p>
@@ -131,7 +131,7 @@ export function CrossSellDiagnostics() {
 
         <div className="flex items-center gap-2 pt-1">
           <WarningCircleIcon size={12} weight="fill" className="text-[var(--text-warning-primary)] shrink-0" />
-          <p className="text-[11px] text-muted-foreground">Over-reliance on Equities (62% of book).</p>
+          <p className="text-meta text-muted-foreground">Over-reliance on Equities (62% of book).</p>
         </div>
       </div>
     </Card>
@@ -204,19 +204,19 @@ export function OutcomeSimulator() {
           <LightningIcon size={15} weight="fill" className="text-muted-foreground" />
           <p className="type-subtitle-1 text-foreground">Outcome Simulator</p>
         </div>
-        <p className="text-[12px] text-muted-foreground -mt-2">Adjust closed deals to see impact on Q2 target.</p>
+        <p className="text-label text-muted-foreground -mt-2">Adjust closed deals to see impact on Q2 target.</p>
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[12px] font-medium text-foreground">Deals Closed from Pipeline</p>
-            <span className="text-[13px] font-semibold text-foreground tabular-nums">
+            <p className="text-label font-medium text-foreground">Deals Closed from Pipeline</p>
+            <span className="text-body-sm font-semibold text-foreground tabular-nums">
               {deals} {deals === 1 ? "deal" : "deals"}
             </span>
           </div>
           <div className="px-3">
             <Slider value={deals} onChange={setDeals} min={0} max={10} showSteps size="lg" />
           </div>
-          <div className="flex items-center justify-between px-3 text-[10px] text-muted-foreground">
+          <div className="flex items-center justify-between px-3 text-meta text-muted-foreground">
             <span>0</span><span>All 10</span>
           </div>
         </div>

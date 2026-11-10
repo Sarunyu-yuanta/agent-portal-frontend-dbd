@@ -155,7 +155,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex h-9 w-full cursor-pointer items-center justify-center gap-1 rounded-full border py-2 pl-2 pr-3 text-sm leading-5 transition-colors ${
+      className={`flex h-9 w-full cursor-pointer items-center justify-center gap-1 rounded-full border py-2 pl-2 pr-3 text-sm leading-[24px] transition-colors ${
         active
           ? "border-[#0a6ee7] bg-[#f3f8fe] text-[#0a6ee7] hover:bg-[#e4f0fd]!"
           : "border-black/10 bg-white text-[#4a5565] hover:bg-black/[0.03]!"
@@ -182,7 +182,7 @@ function FilterSection({
   return (
     <div className={`flex w-full flex-col ${compact ? "gap-3" : "gap-4"}`}>
       <div className="flex w-full items-center justify-between gap-2">
-        <p className="text-sm font-bold leading-5 text-[#101828]">{title}</p>
+        <p className="text-sm font-bold leading-[24px] text-[#101828]">{title}</p>
         <Button variant="plain" size="xs" onClick={onClear} className="shrink-0">
           ล้าง
         </Button>
@@ -378,7 +378,7 @@ export function MutualFundFilterBottomSheet({
       showHeader
       rightSide="icon"
       rightIcon={<XIcon size={18} weight="bold" />}
-      contentClassName="mx-[-16px] flex max-h-[calc(100dvh-8rem)] flex-col overflow-y-auto px-4 pt-4"
+      contentClassName="mx-[-16px] flex max-h-[calc(var(--dvh)*100-8rem)] flex-col overflow-y-auto px-4 pt-4"
     >
       <MutualFundFilterContent draft={draft} setDraft={setDraft} />
       {/* Figma 360:78598 — footer stays pinned while the chips scroll under it */}
@@ -431,9 +431,9 @@ export function MutualFundFilterModal({
           title="ค้นหากองทุนที่คุณสนใจ"
           showClose
           onClose={onClose}
-          className="!max-w-[726px] w-[calc(100vw-3rem)]"
+          className="!max-w-[726px] w-[calc(var(--vw)*100-3rem)]"
         >
-          <div className="mx-[-16px] max-h-[70vh] overflow-y-auto px-4 pb-2">
+          <div className="mx-[-16px] max-h-[calc(var(--vh)*70)] overflow-y-auto px-4 pb-2">
             <div className="flex w-full flex-col gap-6">
               <MutualFundFilterContent draft={draft} setDraft={setDraft} />
             </div>

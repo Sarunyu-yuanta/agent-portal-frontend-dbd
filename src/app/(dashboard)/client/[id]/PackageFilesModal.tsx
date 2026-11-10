@@ -117,7 +117,7 @@ export function PackageFilesModal({ product, open, onClose }: PackageFilesModalP
           actionLayout="single"
           primaryLabel="ดาวน์โหลดทั้งหมด (.zip)"
           onPrimaryClick={handleDownload}
-          className="w-[calc(100vw-2rem)] max-w-[480px]"
+          className="w-[calc(var(--vw)*100-2rem)] max-w-[480px]"
         >
           <FileList files={files} slug={slug} />
         </Modal>

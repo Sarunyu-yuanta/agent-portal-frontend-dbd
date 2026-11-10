@@ -132,7 +132,7 @@ export function AlertOverlay({
       <div
         role="dialog"
         aria-modal="true"
-        className="max-h-[75vh] w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-xl"
+        className="max-h-[calc(var(--vh)*75)] w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-xl"
       >
         <AlertDetail
           item={target.item}

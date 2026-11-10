@@ -12,7 +12,7 @@ function AppliedFilterChip({
 }) {
   return (
     <div className="inline-flex h-8 shrink-0 items-center gap-1 overflow-hidden rounded-full border border-primary-action bg-primary-action pl-3 pr-1.5">
-      <span className="whitespace-nowrap text-sm leading-5 text-on-primary-action">{label}</span>
+      <span className="whitespace-nowrap text-sm leading-[24px] text-on-primary-action">{label}</span>
       <button
         type="button"
         aria-label={`ลบ ${label}`}

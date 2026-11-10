@@ -386,14 +386,14 @@ function ClientHubPageInner() {
 
                 <div className="flex flex-wrap-reverse items-center justify-end gap-3">
                   <div className="flex items-center gap-2">
-                    <p className="text-[12px] text-muted-foreground whitespace-nowrap">Show per page</p>
+                    <p className="text-label text-muted-foreground whitespace-nowrap">Show per page</p>
                     <select
                       value={pageSize}
                       onChange={(e) => {
                         setPageSize(Number(e.target.value));
                         setCurrentPage(1);
                       }}
-                      className="text-[12px] border border-border rounded-md px-2 py-1 bg-background text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-action"
+                      className="text-label border border-border rounded-md px-2 py-1 bg-background text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-action"
                     >
                       {PAGE_SIZE_OPTIONS.map((n) => (
                         <option key={n} value={n}>{n}</option>
@@ -401,7 +401,7 @@ function ClientHubPageInner() {
                     </select>
                   </div>
                   <div className="flex items-center gap-3">
-                    <p className="text-[12px] text-muted-foreground">
+                    <p className="text-label text-muted-foreground">
                       Showing{" "}
                       <span className="font-medium text-foreground">
                         {(safePage - 1) * pageSize + 1}

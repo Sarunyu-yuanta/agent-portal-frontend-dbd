@@ -25,7 +25,7 @@ export function AiGuide() {
       {/* Header */}
       <div className="flex items-center gap-2">
         <SparkleIcon size={14} weight="fill" style={{ color: "var(--text-brand-primary)" }} />
-        <p className="text-[13px] font-semibold text-white">AI Compliance Guide</p>
+        <p className="text-body-sm font-semibold text-white">AI Compliance Guide</p>
       </div>
 
       {/* Active alert context */}
@@ -33,23 +33,23 @@ export function AiGuide() {
         className="rounded-xl px-4 py-3 flex flex-col gap-1"
         style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)" }}
       >
-        <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--text-danger-primary)" }}>Active Alert</p>
-        <p className="text-[12px] font-semibold text-white leading-snug">Unsuitable Trade Blocked</p>
-        <p className="text-[11px] leading-snug" style={{ color: "rgba(255,255,255,0.45)" }}>Malee Pongpipat · Risk mismatch</p>
+        <p className="text-micro font-bold uppercase tracking-widest" style={{ color: "var(--text-danger-primary)" }}>Active Alert</p>
+        <p className="text-label font-semibold text-white leading-snug">Unsuitable Trade Blocked</p>
+        <p className="text-meta leading-snug" style={{ color: "rgba(255,255,255,0.45)" }}>Malee Pongpipat · Risk mismatch</p>
       </div>
 
       {/* Resolution steps */}
       <div className="flex flex-col gap-1" style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "16px" }}>
-        <p className="text-[11px] font-semibold text-white mb-2">Resolution Steps</p>
+        <p className="text-meta font-semibold text-white mb-2">Resolution Steps</p>
         {GUIDE_STEPS.map((s) => (
           <div key={s.n} className="flex gap-3 py-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
             <div
               className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
               style={{ background: "rgba(129,140,248,0.15)", border: "1px solid rgba(129,140,248,0.25)" }}
             >
-              <span className="text-[10px] font-bold" style={{ color: "var(--text-brand-primary)" }}>{s.n}</span>
+              <span className="text-meta font-bold" style={{ color: "var(--text-brand-primary)" }}>{s.n}</span>
             </div>
-            <p className="text-[11px] leading-snug flex-1" style={{ color: "rgba(255,255,255,0.65)" }}>{s.text}</p>
+            <p className="text-meta leading-snug flex-1" style={{ color: "rgba(255,255,255,0.65)" }}>{s.text}</p>
           </div>
         ))}
       </div>
@@ -72,8 +72,8 @@ export function AiGuide() {
             >
               <Icon size={14} style={{ color: "rgba(255,255,255,0.45)" }} className="shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-semibold text-white">{l.label}</p>
-                <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>{l.sub}</p>
+                <p className="text-meta font-semibold text-white">{l.label}</p>
+                <p className="text-meta" style={{ color: "rgba(255,255,255,0.35)" }}>{l.sub}</p>
               </div>
               <ArrowRightIcon size={11} style={{ color: "rgba(255,255,255,0.25)" }} className="shrink-0" />
             </button>
@@ -91,7 +91,7 @@ export function AiGuide() {
           placeholder="Ask compliance AI…"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          className="flex-1 bg-transparent text-[12px] text-white placeholder:text-white/30 outline-none"
+          className="flex-1 bg-transparent text-label text-white placeholder:text-white/30 outline-none"
         />
         <button
           className="shrink-0 cursor-pointer transition-opacity hover:opacity-70"

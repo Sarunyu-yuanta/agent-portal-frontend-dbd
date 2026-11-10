@@ -22,9 +22,9 @@ const AVATAR_TEXT_COLOR = "#00A2D9";
  * picked for a single glyph — "+12" at that size overflows the circle.
  */
 const SLOT: Record<StackSize, { box: string; text: string }> = {
-  small: { box: "size-4", text: "text-[7px]" },
-  medium: { box: "size-5", text: "text-[8px]" },
-  large: { box: "size-6", text: "text-[10px]" },
+  small: { box: "size-4", text: "text-micro" },
+  medium: { box: "size-5", text: "text-micro" },
+  large: { box: "size-6", text: "text-meta" },
 };
 
 /**

@@ -117,7 +117,7 @@ export function NoteComposer({
     // `min(...)` rather than a fixed width: this is anchored to a corner button,
     // so on a phone a 26rem panel would be wider than the screen and get shoved
     // around by collision detection.
-    <div className="flex w-[min(88vw,26rem)] flex-col gap-2">
+    <div className="flex w-[min(var(--vw)*88,26rem)] flex-col gap-2">
       <div className="flex items-start justify-between gap-2">
         <p className="type-subtitle-1 font-semibold text-foreground">New note</p>
         {/* The way out, now that clicking away deliberately doesn't close this.
@@ -143,7 +143,7 @@ export function NoteComposer({
 
       {/* Bounded height: the body textarea has no natural ceiling, and a panel
           that grows with the note would run off the top of the viewport. */}
-      <div className="flex max-h-[45vh] min-h-[9rem] flex-col overflow-y-auto">
+      <div className="flex max-h-[calc(var(--vh)*45)] min-h-[9rem] flex-col overflow-y-auto">
         <NoteEditorFields
           titleRef={titleRef}
           title={draft.title}

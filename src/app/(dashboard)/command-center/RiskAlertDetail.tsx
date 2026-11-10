@@ -189,7 +189,7 @@ export function RiskAlertDetail({
               {/* The stamp, not the elapsed figure the rows carry. A list is
                   read for staleness; a compliance record is read for when, and
                   this panel is the record. */}
-              <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+              <span className="shrink-0 text-meta tabular-nums text-muted-foreground">
                 {detectedAtLabel(alert.detectedAt, new Date())}
               </span>
             </div>
@@ -198,7 +198,7 @@ export function RiskAlertDetail({
               {alert.title}
             </p>
 
-            {/* Raw `text-[11px]` rather than `.type-caption`, which sets its own
+            {/* Raw `text-meta` rather than `.type-caption`, which sets its own
                 `font-weight` from a stylesheet loading after `globals.css` — the
                 same trap, sidestepped rather than fought with a trailing `!`. */}
             {/* All that is left of the reference line is the way to the client.
@@ -223,7 +223,7 @@ export function RiskAlertDetail({
             {alert.clientId && (
               <Link
                 href={`/client/${alert.clientId}`}
-                className="inline-flex w-fit items-center gap-0.5 self-start text-[12px] font-semibold text-primary-action no-underline hover:underline"
+                className="inline-flex w-fit items-center gap-0.5 self-start text-label font-semibold text-primary-action no-underline hover:underline"
               >
                 ดูโปรไฟล์ลูกค้า
                 <CaretRightIcon size={12} weight="bold" />
@@ -288,10 +288,10 @@ export function RiskAlertDetail({
                   key={metric.label}
                   className={`${INFO_BOX} flex grow flex-col gap-1 px-3 py-2.5 sm:basis-[calc(50%-0.25rem)]`}
                 >
-                  <p className="text-[11px] text-muted-foreground">{metric.label}</p>
+                  <p className="text-meta text-muted-foreground">{metric.label}</p>
                   <p
                     className={`tabular-nums font-bold text-foreground ${
-                      metric.emphasis ? "text-[16px]" : "text-[14px]"
+                      metric.emphasis ? "text-title-sm" : "text-body"
                     }`}
                   >
                     {metric.value}
@@ -396,7 +396,7 @@ function Section({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[11px] font-semibold text-muted-foreground">{title}</p>
+      <p className="text-meta font-semibold text-muted-foreground">{title}</p>
       {children}
     </div>
   );

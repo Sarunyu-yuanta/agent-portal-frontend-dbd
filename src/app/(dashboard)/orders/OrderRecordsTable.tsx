@@ -34,7 +34,9 @@
  * about the record.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { setQueryState, withQuery } from "@/lib/query-state";
 import {
   Pagination,
   Table,
@@ -231,6 +233,34 @@ export function OrderRecordsTable({
   const offerProduct = openedOffer ? findBookableProduct(openedOffer.book.productId) : undefined;
   const readiness = useRosterReadiness(clients, openedProduct ?? FALLBACK_PRODUCT);
 
+  /**
+   * The order to point at — `?flash=<submissionId>`, set by the bell's order
+   * receipt ("ดูใน Order Management"). Its bookings pulse, then stay tinted,
+   * with the same `.row-just-added` a product's Order tab uses for a booking
+   * just placed.
+   *
+   * Read once and then taken out of the URL, so a refresh or a back-navigation
+   * shows an ordinary list rather than replaying the pulse. Not while loading:
+   * the skeleton is a different instance from the real table, and consuming
+   * the param there would leave the real one nothing to read.
+   */
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [flashId] = useState(() => searchParams.get("flash"));
+  useEffect(() => {
+    if (isLoading || !searchParams.get("flash")) return;
+    setQueryState(withQuery(pathname, searchParams, { flash: null }), "replace");
+  }, [isLoading, pathname, searchParams]);
+  const flashBookingIds = useMemo(() => {
+    if (!flashId) return new Set<string>();
+    for (const book of books) {
+      const submission = book.submissions.find((s) => s.id === flashId);
+      if (submission) return new Set(submission.bookingIds);
+    }
+    return new Set<string>();
+  }, [books, flashId]);
+  const flashRowRef = useRef<HTMLTableRowElement | null>(null);
+
   const rows = useMemo(() => {
     const all = buildRows(books, isPrivate, step, proposals);
     const built = clientId ? all.filter((r) => r.clientId === clientId) : all;
@@ -243,11 +273,32 @@ export function OrderRecordsTable({
     });
   }, [books, isPrivate, step, proposals, sort, clientId]);
 
+  // Land on the page holding the order's first row — once, as soon as the rows
+  // are there. Adjusted during render rather than in an effect, so the first
+  // page never paints first. Paging away afterwards is the IC's own choice.
+  const [flashPaged, setFlashPaged] = useState(false);
+  if (!flashPaged && flashBookingIds.size > 0) {
+    const index = rows.findIndex((r) => r.booking && flashBookingIds.has(r.booking.id));
+    if (index >= 0) {
+      setFlashPaged(true);
+      setPage(Math.floor(index / PAGE_SIZE) + 1);
+    }
+  }
+
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   // Clamped rather than reset: a filter that shortens the list past the current
   // page should land on the last one, not silently on an empty table.
   const current = Math.min(page, totalPages);
   const visible = rows.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+
+  // Bring the order's first row into view — once, on arrival.
+  const flashLanded = useRef(false);
+  useEffect(() => {
+    if (flashLanded.current || !flashRowRef.current) return;
+    flashLanded.current = true;
+    flashRowRef.current.scrollIntoView({ block: "center", behavior: "smooth" });
+  });
+  const firstFlashId = visible.find((r) => r.booking && flashBookingIds.has(r.booking.id))?.id;
 
   return (
     <div className="flex flex-col gap-3">
@@ -320,11 +371,15 @@ export function OrderRecordsTable({
                           }
                         : undefined
                     }
-                    className={
+                    ref={row.id === firstFlashId ? flashRowRef : undefined}
+                    className={[
                       open
                         ? "cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0a6ee7] active:bg-[var(--bg-default-pressed)]"
-                        : undefined
-                    }
+                        : "",
+                      booking && flashBookingIds.has(booking.id) ? "row-just-added" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || undefined}
                   >
                     <TableCell>
                       <p className="type-caption whitespace-nowrap tabular-nums text-muted-foreground">

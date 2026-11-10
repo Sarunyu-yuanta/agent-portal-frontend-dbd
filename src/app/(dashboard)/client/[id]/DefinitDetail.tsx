@@ -116,7 +116,7 @@ function DesktopBackHeader({ onBack }: { onBack: () => void }) {
       <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="size-[34px] shrink-0 p-2">
         <ArrowLeftIcon size={18} />
       </Button>
-      <h1 className="shrink-0 text-lg font-bold leading-6 text-black">Definit x Yuanta</h1>
+      <h1 className="shrink-0 text-lg font-bold leading-[28px] text-black">Definit x Yuanta</h1>
     </div>
   );
 }
@@ -137,9 +137,9 @@ function DefinitStatItem({
   compact?: boolean;
 }) {
   const labelClassName = compact
-    ? "text-center text-xs font-bold leading-4 text-[#101828]"
-    : "text-center text-sm font-bold leading-5 text-[#101828]";
-  const valueTextClassName = compact ? "text-xs leading-4" : "text-sm leading-5";
+    ? "text-center text-xs font-bold leading-[20px] text-[#101828]"
+    : "text-center text-sm font-bold leading-[24px] text-[#101828]";
+  const valueTextClassName = compact ? "text-xs leading-[20px]" : "text-sm leading-[24px]";
 
   return (
     <div className="flex min-w-0 flex-[1_0_0] flex-col items-center gap-1">
@@ -164,7 +164,7 @@ function DefinitStatItem({
 
 function DefinitPlanDescription({ plan }: { plan: DefinitPlan }) {
   return (
-    <div className="text-sm leading-5 text-[#4a5565]">
+    <div className="text-sm leading-[24px] text-[#4a5565]">
       <p className="mb-0">{plan.intro}</p>
       <ol
         className="list-decimal pl-[21px]"
@@ -209,12 +209,12 @@ function DefinitPlanCard({
             <div className="flex flex-col gap-1 pt-1">
               <p
                 className={
-                  isCompact ? "text-[9px] leading-[14px] text-[#4a5565]" : "text-xs leading-4 text-[#4a5565]"
+                  isCompact ? "text-micro leading-[18px] text-[#4a5565]" : "text-xs leading-[20px] text-[#4a5565]"
                 }
               >
                 {DEFINIT_PROVIDER}
               </p>
-              <p className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-lg font-bold leading-6 text-transparent">
+              <p className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-lg font-bold leading-[28px] text-transparent">
                 {plan.name}
               </p>
             </div>
@@ -226,12 +226,12 @@ function DefinitPlanCard({
             <div className="flex min-w-0 flex-1 items-center justify-end gap-1 whitespace-nowrap">
               <p
                 className={
-                  isCompact ? "text-xs font-bold leading-4 text-[#101828]" : "text-sm font-bold leading-5 text-[#101828]"
+                  isCompact ? "text-xs font-bold leading-[20px] text-[#101828]" : "text-sm font-bold leading-[24px] text-[#101828]"
                 }
               >
                 Available Room
               </p>
-              <p className={isCompact ? "text-xs leading-4 text-[#4a5565]" : "text-sm leading-5 text-[#4a5565]"}>
+              <p className={isCompact ? "text-xs leading-[20px] text-[#4a5565]" : "text-sm leading-[24px] text-[#4a5565]"}>
                 {plan.availableRoom}
               </p>
             </div>
@@ -321,7 +321,7 @@ function DefinitHeroMobile({
         <DefinitHeroDecoration compact />
         <div className="relative flex min-w-0 max-w-[75%] flex-col gap-2 text-white">
           <p className="text-2xl font-bold leading-9">Definit x Yuanta</p>
-          <div className="w-full text-sm leading-5">
+          <div className="w-full text-sm leading-[24px]">
             {DEFINIT_MOBILE_HERO_LINES.map((line, index) => (
               <p key={line} className={index < DEFINIT_MOBILE_HERO_LINES.length - 1 ? "mb-0" : undefined}>
                 {line}
@@ -336,7 +336,7 @@ function DefinitHeroMobile({
           <AdvisoryClientBar state={advisory} />
         </div>
         <div className="flex w-full items-center px-4">
-          <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+          <p className="text-base font-bold leading-[28px] text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
         </div>
         <div className="flex w-[343px] max-w-[calc(100%-32px)] flex-col gap-3">
           {plans.map((plan) => (
@@ -372,14 +372,14 @@ function DefinitHeroTablet({
         <DefinitHeroDecoration compact />
         <div className="relative flex min-w-0 max-w-[65%] flex-col gap-2 text-white">
           <p className="text-2xl font-bold leading-9">Definit x Yuanta</p>
-          <p className="text-base leading-5">{DEFINIT_HERO_DESCRIPTION_LINES.join(" ")}</p>
+          <p className="text-base leading-[24px]">{DEFINIT_HERO_DESCRIPTION_LINES.join(" ")}</p>
         </div>
       </div>
 
       <div className="relative z-10 flex w-full flex-col gap-4 px-8">
         <AdvisoryClientBar state={advisory} />
         <div className="flex w-full items-center">
-          <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+          <p className="text-base font-bold leading-[28px] text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
         </div>
         <div className="flex w-full flex-col gap-4">
           {plans.map((plan) => (
@@ -417,7 +417,7 @@ function DefinitHeroDesktop({
           <DefinitHeroDecoration />
           <div className="relative flex min-w-0 max-w-[55%] flex-col gap-2 text-white">
             <p className="text-2xl font-bold leading-9">Definit x Yuanta</p>
-            <div className="text-base font-bold leading-6">
+            <div className="text-base font-bold leading-[28px]">
               {DEFINIT_HERO_DESCRIPTION_LINES.map((line, index) => (
                 <p key={line} className={index < DEFINIT_HERO_DESCRIPTION_LINES.length - 1 ? "mb-0" : undefined}>
                   {line}
@@ -430,7 +430,7 @@ function DefinitHeroDesktop({
       <div className="relative z-10 flex w-full max-w-[884px] flex-col gap-4">
         <AdvisoryClientBar state={advisory} />
         <div className="flex w-full items-center">
-          <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+          <p className="text-base font-bold leading-[28px] text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
         </div>
 
         <div className="flex w-full items-stretch gap-6">
@@ -466,8 +466,8 @@ export function DefinitDetail({ onBack }: { onBack?: () => void }) {
   }, []);
 
   return (
-    <div className="flex w-full flex-1 flex-col max-lg:min-h-[calc(100dvh-60px)] max-lg:overflow-x-clip max-lg:bg-white lg:bg-[#f9fafb] lg:pb-20 lg:pt-2">
-      <div className="flex min-h-[calc(100dvh-60px)] w-full flex-1 flex-col lg:hidden">
+    <div className="flex w-full flex-1 flex-col max-lg:min-h-[calc(var(--dvh)*100-60px)] max-lg:overflow-x-clip max-lg:bg-white lg:bg-[#f9fafb] lg:pb-20 lg:pt-2">
+      <div className="flex min-h-[calc(var(--dvh)*100-60px)] w-full flex-1 flex-col lg:hidden">
         <DefinitMobileBreadcrumb />
         {client ? (
           <>

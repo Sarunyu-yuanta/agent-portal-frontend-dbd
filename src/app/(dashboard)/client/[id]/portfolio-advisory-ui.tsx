@@ -34,7 +34,7 @@ export function PlanSuitabilityBadge({ suitability }: { suitability: PlanSuitabi
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] leading-4 ${
+      className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-meta leading-[20px] ${
         suitable ? "bg-[#dcfce7] text-[#016630]" : "bg-[#fef3c6] text-[#973c00]"
       }`}
     >

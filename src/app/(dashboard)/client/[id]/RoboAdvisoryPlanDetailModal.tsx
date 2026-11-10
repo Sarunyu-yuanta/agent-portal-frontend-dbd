@@ -46,10 +46,10 @@ function StatItem({
         style={labelWidth != null ? { width: labelWidth } : undefined}
       >
         <div className="text-center leading-none">
-          <p className="mb-0 text-xs font-bold leading-4 text-[#101828]">{labelLines[0]}</p>
-          <p className="text-xs font-bold leading-4 text-[#101828]">{labelLines[1]}</p>
+          <p className="mb-0 text-xs font-bold leading-[20px] text-[#101828]">{labelLines[0]}</p>
+          <p className="text-xs font-bold leading-[20px] text-[#101828]">{labelLines[1]}</p>
         </div>
-        <p className={`whitespace-nowrap text-xs leading-4 ${valueClassName ?? "text-[#4a5565]"}`}>{value}</p>
+        <p className={`whitespace-nowrap text-xs leading-[20px] ${valueClassName ?? "text-[#4a5565]"}`}>{value}</p>
       </div>
     </div>
   );
@@ -68,7 +68,7 @@ function DetailRow({
     <div className="flex w-full gap-3 rounded-lg bg-[#f9fafb] px-3 py-2">
       <Image src={iconSrc} alt="" width={24} height={24} className="size-6 shrink-0" />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold leading-5 text-[#101828]">{title}</p>
+        <p className="text-sm font-bold leading-[24px] text-[#101828]">{title}</p>
         {children}
       </div>
     </div>
@@ -94,11 +94,11 @@ function DownloadDocumentsButton({ className }: { className?: string }) {
 
 function PlanSummary({ summary }: { summary: PlanDetailSummary }) {
   if (summary.kind === "paragraph") {
-    return <p className="text-sm leading-5 text-[#4a5565]">{summary.text}</p>;
+    return <p className="text-sm leading-[24px] text-[#4a5565]">{summary.text}</p>;
   }
 
   return (
-    <div className="text-sm leading-5 text-[#4a5565]">
+    <div className="text-sm leading-[24px] text-[#4a5565]">
       <p className="mb-0 whitespace-pre-wrap">{summary.intro}</p>
       <ol className="list-decimal pl-[21px]">
         {summary.factors.map((factor) => (
@@ -128,8 +128,8 @@ function PlanDetailContent({
       <div className="flex w-full flex-col gap-1">
         <div className="flex w-full items-start justify-between gap-3">
           <div className="min-w-0 flex flex-1 flex-col gap-1">
-            <p className="text-[9px] leading-[14px] text-black/60">{plan.provider}</p>
-            <p className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-lg font-bold leading-6 text-transparent">
+            <p className="text-micro leading-[18px] text-black/60">{plan.provider}</p>
+            <p className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-lg font-bold leading-[28px] text-transparent">
               {plan.name}
             </p>
           </div>
@@ -140,8 +140,8 @@ function PlanDetailContent({
           <RoboRiskLevel tier={plan.riskTier} />
           {suitability ? <PlanSuitabilityBadge suitability={suitability} /> : null}
           <div className="flex min-w-0 flex-[1_0_0] items-center justify-end gap-1 whitespace-nowrap">
-            <p className="text-xs font-bold leading-4 text-black/75">Available Room</p>
-            <p className="text-xs leading-4 text-black/60">{plan.availableRoom}</p>
+            <p className="text-xs font-bold leading-[20px] text-black/75">Available Room</p>
+            <p className="text-xs leading-[20px] text-black/60">{plan.availableRoom}</p>
           </div>
         </div>
       </div>
@@ -172,28 +172,28 @@ function PlanDetailContent({
 
       <div className="flex w-full flex-col gap-2">
         <DetailRow iconSrc={ROBO_ASSETS.modalIconHeadCircuit} title="Trading style:">
-          <p className="text-sm leading-5 text-[#4a5565]">{detail.tradingStyle}</p>
+          <p className="text-sm leading-[24px] text-[#4a5565]">{detail.tradingStyle}</p>
         </DetailRow>
         {presentation.showMarketTiming ? (
           <DetailRow iconSrc={ROBO_ASSETS.modalIconClockAfternoon} title="Market Timing">
-            <p className="text-sm leading-5 text-[#4a5565]">{detail.marketTiming}</p>
+            <p className="text-sm leading-[24px] text-[#4a5565]">{detail.marketTiming}</p>
           </DetailRow>
         ) : null}
         <DetailRow iconSrc={ROBO_ASSETS.modalIconTimer} title="Timing">
-          <p className="text-sm leading-5 text-[#4a5565]">{detail.timing}</p>
+          <p className="text-sm leading-[24px] text-[#4a5565]">{detail.timing}</p>
         </DetailRow>
         <DetailRow iconSrc={ROBO_ASSETS.modalIconMoneyWavy} title="ยอดขั้นต่ำสำหรับการเพิ่มทุน (ต่อครั้ง)">
-          <p className="text-sm leading-5 text-[#4a5565]">{detail.topUpMin}</p>
+          <p className="text-sm leading-[24px] text-[#4a5565]">{detail.topUpMin}</p>
         </DetailRow>
         <DetailRow iconSrc={ROBO_ASSETS.modalIconBrain} title="Knowledge style:">
-          <ul className="list-disc pl-5 text-sm leading-5 text-[#4a5565]">
+          <ul className="list-disc pl-5 text-sm leading-[24px] text-[#4a5565]">
             {detail.knowledgeStyles.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
         </DetailRow>
         <DetailRow iconSrc={ROBO_ASSETS.modalIconSealCheck} title="แผนที่เหมาะกับนักลงทุนแบบไหน:">
-          <ul className="list-disc pl-5 text-sm leading-5 text-[#4a5565]">
+          <ul className="list-disc pl-5 text-sm leading-[24px] text-[#4a5565]">
             {detail.targetInvestors.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -208,10 +208,10 @@ function PlanDetailContent({
           }}
         >
           <div className="bg-[#f3f4f6] px-3 py-2">
-            <p className="text-sm font-bold leading-5 text-[#101828]">สัดส่วนการลงทุน</p>
+            <p className="text-sm font-bold leading-[24px] text-[#101828]">สัดส่วนการลงทุน</p>
           </div>
           <div className="flex flex-col items-center gap-3 px-3 pb-4 pt-3">
-            <p className="w-full text-xs leading-4 text-[#4a5565]">การลงทุนทั้งหมด = 100%</p>
+            <p className="w-full text-xs leading-[20px] text-[#4a5565]">การลงทุนทั้งหมด = 100%</p>
             <div className="flex w-full items-center justify-between px-2 max-sm:flex-col max-sm:gap-4">
               <AllocationDonut slices={detail.allocation} className="size-[120px]" />
               <div className="flex flex-col gap-2">
@@ -219,9 +219,9 @@ function PlanDetailContent({
                   <div key={item.label} className="flex items-start gap-2">
                     <div className="flex w-[115px] items-center gap-1 px-2 py-1">
                       <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-xs leading-4 text-[#4a5565]">{item.label}</span>
+                      <span className="text-xs leading-[20px] text-[#4a5565]">{item.label}</span>
                     </div>
-                    <span className="text-xs leading-4 text-[#4a5565]">{item.percent}%</span>
+                    <span className="text-xs leading-[20px] text-[#4a5565]">{item.percent}%</span>
                   </div>
                 ))}
               </div>
@@ -232,7 +232,7 @@ function PlanDetailContent({
 
       <div className="flex w-full flex-col gap-2">
         <div className="flex items-center gap-1">
-          <p className="text-sm font-bold leading-5 text-[#101828]">ค่าธรรมเนียม</p>
+          <p className="text-sm font-bold leading-[24px] text-[#101828]">ค่าธรรมเนียม</p>
           <Image src={ROBO_ASSETS.modalIconInfo} alt="" width={16} height={16} className="size-4 shrink-0" />
         </div>
         <div className="flex w-full flex-col gap-1">
@@ -244,13 +244,13 @@ function PlanDetailContent({
                   index < detail.fees.length - 1 ? "border-b border-dashed border-black/10" : ""
                 }`}
               >
-                <p className="min-w-0 flex-1 text-xs leading-4 text-[#101828]">{fee.label}</p>
-                <p className="shrink-0 text-sm font-bold leading-5 text-[#0a6ee7]">{fee.value}</p>
+                <p className="min-w-0 flex-1 text-xs leading-[20px] text-[#101828]">{fee.label}</p>
+                <p className="shrink-0 text-sm font-bold leading-[24px] text-[#0a6ee7]">{fee.value}</p>
               </div>
             ))}
           </div>
           {presentation.showFeeFootnote && detail.feeFootnote ? (
-            <p className="text-[9px] leading-[14px] text-[#4a5565]">{detail.feeFootnote}</p>
+            <p className="text-micro leading-[18px] text-[#4a5565]">{detail.feeFootnote}</p>
           ) : null}
         </div>
       </div>
@@ -307,7 +307,7 @@ export function PortfolioAdvisoryPlanDetailModal({
         rightSide="action"
         actionLabel="Close"
         onActionClick={onClose}
-        contentClassName={`flex max-h-[calc(100dvh-10rem)] flex-col overflow-hidden ${MODAL_BODY_BLEED} pt-0`}
+        contentClassName={`flex max-h-[calc(var(--dvh)*100-10rem)] flex-col overflow-hidden ${MODAL_BODY_BLEED} pt-0`}
       >
         <div className={`min-h-0 flex-1 overflow-y-auto ${MODAL_BODY_PX_MOBILE}`}>{content}</div>
         {cta ? <PlanDetailFooter cta={cta} paddingClassName={MODAL_BODY_PX_MOBILE} /> : null}
@@ -325,7 +325,7 @@ export function PortfolioAdvisoryPlanDetailModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="max-h-[calc(100vh-8rem)] w-full max-w-[720px] overflow-hidden" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="max-h-[calc(var(--vh)*100-8rem)] w-full max-w-[720px] overflow-hidden" onMouseDown={(e) => e.stopPropagation()}>
         <Modal
           variant="content"
           title="รายละเอียด"
@@ -337,7 +337,7 @@ export function PortfolioAdvisoryPlanDetailModal({
           {/* -mb-6 cancels Modal's own body padding so the footer sits on the modal's bottom edge. */}
           <div className={`${MODAL_BODY_BLEED} ${cta ? "-mb-6" : ""} flex flex-col`}>
             <div
-              className={`${cta ? "max-h-[calc(100vh-19rem)]" : "max-h-[calc(100vh-14rem)]"} overflow-y-auto [scrollbar-gutter:stable]`}
+              className={`${cta ? "max-h-[calc(var(--vh)*100-19rem)]" : "max-h-[calc(var(--vh)*100-14rem)]"} overflow-y-auto [scrollbar-gutter:stable]`}
             >
               {content}
             </div>

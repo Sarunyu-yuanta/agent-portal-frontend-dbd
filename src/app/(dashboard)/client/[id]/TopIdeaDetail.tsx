@@ -220,20 +220,20 @@ function TopIdeaHeroBanner({ sector }: { sector: TopIdeaSector }) {
         <div className="flex flex-1 gap-2 lg:gap-4 items-center min-w-0">
           <SectorHeroIcon sector={sector} />
           <div className="flex flex-1 flex-col gap-0.5 md:gap-1 lg:gap-2 items-start justify-center min-w-[141px] max-md:max-w-[210px]">
-            <p className="font-bold text-base leading-6 lg:text-lg lg:leading-6 text-[#101828] truncate w-full">
+            <p className="font-bold text-base leading-[28px] lg:text-lg lg:leading-[28px] text-[#101828] truncate w-full">
               {theme}
             </p>
-            <p className="text-xs leading-4 lg:text-sm lg:leading-5 text-[#6a7282] truncate w-full">{subtitle}</p>
+            <p className="text-xs leading-[20px] lg:text-sm lg:leading-[24px] text-[#6a7282] truncate w-full">{subtitle}</p>
           </div>
         </div>
         <div className="relative flex flex-col gap-0.5 lg:gap-2 items-end justify-center shrink-0">
           <div className="flex items-center gap-0.5 lg:gap-1 px-1 rounded-md bg-white">
-            <span className="text-xs leading-4 lg:text-sm lg:leading-5 text-[#6a7282]">up to</span>
-            <span className="font-bold text-lg leading-6 lg:text-xl lg:leading-[30px] text-[#008236]">
+            <span className="text-xs leading-[20px] lg:text-sm lg:leading-[24px] text-[#6a7282]">up to</span>
+            <span className="font-bold text-lg leading-[28px] lg:text-xl lg:leading-[34px] text-[#008236]">
               {TOP_IDEA_MAX_COUPON}
             </span>
           </div>
-          <span className="text-xs leading-4 lg:text-sm lg:leading-5 text-[#6a7282]">Coupon</span>
+          <span className="text-xs leading-[20px] lg:text-sm lg:leading-[24px] text-[#6a7282]">Coupon</span>
         </div>
       </div>
     </div>
@@ -269,7 +269,7 @@ export function TopIdeaDetail({
         <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="flex-1 min-w-0 text-base font-bold leading-6 text-[#101828] truncate lg:text-lg lg:leading-[26px]">
+        <h1 className="flex-1 min-w-0 text-base font-bold leading-[28px] text-[#101828] truncate lg:text-lg lg:leading-[30px]">
           {theme}
         </h1>
       </div>
@@ -279,7 +279,7 @@ export function TopIdeaDetail({
       <div className="relative z-10 w-full bg-white rounded-t-[24px] pt-4 pb-10 lg:pt-6">
         <div className="flex flex-col gap-2 items-center w-full max-w-[1280px] mx-auto px-4 md:px-8 lg:px-20">
           <div className="flex gap-3 items-center w-full">
-            <p className="flex-1 min-w-0 text-sm leading-5 lg:text-base lg:leading-5 text-[#4a5565]">
+            <p className="flex-1 min-w-0 text-sm leading-[24px] lg:text-base lg:leading-[24px] text-[#4a5565]">
               {products.length} รายการ
             </p>
             <Button
@@ -299,7 +299,7 @@ export function TopIdeaDetail({
               ตัวกรอง
             </Button>
           </div>
-          <p className="w-full text-[9px] leading-[14px] lg:text-xs lg:leading-4 text-[#6a7282]">
+          <p className="w-full text-micro leading-[18px] lg:text-xs lg:leading-[20px] text-[#6a7282]">
             <span className="lg:hidden">อัปเดตล่าสุด {TOP_IDEA_UPDATED_AT_MOBILE}</span>
             <span className="hidden lg:inline">อัปเดตล่าสุด {TOP_IDEA_UPDATED_AT}</span>
           </p>

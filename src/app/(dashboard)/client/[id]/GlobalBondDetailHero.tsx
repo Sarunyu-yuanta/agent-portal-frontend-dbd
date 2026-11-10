@@ -43,8 +43,8 @@ function AssetTag({
     <span
       className={`inline-flex items-center gap-0.5 rounded bg-[#f3f4f6] text-[rgba(0,0,0,0.6)] whitespace-nowrap ${
         compact
-          ? "px-1 py-0.5 text-[9px] leading-[14px] md:px-2 md:py-1 md:text-xs md:leading-[18px] md:gap-0.5"
-          : "px-2 py-1 text-xs leading-[18px] gap-0.5"
+          ? "px-1 py-0.5 text-micro leading-[18px] md:px-2 md:py-1 md:text-xs md:leading-[22px] md:gap-0.5"
+          : "px-2 py-1 text-xs leading-[22px] gap-0.5"
       }`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- 14px SVG tag icon; the image optimizer rejects SVG */}
@@ -77,7 +77,7 @@ function FilterPillGroup<T extends string>({
             key={opt.id}
             type="button"
             onClick={() => onChange(opt.id)}
-            className={`px-3 py-1.5 rounded-lg border-none cursor-pointer text-sm font-semibold leading-[22px] text-[rgba(0,0,0,0.75)] whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-lg border-none cursor-pointer text-sm font-semibold leading-[26px] text-[rgba(0,0,0,0.75)] whitespace-nowrap transition-colors ${
               active ? "bg-white" : "bg-transparent"
             }`}
             style={
@@ -167,7 +167,7 @@ export function GlobalBondDetailHero({
                   className="size-full object-cover"
                 />
               </div>
-              <h2 className="text-lg font-bold leading-[26px] text-[rgba(0,0,0,0.85)] md:text-[32px] md:leading-[48px] whitespace-nowrap">
+              <h2 className="text-lg font-bold leading-[30px] text-[rgba(0,0,0,0.85)] md:text-[32px] md:leading-[48px] whitespace-nowrap">
                 {issuer.title}
               </h2>
             </div>
@@ -204,14 +204,14 @@ export function GlobalBondDetailHero({
             />
           </div>
         </div>
-        <p className="hidden md:block text-base font-semibold leading-6 text-[rgba(0,0,0,0.75)]">
+        <p className="hidden md:block text-base font-semibold leading-[28px] text-[rgba(0,0,0,0.75)]">
           {issuer.description}
         </p>
       </div>
 
       {/* Block 2: Description (mobile) + filters */}
       <div className="relative flex flex-col gap-3 md:gap-2 w-full">
-        <p className="md:hidden text-sm font-semibold leading-[22px] text-[rgba(0,0,0,0.75)]">
+        <p className="md:hidden text-sm font-semibold leading-[26px] text-[rgba(0,0,0,0.75)]">
           {issuer.description}
         </p>
         <div
@@ -220,7 +220,7 @@ export function GlobalBondDetailHero({
           }`}
         >
           <div className="flex flex-col gap-2 md:flex-row md:gap-4 md:items-center lg:gap-3 lg:items-center">
-            <span className="text-xs leading-[18px] text-[rgba(0,0,0,0.75)] md:text-sm md:leading-[22px] whitespace-nowrap">
+            <span className="text-xs leading-[22px] text-[rgba(0,0,0,0.75)] md:text-sm md:leading-[26px] whitespace-nowrap">
               ผลตอบแทนโดยประมาณ :
             </span>
             <FilterPillGroup
@@ -231,7 +231,7 @@ export function GlobalBondDetailHero({
             />
           </div>
           <div className="flex flex-col gap-[9px] md:flex-row md:gap-4 md:items-center lg:gap-3 lg:items-center">
-            <span className="text-sm leading-[22px] text-[rgba(0,0,0,0.75)] whitespace-nowrap">
+            <span className="text-sm leading-[26px] text-[rgba(0,0,0,0.75)] whitespace-nowrap">
               ระยะเวลาครบกำหนด :
             </span>
             <FilterPillGroup

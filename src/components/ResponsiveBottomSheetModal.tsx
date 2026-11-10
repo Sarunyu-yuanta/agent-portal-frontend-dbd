@@ -53,7 +53,7 @@ export function ResponsiveBottomSheetModal({
         rightSide="action"
         actionLabel="Close"
         onActionClick={onClose}
-        contentClassName="flex min-h-0 max-h-[calc(100dvh-10rem)] flex-col overflow-hidden pt-0"
+        contentClassName="flex min-h-0 max-h-[calc(var(--dvh)*100-10rem)] flex-col overflow-hidden pt-0"
       >
         {children}
       </BottomSheet>
@@ -82,7 +82,7 @@ export function ResponsiveBottomSheetModal({
       }}
     >
       <div
-        className={`bg-white border border-[rgba(0,0,0,0.1)] ${desktopRoundedClassName} w-full ${desktopMaxWidth} max-h-[85vh] flex flex-col overflow-hidden shadow-lg`}
+        className={`bg-white border border-[rgba(0,0,0,0.1)] ${desktopRoundedClassName} w-full ${desktopMaxWidth} max-h-[calc(var(--vh)*85)] flex flex-col overflow-hidden shadow-lg`}
         role="dialog"
         aria-modal
         aria-labelledby={titleId}

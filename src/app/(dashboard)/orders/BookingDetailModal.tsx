@@ -142,7 +142,7 @@ function CheckRow({ item }: { item: RequirementItem }) {
   return (
     <SheetRow label={item.label} hint={item.detail}>
       {item.value ? (
-        <span className={`text-[13px] font-bold ${chip.fg}`}>{item.value}</span>
+        <span className={`text-body-sm font-bold ${chip.fg}`}>{item.value}</span>
       ) : (
         <Icon size={20} weight="fill" className={`shrink-0 ${chip.fg}`} />
       )}
@@ -223,7 +223,7 @@ function Body({
               than the sheet needed: three labels and two connectors to answer
               "where is this", which one circle and one word answer. */}
           <StatusDisc variant={PHASE_DISC[phase].tone}>{PHASE_DISC[phase].glyph}</StatusDisc>
-          <p className={`pt-3 text-[20px] leading-7 font-bold ${TONE[PHASE_DISC[phase].tone].text}`}>
+          <p className={`pt-3 text-title-lg leading-[32px] font-bold ${TONE[PHASE_DISC[phase].tone].text}`}>
             {BOOKING_PHASE_LABEL[book.mode][phase]}
           </p>
           {/* The product, with the desk as its badge — the sheet is reached
@@ -234,13 +234,13 @@ function Body({
               under it is 16px, and at six pixels apart the two read as one
               run-on phrase rather than a verdict and the thing it is about. */}
           <div className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 pt-4">
-            <span className="shrink-0 rounded-full bg-[var(--fill-blue-100)] px-2 py-0.5 text-[11px] font-semibold text-[var(--fill-blue-700)]">
+            <span className="shrink-0 rounded-full bg-[var(--fill-blue-100)] px-2 py-0.5 text-meta font-semibold text-[var(--fill-blue-700)]">
               {words.action}
             </span>
-            <span className="text-[16px] leading-6 font-bold text-foreground">
+            <span className="text-title-sm leading-[28px] font-bold text-foreground">
               {product.underlying}
             </span>
-            <span className="min-w-0 truncate text-[12px] text-muted-foreground">
+            <span className="min-w-0 truncate text-label text-muted-foreground">
               {product.coupon}
             </span>
           </div>
@@ -282,7 +282,7 @@ function Body({
                 <div className={SHEET_DASHED} />
                 <SheetBlock title="หลักฐานการรับคำสั่ง">
                   <SheetRow label="ช่องทาง">
-                    <span className="inline-flex items-center gap-1.5 text-[13px] font-bold text-foreground">
+                    <span className="inline-flex items-center gap-1.5 text-body-sm font-bold text-foreground">
                       {(() => {
                         const Icon = EVIDENCE_CHANNEL[booking.evidence.channel].icon;
                         return <Icon size={15} weight="fill" className="shrink-0 text-muted-foreground" />;
@@ -301,7 +301,7 @@ function Body({
                         value={`${CALL_DIRECTION_LABEL[booking.evidence.callLog.direction]} · ${booking.evidence.callLog.duration}`}
                       />
                       <SheetRow label="สรุปการสนทนา">
-                        <span className="text-right text-[13px] font-bold text-foreground">
+                        <span className="text-right text-body-sm font-bold text-foreground">
                           {booking.evidence.callLog.summary}
                         </span>
                       </SheetRow>
@@ -311,7 +311,7 @@ function Body({
                       {/* The name wraps rather than truncates: a recording called
                           `call-110002-2026-11-03.m4a` is only useful whole. */}
                       <SheetRow label="ไฟล์">
-                        <span className="text-right text-[13px] font-bold break-all text-foreground">
+                        <span className="text-right text-body-sm font-bold break-all text-foreground">
                           {booking.evidence.fileName}
                         </span>
                       </SheetRow>
@@ -322,7 +322,7 @@ function Body({
                   )}
                   {booking.evidence.note && (
                     <SheetRow label="หมายเหตุ">
-                      <span className="text-right text-[13px] font-bold whitespace-pre-line text-foreground">
+                      <span className="text-right text-body-sm font-bold whitespace-pre-line text-foreground">
                         {booking.evidence.note}
                       </span>
                     </SheetRow>
@@ -347,10 +347,10 @@ function Body({
                 aria-expanded={checksOpen}
                 className={`-mx-2 flex flex-wrap items-center gap-2 px-2 py-1 text-left ${SHEET_PRESSABLE}`}
               >
-                <span className="text-[13px] font-bold text-foreground">{words.prereq}</span>
-                <span className="text-[11px] text-muted-foreground">{words.asOf}</span>
+                <span className="text-body-sm font-bold text-foreground">{words.prereq}</span>
+                <span className="text-meta text-muted-foreground">{words.asOf}</span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] tabular-nums ${
+                  className={`rounded-full px-2 py-0.5 text-meta tabular-nums ${
                     passed === checks.length
                       ? "bg-[var(--fill-green-100)] text-[var(--fill-green-600)]"
                       : "bg-[var(--fill-gray-200)] text-muted-foreground"
@@ -383,9 +383,9 @@ function Body({
               cancelled ? "bg-[var(--fill-gray-100)]" : "bg-[var(--fill-p1-100)]"
             }`}
           >
-            <p className="text-[13px] font-bold text-foreground">Notional Amount</p>
+            <p className="text-body-sm font-bold text-foreground">Notional Amount</p>
             <p
-              className={`text-[20px] leading-7 font-bold tabular-nums ${
+              className={`text-title-lg leading-[32px] font-bold tabular-nums ${
                 cancelled ? "text-muted-foreground line-through" : "text-primary-action"
               }`}
             >

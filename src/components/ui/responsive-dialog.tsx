@@ -99,7 +99,7 @@ export function ResponsiveDialog({
           <div className="flex items-center justify-between gap-4 pr-2">
             <div className="flex min-w-0 flex-1 items-center gap-1">
               {backButton}
-              <p className="min-w-0 flex-1 truncate text-base font-bold leading-6 text-foreground">
+              <p className="min-w-0 flex-1 truncate text-base font-bold leading-[28px] text-foreground">
                 {title}
               </p>
             </div>

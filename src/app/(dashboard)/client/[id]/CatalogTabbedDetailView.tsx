@@ -30,15 +30,15 @@ export function CatalogDetailThemeHero({
           <div className="flex items-center gap-1.5">
             {icon}
             <p
-              className="min-w-0 flex-1 truncate text-xl font-bold leading-[30px]"
+              className="min-w-0 flex-1 truncate text-xl font-bold leading-[34px]"
               style={{ color: THEME_HERO_COLOR.title }}
             >
               {title}
             </p>
           </div>
-          <p className="text-sm font-normal leading-5 text-[#4a5565]">{description}</p>
+          <p className="text-sm font-normal leading-[24px] text-[#4a5565]">{description}</p>
           {meta ? (
-            <p className="text-[9px] font-normal leading-[14px] text-[#6a7282]">{meta}</p>
+            <p className="text-micro font-normal leading-[18px] text-[#6a7282]">{meta}</p>
           ) : null}
         </div>
         {trailing}
@@ -91,7 +91,7 @@ export function CatalogTabbedDetailView<T extends string>({
           <div className={`flex flex-col gap-6 ${CATALOG_DETAIL_WIDTH.narrow}`}>
             {listControls ? <div className="flex w-full flex-col gap-3">{listControls}</div> : null}
             {countLabel ? (
-              <p className="w-full px-3 text-sm font-normal leading-5 text-[#101828]">{countLabel}</p>
+              <p className="w-full px-3 text-sm font-normal leading-[24px] text-[#101828]">{countLabel}</p>
             ) : null}
             {children}
           </div>

@@ -41,7 +41,7 @@ export function NotesSplitView({
   lockedClientId,
   defaultClientId,
   initialSelectedId,
-  heightClassName = "h-[70vh]",
+  heightClassName = "h-[calc(var(--vh)*70)]",
   surfaceClassName,
 }: {
   notes: Note[];

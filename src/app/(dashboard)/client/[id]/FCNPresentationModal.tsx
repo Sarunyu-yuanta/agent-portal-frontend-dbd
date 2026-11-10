@@ -68,8 +68,8 @@ function FCNCard({ product }: { product: StructuredProduct }) {
       <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.6)" }}>
         <YuantaLogoMark />
         <div className="text-right">
-          <p className="font-bold text-[#0a6ee7] text-sm leading-5">FCN Pricing</p>
-          <p className="text-[#0a6ee7] text-xs leading-4">as of {product.offerDate}</p>
+          <p className="font-bold text-[#0a6ee7] text-sm leading-[24px]">FCN Pricing</p>
+          <p className="text-[#0a6ee7] text-xs leading-[20px]">as of {product.offerDate}</p>
         </div>
       </div>
 
@@ -92,8 +92,8 @@ function FCNCard({ product }: { product: StructuredProduct }) {
                       onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/bond-logos/logo-placeholder.svg"; }} />
                   </div>
                   <div className="flex flex-1 min-w-0 flex-col gap-0.5">
-                    <p className="font-semibold text-[#101828] text-xs leading-4 truncate">{name}</p>
-                    <p className="text-[#6a7282] text-[11px] leading-4 truncate">{sector}</p>
+                    <p className="font-semibold text-[#101828] text-xs leading-[20px] truncate">{name}</p>
+                    <p className="text-[#6a7282] text-meta leading-[20px] truncate">{sector}</p>
                   </div>
                   <span className="shrink-0 font-bold text-[#0a6ee7] text-xs">{ticker}</span>
                 </div>
@@ -126,7 +126,7 @@ function FCNCard({ product }: { product: StructuredProduct }) {
           <FooterIconCircle color="#0a6ee7">
             <PhoneIcon size={13} color="white" weight="fill" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} />
           </FooterIconCircle>
-          <p className="text-[10px] leading-4 text-[#101828]">
+          <p className="text-meta leading-[20px] text-[#101828]">
             สอบถามข้อมูลเพิ่มเติม / สนใจลงทุน ติดต่อผู้แนะนำการลงทุนของท่าน หรือ{" "}
             <strong>Online-Service 02-009-8000</strong>
           </p>
@@ -136,7 +136,7 @@ function FCNCard({ product }: { product: StructuredProduct }) {
           <FooterIconCircle color="#e47200">
             <WarningIcon size={13} color="white" weight="fill" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} />
           </FooterIconCircle>
-          <p className="text-[10px] leading-4 text-[#6a7282]">
+          <p className="text-meta leading-[20px] text-[#6a7282]">
             ข้อมูลนี้เป็นเพียงข้อมูลเบื้องต้น ผู้ลงทุนต้องศึกษารายละเอียดก่อนตัดสินใจ
             บริษัทมิได้รับประกันเงินต้นและผลตอบแทนตามเอกสารนี้
           </p>
@@ -218,7 +218,7 @@ export function FCNPresentationModal({ product, open, onClose }: FCNPresentation
           actionLayout="single"
           primaryLabel="ดาวน์โหลด PDF"
           onPrimaryClick={handlePrintPDF}
-          className="!max-w-[720px] w-[calc(100vw-2rem)]"
+          className="!max-w-[720px] w-[calc(var(--vw)*100-2rem)]"
         >
           {cardContent}
         </Modal>

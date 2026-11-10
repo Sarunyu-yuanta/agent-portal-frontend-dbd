@@ -34,7 +34,7 @@ function DetailTable({ rows }: { rows: { label: string; value: string }[] }) {
       {rows.map((row, i) => (
         <div
           key={row.label}
-          className="flex gap-3 items-center px-4 py-2 w-full text-sm leading-5"
+          className="flex gap-3 items-center px-4 py-2 w-full text-sm leading-[24px]"
           style={{ backgroundColor: i % 2 === 0 ? "#f9fafb" : "white" }}
         >
           <span className="flex-1 text-[#4a5565]">{row.label}</span>
@@ -112,7 +112,7 @@ export function ThaiStructuredProductDetail({
         <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="flex-1 min-w-0 text-lg font-bold leading-[26px] text-[#101828] truncate">
+        <h1 className="flex-1 min-w-0 text-lg font-bold leading-[30px] text-[#101828] truncate">
           {underlying}
         </h1>
       </div>
@@ -129,14 +129,14 @@ export function ThaiStructuredProductDetail({
           {ORDER_BOOKING_ENABLED && <ProductOrderNotice book={book} />}
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-col gap-0.5">
-              <p className="text-base font-bold leading-6 text-[#101828]">{underlying}</p>
-              <p className="text-xs leading-4 text-[#4a5565]">Underlying</p>
+              <p className="text-base font-bold leading-[28px] text-[#101828]">{underlying}</p>
+              <p className="text-xs leading-[20px] text-[#4a5565]">Underlying</p>
             </div>
             <div className="flex flex-col gap-0.5 items-end shrink-0">
               <p className="text-2xl font-bold leading-8 text-[#0a6ee7] whitespace-nowrap">
                 {product.couponPa}
               </p>
-              <p className="text-xs leading-4 font-medium text-[#4a5565]">Coupon p.a.</p>
+              <p className="text-xs leading-[20px] font-medium text-[#4a5565]">Coupon p.a.</p>
             </div>
           </div>
 

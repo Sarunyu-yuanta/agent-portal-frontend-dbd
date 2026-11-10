@@ -182,7 +182,7 @@ function CompactStatTile({ tile }: { tile: StatTile }) {
       </p>
 
       <p
-        className={`relative max-w-full text-[12px] font-medium leading-snug line-clamp-2 sm:text-[13px] ${
+        className={`relative max-w-full text-label font-medium leading-snug line-clamp-2 sm:text-body-sm ${
           quiet ? "text-[var(--text-default-placeholder)]" : tone.watermark
         }`}
       >
@@ -251,7 +251,7 @@ function StatTileCard({ tile }: { tile: StatTile }) {
         >
           {display}
         </p>
-        <p className="text-[14px] font-medium text-muted-foreground leading-snug truncate">
+        <p className="text-body font-medium text-muted-foreground leading-snug truncate">
           {tile.label}
         </p>
       </div>

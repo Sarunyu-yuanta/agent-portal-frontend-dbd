@@ -55,7 +55,7 @@ function DesktopBackHeader({ onBack }: { onBack: () => void }) {
       <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="size-[34px] shrink-0 p-2">
         <ArrowLeftIcon size={18} />
       </Button>
-      <h1 className="shrink-0 text-lg font-bold leading-6 text-black">Robo Advisory</h1>
+      <h1 className="shrink-0 text-lg font-bold leading-[28px] text-black">Robo Advisory</h1>
     </div>
   );
 }
@@ -83,10 +83,10 @@ function StatItem({
         style={labelWidth != null ? { width: labelWidth } : undefined}
       >
         <div className="text-center leading-none">
-          <p className="mb-0 text-xs font-bold leading-4 text-[#101828]">{labelLines[0]}</p>
-          <p className="text-xs font-bold leading-4 text-[#101828]">{labelLines[1]}</p>
+          <p className="mb-0 text-xs font-bold leading-[20px] text-[#101828]">{labelLines[0]}</p>
+          <p className="text-xs font-bold leading-[20px] text-[#101828]">{labelLines[1]}</p>
         </div>
-        <p className={`whitespace-nowrap text-xs leading-4 ${valueClassName ?? "text-[#4a5565]"}`}>{value}</p>
+        <p className={`whitespace-nowrap text-xs leading-[20px] ${valueClassName ?? "text-[#4a5565]"}`}>{value}</p>
       </div>
     </div>
   );
@@ -127,19 +127,19 @@ function RoboPlanCard({
         <div className="flex w-full flex-col gap-1">
           <div className="flex w-full flex-col gap-1">
             <div className="flex flex-col gap-1 pt-1">
-              <p className="text-[9px] leading-[14px] text-[#4a5565]">{plan.provider}</p>
-              <p className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-lg font-bold leading-6 text-transparent">
+              <p className="text-micro leading-[18px] text-[#4a5565]">{plan.provider}</p>
+              <p className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-lg font-bold leading-[28px] text-transparent">
                 {plan.name}
               </p>
             </div>
-            <p className="text-sm leading-5 text-[#4a5565]">{plan.description}</p>
+            <p className="text-sm leading-[24px] text-[#4a5565]">{plan.description}</p>
           </div>
           <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-1">
             <RoboRiskLevel tier={plan.riskTier} />
             <PlanSuitabilityBadge suitability={planSuitability(client, plan.riskTier)} />
             <div className="flex min-w-0 flex-[1_0_0] items-center justify-end gap-1 whitespace-nowrap">
-              <p className="text-xs font-bold leading-4 text-[#101828]">Available Room</p>
-              <p className="text-xs leading-4 text-[#4a5565]">{plan.availableRoom}</p>
+              <p className="text-xs font-bold leading-[20px] text-[#101828]">Available Room</p>
+              <p className="text-xs leading-[20px] text-[#4a5565]">{plan.availableRoom}</p>
             </div>
           </div>
         </div>
@@ -237,7 +237,7 @@ function RoboAdvisoryHeroMobile({
         </div>
         <div className="flex min-w-0 flex-[1_0_0] flex-col gap-2 text-white">
           <p className="whitespace-nowrap text-2xl font-bold leading-9">Robo Advisory</p>
-          <div className="w-full text-sm leading-5">
+          <div className="w-full text-sm leading-[24px]">
             {ROBO_DETAIL_MOBILE_HERO_LINES.map((line, index) => (
               <p key={line} className={index < ROBO_DETAIL_MOBILE_HERO_LINES.length - 1 ? "mb-0" : undefined}>
                 {line}
@@ -252,7 +252,7 @@ function RoboAdvisoryHeroMobile({
           <AdvisoryClientBar state={advisory} />
         </div>
         <div className="flex w-full items-center justify-between px-4">
-          <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+          <p className="text-base font-bold leading-[28px] text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
           {SHOW_ROBO_FILTER_BUTTON ? (
             <Button variant="outline-black" size="icon-sm" aria-label="ตัวกรอง" onClick={onFilterClick}>
               <FunnelSimpleIcon size={18} />
@@ -305,14 +305,14 @@ function RoboAdvisoryHeroTablet({
         </div>
         <div className="flex min-w-0 flex-[1_0_0] flex-col gap-2 text-white">
           <p className="text-2xl font-bold leading-9">Robo Advisory</p>
-          <p className="text-base leading-5">{ROBO_DETAIL_TABLET_HERO_DESCRIPTION}</p>
+          <p className="text-base leading-[24px]">{ROBO_DETAIL_TABLET_HERO_DESCRIPTION}</p>
         </div>
       </div>
 
       <div className="relative z-10 flex w-full flex-col gap-4 px-8">
         <AdvisoryClientBar state={advisory} />
         <div className="flex w-full items-center justify-between">
-          <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+          <p className="text-base font-bold leading-[28px] text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
           {SHOW_ROBO_FILTER_BUTTON ? (
             <Button variant="outline-black" size="icon-sm" aria-label="ตัวกรอง" onClick={onFilterClick}>
               <FunnelSimpleIcon size={18} />
@@ -369,7 +369,7 @@ function RoboAdvisoryHeroDesktop({
         </div>
         <div className="flex min-w-0 flex-[1_0_0] flex-col gap-2 text-white">
           <p className="text-2xl font-bold leading-9">Robo Advisory</p>
-          <p className="text-base leading-5">
+          <p className="text-base leading-[24px]">
             คือบริการลงทุนแบบอัตโนมัติด้วย AI ที่จะช่วยให้บรรลุเป้าหมายการลงทุนได้อย่างง่ายดาย
           </p>
         </div>
@@ -378,7 +378,7 @@ function RoboAdvisoryHeroDesktop({
       <div className="relative z-10 flex w-full flex-col gap-4">
         <AdvisoryClientBar state={advisory} />
         <div className="flex w-full items-center justify-between">
-          <p className="text-base font-bold leading-6 text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
+          <p className="text-base font-bold leading-[28px] text-white">แผนลงทุนทั้งหมด ({plans.length})</p>
           {SHOW_ROBO_FILTER_BUTTON ? (
             <Button variant="outline-black" size="icon-sm" aria-label="ตัวกรอง" onClick={onFilterClick}>
               <FunnelSimpleIcon size={18} />
@@ -420,8 +420,8 @@ export function RoboAdvisoryDetail({ onBack }: { onBack?: () => void }) {
   }, []);
 
   return (
-    <div className="flex w-full flex-1 flex-col max-lg:min-h-[calc(100dvh-60px)] max-lg:overflow-x-clip max-lg:bg-white lg:bg-[#f9fafb] lg:pb-20 lg:pt-2">
-      <div className="flex min-h-[calc(100dvh-60px)] w-full flex-1 flex-col lg:hidden">
+    <div className="flex w-full flex-1 flex-col max-lg:min-h-[calc(var(--dvh)*100-60px)] max-lg:overflow-x-clip max-lg:bg-white lg:bg-[#f9fafb] lg:pb-20 lg:pt-2">
+      <div className="flex min-h-[calc(var(--dvh)*100-60px)] w-full flex-1 flex-col lg:hidden">
         <RoboAdvisoryMobileBreadcrumb />
         {client ? (
           <>

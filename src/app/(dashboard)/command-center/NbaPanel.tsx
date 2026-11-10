@@ -120,11 +120,11 @@ export function NbaPanel({
 
               <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                 <div className="flex items-center gap-2 min-w-0">
-                  <p className="text-[14px] font-bold text-foreground truncate">
+                  <p className="text-body font-bold text-foreground truncate">
                     {displayName}
                   </p>
                   <Avatar type="text" initials={getInitials(displayName)} size="xs" />
-                  <span className="shrink-0 text-[11px] text-muted-foreground">
+                  <span className="shrink-0 text-meta text-muted-foreground">
                     {action.tier}
                   </span>
                 </div>
@@ -141,13 +141,13 @@ export function NbaPanel({
                 <div className="text-right">
                   {revenueThbM !== null ? (
                     <>
-                      <p className="text-[15px] font-bold leading-none text-success tabular-nums">
+                      <p className="text-body-lg font-bold leading-none text-success tabular-nums">
                         ฿{revenueThbM}M
                       </p>
-                      <p className="mt-1 text-[10px] text-muted-foreground">โอกาสรายได้</p>
+                      <p className="mt-1 text-meta text-muted-foreground">โอกาสรายได้</p>
                     </>
                   ) : (
-                    <p className="text-[11px] font-medium text-warning">
+                    <p className="text-meta font-medium text-warning">
                       {action.revenueImpact}
                     </p>
                   )}
@@ -167,7 +167,7 @@ export function NbaPanel({
               </div>
             </div>
 
-            <p className="text-[12.5px] text-muted-foreground leading-relaxed line-clamp-2">
+            <p className="text-label text-muted-foreground leading-relaxed line-clamp-2">
               {action.insight}
             </p>
 
@@ -181,7 +181,7 @@ export function NbaPanel({
                 weight="fill"
                 className="mt-0.5 shrink-0 text-primary-action"
               />
-              <p className="text-[12px] leading-relaxed text-foreground line-clamp-2">
+              <p className="text-label leading-relaxed text-foreground line-clamp-2">
                 {action.aiDraft}
               </p>
             </div>

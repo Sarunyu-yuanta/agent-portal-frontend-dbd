@@ -33,7 +33,7 @@ export const TREND_PILL_BG: Record<Trend, string> = { up: "#dbfce7", down: "#fef
  *  ships two sizes: "Large" (14px, board index cards) and "Small" (9px,
  *  compact instrument rows) — `size` picks between them. */
 const PERCENT_PILL_SIZE: Record<"sm" | "md" | "lg", string> = {
-  sm: "text-[9px] px-1 py-0.5",
+  sm: "text-micro px-1 py-0.5",
   md: "text-xs px-1.5 py-0.5",
   lg: "text-sm px-1.5 py-0.5",
 };

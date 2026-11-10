@@ -96,7 +96,7 @@ function MarketStatusTag({ status }: { status: MarketStatusValue }) {
   const isOpen = status === "Open";
   return (
     <span
-      className="inline-flex w-fit items-center gap-1 overflow-hidden rounded px-2 py-1 text-xs leading-4"
+      className="inline-flex w-fit items-center gap-1 overflow-hidden rounded px-2 py-1 text-xs leading-[20px]"
       style={{ backgroundColor: s.bg, color: s.text }}
     >
       {isOpen ? (
@@ -134,8 +134,8 @@ function QuoteTooltip({
   const label = date.replace(", ", " - ");
   return (
     <div className="min-w-[48px] rounded-2xl bg-white p-1.5 text-center shadow-[0px_0px_1px_rgba(102,102,102,0.16),0px_4px_4px_rgba(102,102,102,0.12)]">
-      <p className="text-xs leading-4 text-black/40">{label}</p>
-      <p className="text-sm leading-5 text-black/75">
+      <p className="text-xs leading-[20px] text-black/40">{label}</p>
+      <p className="text-sm leading-[24px] text-black/75">
         {price.toFixed(2)} <span className="text-black/40">{currency}</span>
       </p>
     </div>
@@ -227,7 +227,7 @@ function StockQuoteChart({
             tickLine={false}
             axisLine={false}
             minTickGap={24}
-            tick={{ fill: "rgba(0,0,0,0.4)", fontSize: 12 }}
+            tick={{ fill: "rgba(0,0,0,0.4)", fontSize: 14 }}
             tickMargin={8}
           />
           <YAxis hide domain={domain} />
@@ -268,7 +268,7 @@ function ChartRangeSelector({
             key={range}
             type="button"
             onClick={() => onChange(range)}
-            className={`flex min-h-8 flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-bold leading-4 transition-colors ${
+            className={`flex min-h-8 flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-bold leading-[20px] transition-colors ${
               selected
                 ? "bg-white text-[#101828] shadow-[0px_4px_8px_0px_rgba(28,25,23,0.03),0px_8px_16px_0px_rgba(28,25,23,0.02)]"
                 : "text-black/75"
@@ -307,7 +307,7 @@ function DepthSide({
             : { left: 0, width: `${barPct}%`, backgroundColor: barColor }
         }
       />
-      <div className="relative z-10 flex h-full items-center justify-between px-2 py-0.5 text-xs leading-4">
+      <div className="relative z-10 flex h-full items-center justify-between px-2 py-0.5 text-xs leading-[20px]">
         {align === "bid" ? (
           <>
             <span className="w-[68px] shrink-0 text-[rgba(0,0,0,0.75)]">{volume}</span>
@@ -331,10 +331,10 @@ function DepthSide({
 function OrderBook({ detail }: { detail: StockProductDetail }) {
   return (
     <section className="flex min-w-0 flex-1 flex-col gap-4">
-      <h2 className="text-lg font-bold leading-6 text-[rgba(0,0,0,0.85)]">Order Book</h2>
+      <h2 className="text-lg font-bold leading-[28px] text-[rgba(0,0,0,0.85)]">Order Book</h2>
       <div className="flex w-full flex-col overflow-hidden rounded-xl border border-black/10">
         <div className="flex flex-col gap-2.5 p-4">
-          <div className="flex w-full items-center text-xs leading-4 text-[#6a7282]">
+          <div className="flex w-full items-center text-xs leading-[20px] text-[#6a7282]">
             <div className="flex min-w-0 flex-1 items-center justify-between px-2">
               <span>Volume</span>
               <span>Best Bid</span>
@@ -346,17 +346,17 @@ function OrderBook({ detail }: { detail: StockProductDetail }) {
           </div>
           <div className="flex w-full items-center overflow-hidden rounded">
             <div className="flex min-w-0 flex-1 items-center justify-between px-2">
-              <span className="w-[68px] text-sm leading-5 text-[#6a7282]">{detail.bestBid.volume}</span>
-              <span className="text-sm font-bold leading-5 text-[#2f952a]">{detail.bestBid.price}</span>
+              <span className="w-[68px] text-sm leading-[24px] text-[#6a7282]">{detail.bestBid.volume}</span>
+              <span className="text-sm font-bold leading-[24px] text-[#2f952a]">{detail.bestBid.price}</span>
             </div>
             <div className="flex min-w-0 flex-1 items-center justify-between px-2">
-              <span className="text-sm font-bold leading-5 text-[#f5212d]">{detail.bestOffer.price}</span>
-              <span className="text-sm leading-5 text-[#6a7282]">{detail.bestOffer.volume}</span>
+              <span className="text-sm font-bold leading-[24px] text-[#f5212d]">{detail.bestOffer.price}</span>
+              <span className="text-sm leading-[24px] text-[#6a7282]">{detail.bestOffer.volume}</span>
             </div>
           </div>
         </div>
         <div className="flex flex-col gap-2.5 border-t border-black/10 p-4">
-          <div className="flex w-full items-center text-xs leading-4 text-[#6a7282]">
+          <div className="flex w-full items-center text-xs leading-[20px] text-[#6a7282]">
             <div className="flex min-w-0 flex-1 items-center justify-between px-2">
               <span>Volume</span>
               <span>Bid</span>
@@ -431,7 +431,7 @@ function VolumeAnalysisChart({ data }: { data: VolumeAnalysisData }) {
         <div className="flex flex-col gap-[11px]">
           {data.rows.map((row, index) => (
             <div key={`${row.price}-${index}`} className="flex h-3.5 w-full items-center gap-1">
-              <span className="w-9 shrink-0 text-xs leading-4 text-[rgba(0,0,0,0.85)]">
+              <span className="w-9 shrink-0 text-xs leading-[20px] text-[rgba(0,0,0,0.85)]">
                 {row.showPrice ? row.price : ""}
               </span>
               <div className="relative min-w-0 flex-1 border-l border-black/10 pl-1">
@@ -444,7 +444,7 @@ function VolumeAnalysisChart({ data }: { data: VolumeAnalysisData }) {
           <span className="w-9 shrink-0" aria-hidden />
           <div className="flex min-w-0 flex-1 items-center justify-between border-t border-black/10 pt-1 pl-1">
             {data.axisTicks.map((tick) => (
-              <span key={tick} className="text-xs leading-4 text-black/40">
+              <span key={tick} className="text-xs leading-[20px] text-black/40">
                 {tick}
               </span>
             ))}
@@ -462,7 +462,7 @@ function TimeSalesTable({ rows }: { rows: TimeSalesRow[] }) {
         {["Time", "Price", "Volume", "Side"].map((label) => (
           <div
             key={label}
-            className={`flex min-w-0 flex-1 items-center border-b border-black/10 px-4 py-3 text-sm leading-5 text-black/40 ${
+            className={`flex min-w-0 flex-1 items-center border-b border-black/10 px-4 py-3 text-sm leading-[24px] text-black/40 ${
               label === "Side" ? "justify-center" : label === "Time" ? "justify-start" : "justify-end"
             }`}
           >
@@ -473,23 +473,23 @@ function TimeSalesTable({ rows }: { rows: TimeSalesRow[] }) {
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         {rows.map((row, i) => (
           <div key={`${row.time}-${row.price}-${i}`} className="flex w-full items-center">
-            <div className="flex min-w-0 flex-1 items-center border-b border-black/10 px-4 py-2 text-sm leading-[22px] text-[rgba(0,0,0,0.75)]">
+            <div className="flex min-w-0 flex-1 items-center border-b border-black/10 px-4 py-2 text-sm leading-[26px] text-[rgba(0,0,0,0.75)]">
               {row.time}
             </div>
             <div
-              className="flex min-w-0 flex-1 items-center justify-end border-b border-black/10 px-4 py-2 text-sm leading-[22px]"
+              className="flex min-w-0 flex-1 items-center justify-end border-b border-black/10 px-4 py-2 text-sm leading-[26px]"
               style={{ color: TONE[row.priceTone] }}
             >
               {row.price}
             </div>
             <div
-              className="flex min-w-0 flex-1 items-center justify-end border-b border-black/10 px-4 py-2 text-sm leading-[22px]"
+              className="flex min-w-0 flex-1 items-center justify-end border-b border-black/10 px-4 py-2 text-sm leading-[26px]"
               style={{ color: TONE[row.volumeTone] }}
             >
               {row.volume}
             </div>
             <div
-              className="flex min-w-0 flex-1 items-center justify-center border-b border-black/10 px-4 py-2 text-sm leading-[22px]"
+              className="flex min-w-0 flex-1 items-center justify-center border-b border-black/10 px-4 py-2 text-sm leading-[26px]"
               style={{ color: row.side === "Buy" ? UP : DOWN }}
             >
               {row.side}
@@ -506,7 +506,7 @@ function TimeAndSales({ detail }: { detail: StockProductDetail }) {
   return (
     <section className="flex min-w-0 flex-1 flex-col gap-4">
       <div className="flex w-full items-end justify-between gap-2">
-        <h2 className="text-lg font-bold leading-6 text-[rgba(0,0,0,0.85)]">{`Time&Sales`}</h2>
+        <h2 className="text-lg font-bold leading-[28px] text-[rgba(0,0,0,0.85)]">{`Time&Sales`}</h2>
         <div className="flex items-center gap-2">
           <Chip
             type="single"
@@ -540,30 +540,30 @@ function DaysRangeMeter({ data }: { data: StockAdvanceData }) {
 
   return (
     <div className="relative h-[91px] w-full overflow-hidden rounded-lg border border-black/10 px-2">
-      <p className="pt-[7px] text-xs leading-4 text-[rgba(0,0,0,0.75)]">Day&apos;s Range</p>
+      <p className="pt-[7px] text-xs leading-[20px] text-[rgba(0,0,0,0.75)]">Day&apos;s Range</p>
       <div className="mt-1 flex items-start gap-1">
         <div className="flex w-10 shrink-0 flex-col">
-          <span className="text-xs leading-4 text-[rgba(0,0,0,0.75)]">{data.rangeLow}</span>
-          <span className="text-xs leading-4 text-black/40">52wk.</span>
+          <span className="text-xs leading-[20px] text-[rgba(0,0,0,0.75)]">{data.rangeLow}</span>
+          <span className="text-xs leading-[20px] text-black/40">52wk.</span>
         </div>
         <div className="relative mt-1.5 min-h-[40px] min-w-0 flex-1">
           <div className="h-2 overflow-hidden rounded-lg bg-[#f3f3f3]">
             <div className="h-full bg-[#0a6ee7]" style={{ marginLeft: `${left}%`, width: `${width}%` }} />
           </div>
           <span
-            className="absolute -top-3.5 text-[9px] leading-[14px] text-[#0a6ee7]"
+            className="absolute -top-3.5 text-micro leading-[18px] text-[#0a6ee7]"
             style={{ left: `${right}%` }}
           >
             {data.dayMarkHigh}
           </span>
           <span
-            className="absolute top-3 text-[9px] leading-[14px] text-[#0a6ee7]"
+            className="absolute top-3 text-micro leading-[18px] text-[#0a6ee7]"
             style={{ left: `${left}%` }}
           >
             {data.dayMarkLow}
           </span>
           <span
-            className="absolute top-[5px] -translate-x-1/2 text-xs leading-4 text-black/40"
+            className="absolute top-[5px] -translate-x-1/2 text-xs leading-[20px] text-black/40"
             style={{ left: `${left + width / 2}%` }}
           >
             1D
@@ -572,8 +572,8 @@ function DaysRangeMeter({ data }: { data: StockAdvanceData }) {
           <span className="absolute top-[-3px] h-5 w-px bg-[#0a6ee7]" style={{ left: `${right}%` }} />
         </div>
         <div className="flex w-10 shrink-0 flex-col items-end">
-          <span className="text-xs leading-4 text-[rgba(0,0,0,0.75)]">{data.rangeHigh}</span>
-          <span className="text-xs leading-4 text-black/40">52wk.</span>
+          <span className="text-xs leading-[20px] text-[rgba(0,0,0,0.75)]">{data.rangeHigh}</span>
+          <span className="text-xs leading-[20px] text-black/40">52wk.</span>
         </div>
       </div>
     </div>
@@ -586,7 +586,7 @@ function AdvanceStatColumn({ rows }: { rows: StockAdvanceData["left"] }) {
       {rows.map((row) => (
         <div
           key={row.label}
-          className="flex w-full items-start justify-between border-b border-black/10 py-1.5 text-sm leading-5"
+          className="flex w-full items-start justify-between border-b border-black/10 py-1.5 text-sm leading-[24px]"
         >
           <span className="text-black/40">{row.label}</span>
           <span className="text-right text-[rgba(0,0,0,0.75)]">{row.value}</span>
@@ -623,11 +623,11 @@ function StockAdvanceDataModal({
         role="dialog"
         aria-modal
         aria-labelledby="stock-advance-data-title"
-        className="flex max-h-[90vh] w-full max-w-[528px] flex-col items-center gap-6 overflow-y-auto rounded-3xl bg-white p-4"
+        className="flex max-h-[calc(var(--vh)*90)] w-full max-w-[528px] flex-col items-center gap-6 overflow-y-auto rounded-3xl bg-white p-4"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex w-full flex-col gap-2">
-          <h2 id="stock-advance-data-title" className="text-lg font-bold leading-6 text-[rgba(0,0,0,0.85)]">
+          <h2 id="stock-advance-data-title" className="text-lg font-bold leading-[28px] text-[rgba(0,0,0,0.85)]">
             Advance Data
           </h2>
           <div className="flex w-full flex-col gap-4">
@@ -659,13 +659,13 @@ function QuoteBlock({ detail }: { detail: StockProductDetail }) {
           <div className="flex items-center gap-1">
             <PriceIcon trend={detail.trend} />
             <span className="text-[40px] font-bold leading-[60px] text-[rgba(0,0,0,0.85)]">{detail.price}</span>
-            <span className="text-sm leading-5 text-black/40">{detail.currency}</span>
+            <span className="text-sm leading-[24px] text-black/40">{detail.currency}</span>
           </div>
           <div className="flex items-center gap-1.5" style={{ color: changeColor }}>
-            <span className="text-base leading-5">{detail.changeAmount}</span>
+            <span className="text-base leading-[24px]">{detail.changeAmount}</span>
             {detail.trend !== "flat" ? (
               <span
-                className="inline-flex items-center overflow-hidden rounded px-1.5 py-0.5 text-sm leading-5"
+                className="inline-flex items-center overflow-hidden rounded px-1.5 py-0.5 text-sm leading-[24px]"
                 style={{ backgroundColor: pillBg, color: changeColor }}
               >
                 <span className="w-[9px] text-center">{sign}</span>
@@ -675,12 +675,12 @@ function QuoteBlock({ detail }: { detail: StockProductDetail }) {
           </div>
           <div className="flex items-center gap-1">
             <ClockIcon size={16} className="shrink-0 text-[#666]" />
-            <span className="text-xs leading-4 text-[#666]">{detail.lastUpdated}</span>
+            <span className="text-xs leading-[20px] text-[#666]">{detail.lastUpdated}</span>
           </div>
         </div>
         <div className="flex h-full shrink-0 flex-col items-end justify-end gap-4">
           <span className="inline-flex items-center justify-center gap-1 rounded-[80px] border border-black/10 bg-white py-0.5 pl-1.5 pr-0.5">
-            <span className="text-xs leading-4 text-[rgba(0,0,0,0.75)]">{detail.market}</span>
+            <span className="text-xs leading-[20px] text-[rgba(0,0,0,0.75)]">{detail.market}</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={detail.marketIcon}
@@ -691,8 +691,8 @@ function QuoteBlock({ detail }: { detail: StockProductDetail }) {
             />
           </span>
           <div className="flex flex-col items-end gap-0.5">
-            <span className="text-sm leading-5 text-[rgba(0,0,0,0.75)]">Day&apos;s Range</span>
-            <span className="inline-flex items-center gap-1 rounded-[34px] border border-black/10 px-2 py-0.5 text-sm leading-5 text-[rgba(0,0,0,0.75)]">
+            <span className="text-sm leading-[24px] text-[rgba(0,0,0,0.75)]">Day&apos;s Range</span>
+            <span className="inline-flex items-center gap-1 rounded-[34px] border border-black/10 px-2 py-0.5 text-sm leading-[24px] text-[rgba(0,0,0,0.75)]">
               {detail.dayLow}
               <span className="inline-block h-px w-5 bg-black/20" aria-hidden />
               {detail.dayHigh}
@@ -707,7 +707,7 @@ function QuoteBlock({ detail }: { detail: StockProductDetail }) {
         onClick={() => setAdvanceOpen(true)}
         className="inline-flex w-fit cursor-pointer items-center gap-4 rounded-2xl bg-[#f9f9f9] py-1.5 pl-3 pr-2 transition-colors hover:bg-[#ececec] active:bg-[#e4e4e4] aria-expanded:bg-[#ececec] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6ee7] focus-visible:ring-offset-2"
       >
-        <div className="flex items-center gap-[13px] text-sm leading-5">
+        <div className="flex items-center gap-[13px] text-sm leading-[24px]">
           <span className="flex items-center gap-1">
             <span className="text-black/40">Volume</span>
             <span className="text-[rgba(0,0,0,0.85)]">{detail.volume}</span>
@@ -805,12 +805,12 @@ export function StockProductDetail({
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <div className="flex min-w-0 flex-col gap-0.5">
               <div className="flex min-w-0 items-center gap-1">
-                <p className="shrink-0 text-lg font-bold leading-6 text-[rgba(0,0,0,0.8)]">{detail.symbol}</p>
+                <p className="shrink-0 text-lg font-bold leading-[28px] text-[rgba(0,0,0,0.8)]">{detail.symbol}</p>
                 {detail.featured ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={ASSETS.sparkle} alt="" width={16} height={16} className="shrink-0" />
                 ) : null}
-                <p className="min-w-0 truncate text-base leading-5 text-[rgba(0,0,0,0.75)]">{detail.name}</p>
+                <p className="min-w-0 truncate text-base leading-[24px] text-[rgba(0,0,0,0.75)]">{detail.name}</p>
               </div>
               <MarketStatusTag status={detail.status} />
             </div>
@@ -849,7 +849,7 @@ export function StockProductDetail({
                   // Matches `CatalogDetailTextTabs`: hover paint on the inactive
                   // tabs only. Trailing `!` because system-one ships its base
                   // utilities unlayered, where they outrank a `hover:` variant.
-                  className={`flex shrink-0 cursor-pointer items-center justify-center border-b-[1.5px] px-3 py-2.5 text-sm font-bold leading-5 whitespace-nowrap transition-colors lg:min-w-[80px] lg:flex-1 ${
+                  className={`flex shrink-0 cursor-pointer items-center justify-center border-b-[1.5px] px-3 py-2.5 text-sm font-bold leading-[24px] whitespace-nowrap transition-colors lg:min-w-[80px] lg:flex-1 ${
                     active
                       ? "border-[#0a6ee7] text-[#0a6ee7]"
                       : "border-black/10 text-black/60 hover:bg-black/[0.03]! hover:text-[#101828]!"

@@ -95,7 +95,7 @@ export function ProductDetailDrawer({
               {expandedSubIds.size === subProducts.length ? (
                 <button
                   type="button"
-                  className="text-[12px] text-blue-600 hover:underline cursor-pointer"
+                  className="text-label text-blue-600 hover:underline cursor-pointer"
                   onClick={() => setExpandedSubIds(new Set())}
                 >
                   Collapse All
@@ -103,7 +103,7 @@ export function ProductDetailDrawer({
               ) : (
                 <button
                   type="button"
-                  className="text-[12px] text-blue-600 hover:underline cursor-pointer"
+                  className="text-label text-blue-600 hover:underline cursor-pointer"
                   onClick={() => setExpandedSubIds(new Set(subProducts.map((s) => s.id)))}
                 >
                   Expand All
@@ -134,19 +134,19 @@ export function ProductDetailDrawer({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         {sub.ticker && (
-                          <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded shrink-0">
+                          <span className="text-meta font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded shrink-0">
                             {sub.ticker}
                           </span>
                         )}
-                        <p className="text-[13px] font-semibold text-foreground truncate">{sub.name}</p>
+                        <p className="text-body-sm font-semibold text-foreground truncate">{sub.name}</p>
                       </div>
-                      <p className="text-[12px] text-muted-foreground">{formatThbAmount(sub.totalAmountThb)} THB</p>
+                      <p className="text-label text-muted-foreground">{formatThbAmount(sub.totalAmountThb)} THB</p>
                     </div>
 
                     {/* Client count badge (prominent) */}
                     <div className="shrink-0 flex flex-col items-center bg-[var(--bg-default-secondary)] rounded-lg px-3 py-1.5 min-w-[52px]">
-                      <span className="text-[18px] font-bold text-foreground leading-none">{sub.clientCount}</span>
-                      <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">clients</span>
+                      <span className="text-title font-bold text-foreground leading-none">{sub.clientCount}</span>
+                      <span className="text-meta text-muted-foreground leading-tight mt-0.5">clients</span>
                     </div>
 
                     {/* Chevron */}
@@ -168,11 +168,11 @@ export function ProductDetailDrawer({
                         >
                           <Avatar type="text" initials={getInitials(maskName(holder.clientName, isPrivate))} size="s" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-semibold text-foreground truncate">{maskName(holder.clientName, isPrivate)}</p>
+                            <p className="text-body-sm font-semibold text-foreground truncate">{maskName(holder.clientName, isPrivate)}</p>
                             <p className="type-caption text-muted-foreground">{holder.clientId} · {holder.tier}</p>
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="text-[12px] font-bold text-foreground">{holder.allocationPct.toFixed(1)}%</p>
+                            <p className="text-label font-bold text-foreground">{holder.allocationPct.toFixed(1)}%</p>
                             <p className="type-caption text-muted-foreground">{formatThbAmount(holder.amountThb)} THB</p>
                           </div>
                           <CaretRightIcon size={20} className="text-[var(--text-default-tertiary)] shrink-0" />

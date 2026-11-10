@@ -17,6 +17,7 @@ import { HolderContactOverlay } from "./HolderContact";
 import { ReminderDayStrip } from "./ReminderDayStrip";
 import { ReminderPreviewRow } from "./reminder-preview";
 import { useIsoLayoutEffect } from "@/hooks/use-iso-layout-effect";
+import { pageZoom } from "@/lib/page-zoom";
 
 /** How far either side of today this tab reaches — the same three months the
  *  mini calendar can point at. Notes ignore it (see `buildAllReminders`); it
@@ -255,7 +256,7 @@ function ReminderDayHeading({ day, daysUntil }: { day: Date; daysUntil: number }
         {dayHeading(day)}
       </p>
       {isToday ? (
-        <span className="rounded-md bg-primary-action px-1.5 py-0.5 text-[11px] font-semibold leading-4 text-on-primary-action">
+        <span className="rounded-md bg-primary-action px-1.5 py-0.5 text-meta font-semibold leading-[20px] text-on-primary-action">
           วันนี้
         </span>
       ) : (
@@ -329,7 +330,9 @@ export function CalendarRemindersTab({
 
       // Measured rather than read off `offsetTop`, which is relative to the
       // nearest *positioned* ancestor — the wrapper, not the scroller.
-      const delta = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      // Screen pixels, converted to the page's own for `scrollTop` (see `pageZoom`).
+      const delta =
+        (el.getBoundingClientRect().top - scroller.getBoundingClientRect().top) / pageZoom();
 
       // How far down to leave it, and the answer differs by day. Today's block
       // paints its own band with its own padding inside, so it parks against
@@ -534,7 +537,7 @@ export function CalendarRemindersTab({
             onClick={jumpToToday}
             className={`absolute left-1/2 z-10 -translate-x-1/2 ${
               jump === "up" ? "top-3" : "bottom-3"
-            } inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-primary-action px-3 py-1.5 text-[12px] font-semibold text-on-primary-action shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-primary-action-hover`}
+            } inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-primary-action px-3 py-1.5 text-label font-semibold text-on-primary-action shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-primary-action-hover`}
           >
             {jump === "up" ? (
               <ArrowUpIcon size={14} weight="bold" />

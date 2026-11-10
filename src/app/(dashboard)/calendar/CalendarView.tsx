@@ -422,7 +422,7 @@ export function CalendarView({
             setCreateOpen(false);
           }}
         >
-          <div className="relative w-full max-w-4xl h-[75vh] rounded-xl border border-border bg-card flex flex-col overflow-hidden shadow-xl">
+          <div className="relative w-full max-w-4xl h-[calc(var(--vh)*75)] rounded-xl border border-border bg-card flex flex-col overflow-hidden shadow-xl">
             <div className="flex-1 min-h-0 overflow-hidden">
               <NoteDetailPane
                 key="__draft__"
@@ -464,7 +464,7 @@ export function CalendarView({
             setEditNoteId(null);
           }}
         >
-          <div className="relative w-full max-w-4xl h-[75vh] rounded-xl border border-border bg-card flex flex-col overflow-hidden shadow-xl">
+          <div className="relative w-full max-w-4xl h-[calc(var(--vh)*75)] rounded-xl border border-border bg-card flex flex-col overflow-hidden shadow-xl">
             <div className="flex-1 min-h-0 overflow-hidden">
               {panelNote && (
                 <NoteDetailPane

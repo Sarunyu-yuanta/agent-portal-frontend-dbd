@@ -59,7 +59,7 @@ export function InsightDrawerPanel({ insight }: { insight: Insight }) {
               className="flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl bg-[var(--bg-default-secondary)] border border-primary-action/20 hover:bg-[var(--bg-brand-light)] hover:border-[var(--bg-brand-primary)] transition-colors cursor-pointer"
             >
               <span className="text-primary-action">{icon}</span>
-              <span className="text-[11px] font-medium text-primary-action leading-none">{label}</span>
+              <span className="text-meta font-medium text-primary-action leading-none">{label}</span>
             </button>
           ))}
         </div>
@@ -77,10 +77,10 @@ export function InsightDrawerPanel({ insight }: { insight: Insight }) {
               { label: "Risk Profile",value: client.riskProfile,         sub: null,                                           accent: null },
             ].map((kpi) => (
               <div key={kpi.label} className="flex flex-col justify-between gap-2 p-3 rounded-xl bg-[var(--bg-default-primary-medium)] border border-[var(--border-default)] min-h-[80px]">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide leading-none">{kpi.label}</p>
+                <p className="text-meta font-semibold text-muted-foreground uppercase tracking-wide leading-none">{kpi.label}</p>
                 <div className="flex flex-col gap-0.5">
                   <p className={`type-subtitle-1 font-bold leading-tight ${kpi.accent ?? "text-foreground"}`}>{kpi.value}</p>
-                  {kpi.sub && <p className={`text-[10px] font-semibold leading-none ${kpi.accent ?? "text-muted-foreground"}`}>{kpi.sub}</p>}
+                  {kpi.sub && <p className={`text-meta font-semibold leading-none ${kpi.accent ?? "text-muted-foreground"}`}>{kpi.sub}</p>}
                 </div>
               </div>
             ))}
@@ -90,28 +90,28 @@ export function InsightDrawerPanel({ insight }: { insight: Insight }) {
         {/* 2. AI Insight */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">AI Insight</p>
+            <p className="text-meta font-semibold text-muted-foreground uppercase tracking-wide">AI Insight</p>
             <div className="inline-flex items-center gap-1 bg-primary-action/10 rounded-full px-1.5 py-0.5">
               <SparkleIcon size={9} className="text-primary-action" weight="fill" />
-              <span className="text-[9px] font-bold text-primary-action">AI</span>
+              <span className="text-micro font-bold text-primary-action">AI</span>
             </div>
             <Tag text={tagText} variant={tagVariant} size="small" />
           </div>
           <div className="bg-[var(--primary-action-light)] border border-[var(--border-brand-primary)] rounded-xl px-3 py-3 flex flex-col gap-3">
-            <p className="text-[12px] text-primary-action leading-relaxed">{insight.insight}</p>
+            <p className="text-label text-primary-action leading-relaxed">{insight.insight}</p>
             <div className="flex items-center justify-between gap-2">
               <div className="flex flex-col gap-0.5">
-                <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide leading-none">Confidence</p>
-                <span className="text-[13px] font-bold leading-none" style={{ color: confColor }}>
+                <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wide leading-none">Confidence</p>
+                <span className="text-body-sm font-bold leading-none" style={{ color: confColor }}>
                   {insight.confidence}%
                 </span>
               </div>
               {!isRisk && (
                 <div className="flex flex-col gap-0.5 items-end">
-                  <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide leading-none">Revenue Potential</p>
+                  <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wide leading-none">Revenue Potential</p>
                   <div className="flex items-center gap-1">
                     <CurrencyCircleDollarIcon size={13} weight="fill" className="text-success" />
-                    <span className="text-[13px] font-bold text-success leading-none">{insight.revenueImpact}</span>
+                    <span className="text-body-sm font-bold text-success leading-none">{insight.revenueImpact}</span>
                   </div>
                 </div>
               )}
@@ -122,13 +122,13 @@ export function InsightDrawerPanel({ insight }: { insight: Insight }) {
         {/* 3. Portfolio Allocation — individual bars per slice */}
         {detail?.allocationData && (
           <div className="flex flex-col gap-2">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Asset Allocation</p>
+            <p className="text-meta font-semibold text-muted-foreground uppercase tracking-wide">Asset Allocation</p>
             <div className="bg-[var(--bg-default-primary-medium)] border border-[var(--border-default)] rounded-xl px-3 py-3 flex flex-col gap-3">
               {detail.allocationData.map((slice) => (
                 <div key={slice.name} className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-medium text-foreground">{slice.name}</span>
-                    <span className="text-[12px] font-bold text-foreground">{slice.value}%</span>
+                    <span className="text-label font-medium text-foreground">{slice.name}</span>
+                    <span className="text-label font-bold text-foreground">{slice.value}%</span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-[var(--bg-default-secondary)]">
                     <div className="h-full rounded-full" style={{ width: `${slice.value}%`, backgroundColor: slice.fill }} />

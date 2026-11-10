@@ -180,7 +180,7 @@ export function TopIdeaCard({
         <div className="shrink-0 flex items-center justify-center" style={{ width: 12, height: 12 }}>
           <SectorIcon sector={sector} />
         </div>
-        <p className="whitespace-nowrap" style={{ color: "#525252", fontSize: 12, lineHeight: "16px" }}>
+        <p className="whitespace-nowrap" style={{ color: "#525252", fontSize: 14, lineHeight: "20px" }}>
           {sector}
         </p>
       </div>
@@ -200,12 +200,12 @@ export function TopIdeaCard({
           paddingLeft: 8,
         }}
       >
-        <p className="font-bold" style={{ color: "#101828", fontSize: 14, lineHeight: "20px" }}>
+        <p className="font-bold" style={{ color: "#101828", fontSize: 16, lineHeight: "24px" }}>
           {theme}
         </p>
         <div className="flex items-baseline gap-0.5 justify-end whitespace-nowrap">
-          <span style={{ color: "#4a5565", fontSize: 12, lineHeight: "16px" }}>up to</span>
-          <span className="font-bold" style={{ color: "#008236", fontSize: 18, lineHeight: "24px" }}>
+          <span style={{ color: "#4a5565", fontSize: 14, lineHeight: "20px" }}>up to</span>
+          <span className="font-bold" style={{ color: "#008236", fontSize: 20, lineHeight: "28px" }}>
             30.5%
           </span>
         </div>

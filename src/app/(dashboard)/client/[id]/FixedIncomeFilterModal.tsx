@@ -34,7 +34,7 @@ function CompanyFilterChip({
     <button
       type="button"
       onClick={onClick}
-      className="flex h-8 w-full min-w-0 items-center justify-center gap-1 overflow-hidden rounded-full border pl-2 pr-3 py-1.5 text-sm leading-5 cursor-pointer transition-colors"
+      className="flex h-8 w-full min-w-0 items-center justify-center gap-1 overflow-hidden rounded-full border pl-2 pr-3 py-1.5 text-sm leading-[24px] cursor-pointer transition-colors"
       style={{
         backgroundColor: selected ? "#0a6ee7" : "white",
         borderColor: selected ? "rgba(0,0,0,0.08)" : "rgba(0,0,0,0.1)",
@@ -60,7 +60,7 @@ function FilterSection({
     <div className={`flex w-full flex-col ${mobile ? "gap-3" : "gap-4"}`}>
       <p
         className={`w-full font-bold text-[#101828] ${
-          mobile ? "text-sm leading-5" : "text-base leading-6"
+          mobile ? "text-sm leading-[24px]" : "text-base leading-[28px]"
         }`}
       >
         {title}
@@ -281,7 +281,7 @@ export function FixedIncomeFilterModal({
         actionLabel="Close"
         onActionClick={onClose}
         showHandle
-        contentClassName="flex max-h-[calc(100dvh-8rem)] flex-col gap-0 overflow-y-auto pb-2"
+        contentClassName="flex max-h-[calc(var(--dvh)*100-8rem)] flex-col gap-0 overflow-y-auto pb-2"
       >
         <FilterContent {...filterContentProps} mobile />
         <FilterFooter mobile onClear={clearDraft} onApply={applyDraft} />
@@ -317,7 +317,7 @@ export function FixedIncomeFilterModal({
 
         <div className="flex w-full items-center gap-2 pr-8">
           <FunnelSimpleIcon size={24} className="shrink-0 text-[#101828]" />
-          <p id="fixed-income-filter-title" className="min-w-0 flex-1 text-lg font-bold leading-6 text-[#101828]">
+          <p id="fixed-income-filter-title" className="min-w-0 flex-1 text-lg font-bold leading-[28px] text-[#101828]">
             {title}
           </p>
         </div>

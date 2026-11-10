@@ -101,7 +101,7 @@ export function CorporateActionDetailModal({
                 legal name only confirms it, so they belong on the same baseline.
                 It wraps rather than truncating — a half-shown company name on a
                 record sheet is the kind of thing people screenshot. */}
-            <p className="min-w-0 text-sm font-bold leading-5 text-[rgba(0,0,0,0.85)]">
+            <p className="min-w-0 text-sm font-bold leading-[24px] text-[rgba(0,0,0,0.85)]">
               {symbol} : {companyName}
             </p>
           </div>

@@ -89,7 +89,7 @@ function ChipGroup<T extends string>({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[12.5px] font-semibold text-foreground">{label}</p>
+      <p className="text-label font-semibold text-foreground">{label}</p>
       <div className="flex flex-wrap gap-2">
         <Chip
           label="ทั้งหมด"
@@ -221,7 +221,7 @@ export function CampaignFilters({
           >
             ตัวกรอง
             {chips.length > 0 && (
-              <span className="ml-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-primary-action px-1 text-[11px] font-bold tabular-nums text-on-primary-action">
+              <span className="ml-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-primary-action px-1 text-meta font-bold tabular-nums text-on-primary-action">
                 {chips.length}
               </span>
             )}
@@ -237,7 +237,7 @@ export function CampaignFilters({
               type="button"
               onClick={() => onChange({ [chip.key]: null } as Partial<Filters>)}
               aria-label={`เอาตัวกรอง ${chip.label} ออก`}
-              className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-card py-1 pl-2.5 pr-1.5 text-[12.5px] font-medium text-foreground transition-colors hover:bg-muted"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-card py-1 pl-2.5 pr-1.5 text-label font-medium text-foreground transition-colors hover:bg-muted"
             >
               {chip.label}
               <XIcon size={13} weight="bold" className="text-muted-foreground" />
@@ -246,7 +246,7 @@ export function CampaignFilters({
           <button
             type="button"
             onClick={onClear}
-            className="cursor-pointer px-1 text-[12.5px] font-medium text-primary-action hover:underline"
+            className="cursor-pointer px-1 text-label font-medium text-primary-action hover:underline"
           >
             ล้างทั้งหมด
           </button>

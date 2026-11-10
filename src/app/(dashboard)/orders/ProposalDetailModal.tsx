@@ -126,19 +126,19 @@ function Body({
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex flex-col items-center px-6 pb-6 pt-2 text-center">
           <StatusDisc variant={disc.tone}>{disc.glyph}</StatusDisc>
-          <p className={`pt-3 text-[20px] leading-7 font-bold ${TONE[disc.tone].text}`}>
+          <p className={`pt-3 text-title-lg leading-[32px] font-bold ${TONE[disc.tone].text}`}>
             {PROPOSAL_OUTCOME_LABEL[outcome]}
           </p>
           <div className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 pt-4">
             {/* The proposal's own colour, where the booking sheet's badge is
                 blue — this names a different kind of record entirely. */}
-            <span className="shrink-0 rounded-full bg-[var(--fill-blue-100)] px-2 py-0.5 text-[11px] font-semibold text-[var(--fill-blue-700)]">
+            <span className="shrink-0 rounded-full bg-[var(--fill-blue-100)] px-2 py-0.5 text-meta font-semibold text-[var(--fill-blue-700)]">
               Proposal
             </span>
-            <span className="text-[16px] leading-6 font-bold text-foreground">
+            <span className="text-title-sm leading-[28px] font-bold text-foreground">
               {product.underlying}
             </span>
-            <span className="min-w-0 truncate text-[12px] text-muted-foreground">
+            <span className="min-w-0 truncate text-label text-muted-foreground">
               {product.coupon}
             </span>
           </div>
@@ -170,7 +170,7 @@ function Body({
                     return (
                       <span
                         key={c}
-                        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-[var(--border-default)] bg-white px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
+                        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-[var(--border-default)] bg-white px-2 py-0.5 text-meta font-semibold text-muted-foreground"
                       >
                         <Icon size={11} weight="fill" className="shrink-0" />
                         {label}
@@ -201,7 +201,7 @@ function Body({
 
           {/* Plainly, because it is the whole point of the record: nothing here
               is a commitment, and the next move is the client's. */}
-          <p className="px-1 text-center text-[12px] leading-snug text-muted-foreground">
+          <p className="px-1 text-center text-label leading-snug text-muted-foreground">
             {outcome === "open"
               ? "ยังไม่มีการจองจาก Proposal นี้ — ลูกค้าจองเองจากแอป หรือติดต่อให้ IC จองให้ก็ได้"
               : outcome === "won"

@@ -58,7 +58,7 @@ function TaxCardViewTag() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={MF_ASSETS.performersTagView} alt="" className="absolute inset-0 block size-full max-w-none" />
       </span>
-      <span className="text-[9px] leading-[14px] font-normal whitespace-nowrap text-[#935737]">View</span>
+      <span className="text-micro leading-[18px] font-normal whitespace-nowrap text-[#935737]">View</span>
     </span>
   );
 }
@@ -70,7 +70,7 @@ function TaxCardHighlightTag() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={MF_ASSETS.performersTagHighlight} alt="" className="absolute inset-0 block size-full max-w-none" />
       </span>
-      <span className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-[9px] leading-[14px] font-normal whitespace-nowrap text-transparent">
+      <span className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-micro leading-[18px] font-normal whitespace-nowrap text-transparent">
         Highlight
       </span>
     </span>
@@ -115,12 +115,12 @@ function TaxFundPreviewCard({
     >
       <TaxCardTags variant={tagVariantForIndex(index, total)} />
       <div className="flex w-full cursor-pointer flex-col gap-2 rounded-lg bg-white p-2 transition-colors hover:bg-black/[0.03]!">
-        <span className="truncate text-sm font-bold leading-5 text-[#101828]">{fund.symbol}</span>
+        <span className="truncate text-sm font-bold leading-[24px] text-[#101828]">{fund.symbol}</span>
         <div className="flex items-center gap-1">
-          <span className="text-xs leading-4 text-[#4a5565]">{fund.price}</span>
+          <span className="text-xs leading-[20px] text-[#4a5565]">{fund.price}</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={MF_ASSETS.caretUpFill} alt="" className="size-3" />
-          <span className="inline-flex w-fit items-center rounded bg-[#dbfce7] px-1 py-0.5 text-[9px] leading-[14px] text-[#008236]">
+          <span className="inline-flex w-fit items-center rounded bg-[#dbfce7] px-1 py-0.5 text-micro leading-[18px] text-[#008236]">
             {fund.changePct}
           </span>
         </div>
@@ -167,12 +167,12 @@ function TaxSavingFundCard({
     <div className="flex w-full flex-col overflow-hidden rounded-lg border border-black/10">
       <div className="flex w-full items-center justify-between gap-2 p-4">
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs leading-4 text-[#6a7282]">ประเภทกองทุน</span>
-          <span className="text-base font-bold leading-6 text-[#101828]">{fundType}</span>
+          <span className="text-xs leading-[20px] text-[#6a7282]">ประเภทกองทุน</span>
+          <span className="text-base font-bold leading-[28px] text-[#101828]">{fundType}</span>
         </div>
         <div className="flex flex-col items-end gap-0.5">
-          <span className="text-xs leading-4 text-[#6a7282]">ลงทุนได้สูงสุด</span>
-          <span className="text-base font-bold leading-6 text-[#101828]">{formatThb(maxInvestment)}</span>
+          <span className="text-xs leading-[20px] text-[#6a7282]">ลงทุนได้สูงสุด</span>
+          <span className="text-base font-bold leading-[28px] text-[#101828]">{formatThb(maxInvestment)}</span>
         </div>
       </div>
 
@@ -180,7 +180,7 @@ function TaxSavingFundCard({
 
       <div className="flex w-full flex-col gap-2 bg-[#f9fafb] p-4">
         <div className="flex w-full items-center justify-between gap-2">
-          <span className="text-sm leading-5 text-[#6a7282]">กองทุนแนะนำ</span>
+          <span className="text-sm leading-[24px] text-[#6a7282]">กองทุนแนะนำ</span>
           <Button
             variant="plain"
             size="xs"
@@ -261,7 +261,7 @@ export function MutualFundTaxPlanningPage({
         >
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="min-w-0 flex-1 truncate text-lg font-bold leading-7 text-[#101828]">วางแผนภาษี</h1>
+        <h1 className="min-w-0 flex-1 truncate text-lg font-bold leading-[32px] text-[#101828]">วางแผนภาษี</h1>
       </div>
 
       <div className="mx-auto w-full max-w-[996px] px-4 py-4 md:px-8 lg:px-0">
@@ -274,8 +274,8 @@ export function MutualFundTaxPlanningPage({
         >
           <div className="flex w-full flex-col gap-3 rounded-xl border border-black/10 bg-[#f9fafb] p-4">
             <div className="flex flex-col gap-0.5">
-              <p className="text-sm font-bold leading-5 text-[#101828]">รายได้ของคุณ</p>
-              <p className="text-xs leading-4 text-[#6a7282]">รวมรายได้ทั้งหมดที่ได้รับในปี</p>
+              <p className="text-sm font-bold leading-[24px] text-[#101828]">รายได้ของคุณ</p>
+              <p className="text-xs leading-[20px] text-[#6a7282]">รวมรายได้ทั้งหมดที่ได้รับในปี</p>
             </div>
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-start">
               <div className="min-w-0 flex-1">
@@ -304,7 +304,7 @@ export function MutualFundTaxPlanningPage({
             </div>
             <div className="flex w-full items-start gap-1.5 rounded bg-[#f9fafb] px-2 py-2">
               <InfoIcon size={16} className="mt-0.5 shrink-0 text-[#4a5565]" />
-              <p className="min-w-0 flex-1 text-sm leading-5 text-[#4a5565]">
+              <p className="min-w-0 flex-1 text-sm leading-[24px] text-[#4a5565]">
                 เครื่องมือวางแผนภาษีนี้เป็นเพียงการประมาณการสิทธิลดหย่อนภาษีเบื้องต้นจากรายได้ที่ระบุและเป็นไปตามหลักเกณฑ์ทั่วไป
                 โดยยังไม่รวมสิทธิลดหย่อนอื่น และมิใช่คำแนะนำภาษีเฉพาะบุคคลหรือการรับรองสิทธิ
                 โปรดตรวจสอบเกณฑ์สรรพากรและเงื่อนไขล่าสุดก่อนตัดสินใจลงทุน
@@ -314,7 +314,7 @@ export function MutualFundTaxPlanningPage({
 
           {calculatedIncome !== null ? (
             <div className="flex w-full flex-col gap-3">
-              <p className="text-base font-bold leading-6 text-[#101828]">วางแผนภาษี</p>
+              <p className="text-base font-bold leading-[28px] text-[#101828]">วางแผนภาษี</p>
               {TAX_SAVING_FUND_TYPES.map((fundType) => (
                 <TaxSavingFundCard
                   key={fundType}

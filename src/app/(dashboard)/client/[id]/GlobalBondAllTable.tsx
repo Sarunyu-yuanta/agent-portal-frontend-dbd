@@ -98,30 +98,30 @@ export function GlobalBondAllTable({ bonds }: { bonds: GlobalBondRow[] }) {
                 >
                   <IssuerLogo src={row.logo} />
                   <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-                    <span className="min-w-0 truncate text-sm leading-5 text-[#101828]">{row.name}</span>
+                    <span className="min-w-0 truncate text-sm leading-[24px] text-[#101828]">{row.name}</span>
                     {row.topPick && <TopPickTag />}
                   </div>
                 </div>
                 <div className="flex items-center w-[138px] shrink-0 px-4 py-3.5 h-[65px]" style={border}>
-                  <span className="text-sm leading-5 text-[#101828]">{row.isin}</span>
+                  <span className="text-sm leading-[24px] text-[#101828]">{row.isin}</span>
                 </div>
                 <div className="flex items-center justify-center w-[80px] shrink-0 px-4 py-3.5 h-[65px]" style={border}>
-                  <span className="text-sm leading-5 text-[#101828]">{row.currency}</span>
+                  <span className="text-sm leading-[24px] text-[#101828]">{row.currency}</span>
                 </div>
                 <div className="flex items-center justify-end w-[128px] shrink-0 px-4 py-3.5 h-[65px]" style={border}>
-                  <span className="text-sm leading-5 text-[#101828]">{row.couponRate}</span>
+                  <span className="text-sm leading-[24px] text-[#101828]">{row.couponRate}</span>
                 </div>
                 <div className="flex items-center justify-end w-[81px] shrink-0 px-4 py-3.5 h-[65px]" style={border}>
-                  <span className="text-sm leading-5 text-[#101828]">{row.price}</span>
+                  <span className="text-sm leading-[24px] text-[#101828]">{row.price}</span>
                 </div>
                 <div className="flex items-center justify-end w-[180px] shrink-0 px-4 py-3.5 h-[65px]" style={border}>
-                  <span className="text-sm leading-5 text-[#101828]">{row.yieldPct}</span>
+                  <span className="text-sm leading-[24px] text-[#101828]">{row.yieldPct}</span>
                 </div>
                 <div className="flex items-center justify-center w-[122px] shrink-0 px-4 py-3.5 h-[65px]" style={border}>
-                  <span className="text-sm leading-5 text-[#101828]">{row.maturity}</span>
+                  <span className="text-sm leading-[24px] text-[#101828]">{row.maturity}</span>
                 </div>
                 <div className="flex items-center justify-end w-[112px] shrink-0 px-4 py-3.5 h-[65px]" style={border}>
-                  <span className="text-sm leading-5 text-[#101828]">{row.duration}</span>
+                  <span className="text-sm leading-[24px] text-[#101828]">{row.duration}</span>
                 </div>
                 <div className="flex items-center justify-center w-[122px] shrink-0 px-3 py-[11px] h-[65px]" style={border}>
                   <FactsheetButton />

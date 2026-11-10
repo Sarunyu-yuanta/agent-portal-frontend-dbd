@@ -42,7 +42,7 @@ export function RankBadge({ rank }: { rank: number }) {
   const style = RANK_STYLE[rank] ?? RANK_DEFAULT;
   return (
     <span
-      className="shrink-0 flex items-center justify-center size-6 rounded-full text-[12px] font-bold"
+      className="shrink-0 flex items-center justify-center size-6 rounded-full text-label font-bold"
       style={{ backgroundColor: style.bg, color: style.text }}
     >
       {rank}
@@ -161,7 +161,7 @@ function Cell({ item, col, book }: { item: TrendingItem; col: ColDef; book: Orde
     case "product":
       return (
         <span className="flex flex-col min-w-0">
-          <span className="text-sm font-bold leading-5 text-[#101828] truncate">{item.title}</span>
+          <span className="text-sm font-bold leading-[24px] text-[#101828] truncate">{item.title}</span>
           <span className="type-caption text-muted-foreground truncate">{item.subtitle}</span>
         </span>
       );
@@ -170,13 +170,13 @@ function Cell({ item, col, book }: { item: TrendingItem; col: ColDef; book: Orde
     // list and a measure that disagree — render nothing rather than a zero.
     case "sales":
       return item.salesThb === undefined ? null : (
-        <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">
+        <span className="text-sm font-bold leading-[24px] text-[#101828] whitespace-nowrap">
           {formatAumThb(item.salesThb)}
         </span>
       );
     case "orders":
       return item.orders === undefined ? null : (
-        <span className="text-sm leading-5 text-[#101828] whitespace-nowrap">
+        <span className="text-sm leading-[24px] text-[#101828] whitespace-nowrap">
           {item.orders.toLocaleString("en-US")}
         </span>
       );
@@ -243,7 +243,7 @@ export function ProductTrendingAllTable({
             <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
               <ArrowLeftIcon size={20} />
             </Button>
-            <p className="flex-1 min-w-0 font-bold text-[18px] leading-6 truncate" style={{ color: "rgba(0,0,0,0.75)" }}>
+            <p className="flex-1 min-w-0 font-bold text-title leading-[28px] truncate" style={{ color: "rgba(0,0,0,0.75)" }}>
               {group.title}
             </p>
           </div>
@@ -300,17 +300,17 @@ export function ProductTrendingAllTable({
 
           <div className="flex flex-wrap-reverse items-center justify-end gap-3">
             <div className="flex items-center gap-2">
-              <p className="text-[12px] text-muted-foreground whitespace-nowrap">Show per page</p>
+              <p className="text-label text-muted-foreground whitespace-nowrap">Show per page</p>
               <select
                 value={pageSize}
                 onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
-                className="text-[12px] border border-border rounded-md px-2 py-1 bg-background text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-action"
+                className="text-label border border-border rounded-md px-2 py-1 bg-background text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-action"
               >
                 {PAGE_SIZE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
             <div className="flex items-center gap-3">
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-label text-muted-foreground">
                 Showing{" "}
                 <span className="font-medium text-foreground">{(safePage - 1) * pageSize + 1}</span>
                 {" – "}

@@ -57,7 +57,7 @@ export function TopIdeaStrip({
       <div className="flex gap-2 items-center shrink-0 w-full max-w-[1280px] mx-auto px-4 lg:px-6">
         <p
           className="font-bold flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
-          style={{ color: "#101828", fontSize: 20, lineHeight: "30px" }}
+          style={{ color: "#101828", fontSize: 22, lineHeight: "32px" }}
         >
           Top idea
         </p>
@@ -121,7 +121,7 @@ export function InvestmentSolutionSection({
       <div className="flex flex-col gap-4 items-start shrink-0 w-full max-w-[1280px] mx-auto px-4 md:px-8 lg:px-6">
         <p
           className="font-bold relative shrink-0 overflow-hidden text-ellipsis w-full whitespace-nowrap"
-          style={{ color: "#101828", fontSize: 20, lineHeight: "30px" }}
+          style={{ color: "#101828", fontSize: 22, lineHeight: "32px" }}
         >
           Investment Solution
         </p>
@@ -216,7 +216,7 @@ export function TopPickSection({
             className="shrink-0 hidden md:block lg:hidden"
           />
           <p
-            className="font-bold overflow-hidden text-ellipsis whitespace-nowrap text-xl leading-[30px] md:text-lg md:leading-6 lg:text-xl lg:leading-[30px]"
+            className="font-bold overflow-hidden text-ellipsis whitespace-nowrap text-xl leading-[34px] md:text-lg md:leading-[28px] lg:text-xl lg:leading-[34px]"
             style={{ color: "#101828" }}
           >
             Top pick
@@ -255,7 +255,7 @@ export function StructuredProductGridSection({
       <div className="flex gap-2 items-center shrink-0 w-full max-w-[1280px] mx-auto px-4 lg:px-6">
         <p
           className="font-bold flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
-          style={{ color: "#101828", fontSize: 20, lineHeight: "30px" }}
+          style={{ color: "#101828", fontSize: 22, lineHeight: "32px" }}
         >
           {title}
         </p>

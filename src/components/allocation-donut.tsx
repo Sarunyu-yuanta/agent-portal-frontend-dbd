@@ -30,7 +30,7 @@ function AllocationTooltip({
   const { name, value } = payload[0];
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-sm">
-      <p className="text-[11px] font-semibold text-muted-foreground">{name}</p>
+      <p className="text-meta font-semibold text-muted-foreground">{name}</p>
       <p className="type-subtitle-2 font-bold text-foreground">{value}%</p>
     </div>
   );
@@ -121,7 +121,7 @@ export function AllocationTiles({
               className="w-2 h-2 rounded-full shrink-0"
               style={{ backgroundColor: s.color ?? ALLOCATION_COLORS[i % ALLOCATION_COLORS.length] }}
             />
-            <p className="text-[11px] font-semibold text-muted-foreground truncate">
+            <p className="text-meta font-semibold text-muted-foreground truncate">
               {displayAssetLabel(s.label)}
             </p>
           </div>

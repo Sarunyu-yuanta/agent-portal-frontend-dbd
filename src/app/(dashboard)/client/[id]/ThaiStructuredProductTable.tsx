@@ -105,13 +105,13 @@ function TableRow({
       style={border}
     >
       <span
-        className={`text-sm ${col.sticky || col.accent ? "font-bold " : ""}leading-5 ${col.accent ? "text-[#0a6ee7]" : "text-[#101828]"} whitespace-nowrap`}
+        className={`text-sm ${col.sticky || col.accent ? "font-bold " : ""}leading-[24px] ${col.accent ? "text-[#0a6ee7]" : "text-[#101828]"} whitespace-nowrap`}
       >
         {row[col.key]}
         {/* Same tag the global desk's cards carry — under the theme, the one
             column always on screen. */}
         {col.key === "theme" && processing && (
-          <span className="mt-0.5 flex w-fit items-center gap-0.5 rounded bg-[#eff6ff] px-1 py-0.5 text-[9px] font-normal leading-[14px] text-[#101828]">
+          <span className="mt-0.5 flex w-fit items-center gap-0.5 rounded bg-[#eff6ff] px-1 py-0.5 text-micro font-normal leading-[18px] text-[#101828]">
             <HourglassMediumIcon size={12} weight="fill" color="#2b7fff" />
             กำลังดำเนินการสั่งซื้อ
           </span>
@@ -210,17 +210,17 @@ export function ThaiStructuredProductTable({
       {/* Pagination */}
       <div className="flex flex-wrap-reverse items-center justify-end gap-3">
         <div className="flex items-center gap-2">
-          <p className="text-[12px] text-muted-foreground whitespace-nowrap">Show per page</p>
+          <p className="text-label text-muted-foreground whitespace-nowrap">Show per page</p>
           <select
             value={pageSize}
             onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
-            className="text-[12px] border border-border rounded-md px-2 py-1 bg-background text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-action"
+            className="text-label border border-border rounded-md px-2 py-1 bg-background text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-action"
           >
             {PAGE_SIZE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-3">
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             Showing{" "}
             <span className="font-medium text-foreground">{(safePage - 1) * pageSize + 1}</span>
             {" – "}

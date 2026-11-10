@@ -34,8 +34,8 @@ function DealCard({ deal, onAdvanceRequest }: { deal: Deal; onAdvanceRequest: (i
         <div className="flex items-center gap-2.5 min-w-0">
           <Avatar type="text" initials={getInitialsFromWords(maskedClient)} size="xs" />
           <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-foreground leading-snug truncate">{maskedClient}</p>
-            <p className="text-[11px] text-muted-foreground leading-snug truncate">{deal.product}</p>
+            <p className="text-body-sm font-semibold text-foreground leading-snug truncate">{maskedClient}</p>
+            <p className="text-meta text-muted-foreground leading-snug truncate">{deal.product}</p>
           </div>
         </div>
         {deal.stalled && <WarningCircleIcon size={16} weight="fill" className="text-[var(--text-warning-primary)] shrink-0 mt-0.5" />}
@@ -49,13 +49,13 @@ function DealCard({ deal, onAdvanceRequest }: { deal: Deal; onAdvanceRequest: (i
       {/* Days / status */}
       <div className="flex items-center gap-2">
         {deal.stalled ? (
-          <span className="text-[11px] font-semibold text-[var(--text-warning-primary)]">Stalled · {deal.daysInStage}d</span>
+          <span className="text-meta font-semibold text-[var(--text-warning-primary)]">Stalled · {deal.daysInStage}d</span>
         ) : isClosedWon ? (
-          <span className="text-[11px] font-semibold text-[var(--text-success-primary)]">Won</span>
+          <span className="text-meta font-semibold text-[var(--text-success-primary)]">Won</span>
         ) : isClosedLost ? (
-          <span className="text-[11px] text-muted-foreground">Lost</span>
+          <span className="text-meta text-muted-foreground">Lost</span>
         ) : deal.daysInStage > 0 ? (
-          <span className="text-[11px] text-muted-foreground">{deal.daysInStage}d in stage</span>
+          <span className="text-meta text-muted-foreground">{deal.daysInStage}d in stage</span>
         ) : null}
       </div>
 
@@ -94,14 +94,14 @@ export function KanbanColumn({ stage, deals, dimmed = false, onAdvanceRequest }:
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: meta.dot }} />
-            <p className="text-[13px] font-semibold text-foreground">{meta.label}</p>
+            <p className="text-body-sm font-semibold text-foreground">{meta.label}</p>
             <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-[11px] font-bold text-muted-foreground tabular-nums leading-none">
+              <span className="text-meta font-bold text-muted-foreground tabular-nums leading-none">
                 {deals.length}
               </span>
             </span>
           </div>
-          <p className="text-[12px] font-medium text-muted-foreground tabular-nums">{columnTotal(deals)}</p>
+          <p className="text-label font-medium text-muted-foreground tabular-nums">{columnTotal(deals)}</p>
         </div>
 
         {/* Cards */}
@@ -111,7 +111,7 @@ export function KanbanColumn({ stage, deals, dimmed = false, onAdvanceRequest }:
           ))}
           {deals.length === 0 && (
             <div className="border-2 border-dashed border-border rounded-xl py-10 flex items-center justify-center">
-              <p className="text-[12px] text-muted-foreground/60">No deals</p>
+              <p className="text-label text-muted-foreground/60">No deals</p>
             </div>
           )}
         </div>

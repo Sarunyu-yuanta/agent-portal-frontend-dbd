@@ -40,11 +40,11 @@ function LiabilitiesLegendItem({
           className="shrink-0 size-3 rounded-full"
           style={{ backgroundColor: category.color }}
         />
-        <p className="text-[12px] font-normal leading-4 text-[var(--text-default-tertiary)] truncate">
+        <p className="text-label font-normal leading-[20px] text-[var(--text-default-tertiary)] truncate">
           {category.label}
         </p>
       </div>
-      <p className="text-[12px] font-normal leading-4 text-[var(--text-default-tertiary)] shrink-0">
+      <p className="text-label font-normal leading-[20px] text-[var(--text-default-tertiary)] shrink-0">
         {category.percent}%
       </p>
     </div>
@@ -71,17 +71,17 @@ function LiabilityCategoryCard({
           className="shrink-0 size-2 rounded-full"
           style={{ backgroundColor: category.color }}
         />
-        <p className="text-[14px] font-bold leading-5 text-[var(--text-default-primary)] whitespace-nowrap">
+        <p className="text-body font-bold leading-[24px] text-[var(--text-default-primary)] whitespace-nowrap">
           {category.label}
         </p>
       </div>
 
       <div className="flex flex-1 justify-end items-center min-w-0">
         <div className="flex gap-1 items-center text-right whitespace-nowrap">
-          <p className="text-[14px] font-bold leading-5 text-[var(--text-default-primary)]">
+          <p className="text-body font-bold leading-[24px] text-[var(--text-default-primary)]">
             {amount}
           </p>
-          <p className="text-[14px] font-normal leading-5 text-[var(--text-default-tertiary)]">
+          <p className="text-body font-normal leading-[24px] text-[var(--text-default-tertiary)]">
             THB
           </p>
         </div>
@@ -127,7 +127,7 @@ function LiabilityCategoryCard({
         {category.subItems.map((subItem) => (
           <div
             key={subItem.label}
-            className="flex gap-2 items-center text-[12px] font-normal leading-4 text-[var(--text-default-tertiary)] w-full"
+            className="flex gap-2 items-center text-label font-normal leading-[20px] text-[var(--text-default-tertiary)] w-full"
           >
             <p className="flex-1 min-w-0">{subItem.label}</p>
             <p className="flex-1 min-w-0 text-right">

@@ -26,7 +26,7 @@ export function ProposalTallyLine({ productId }: { productId: string }) {
     const offered = new Set(proposalsFor(proposals, productId).map((p) => p.clientId)).size;
     if (offered === 0) return null;
     return (
-      <p className="text-xs leading-4 text-[#6a7282] text-center">ส่ง Proposal แล้ว {offered} ราย</p>
+      <p className="text-xs leading-[20px] text-[#6a7282] text-center">ส่ง Proposal แล้ว {offered} ราย</p>
     );
   }
 
@@ -34,7 +34,7 @@ export function ProposalTallyLine({ productId }: { productId: string }) {
   if (clients === 0) return null;
 
   return (
-    <p className="text-xs leading-4 text-[#6a7282] text-center">
+    <p className="text-xs leading-[20px] text-[#6a7282] text-center">
       ส่ง Proposal แล้ว {clients} ราย · จองแล้ว{" "}
       <span className={won > 0 ? "font-semibold text-[var(--fill-green-700)]" : undefined}>
         {won}

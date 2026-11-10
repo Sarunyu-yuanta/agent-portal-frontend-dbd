@@ -23,13 +23,13 @@ function LegendRow({
   return (
     <div className="flex w-full flex-col items-start gap-0.5 rounded-xl bg-[#f9fafb] py-2.5 pl-3 pr-4">
       <div className="flex items-center gap-1.5">
-        <p className="text-sm font-bold leading-5 text-[#101828]">{label}</p>
+        <p className="text-sm font-bold leading-[24px] text-[#101828]">{label}</p>
         <div className={`flex items-center gap-0.5 rounded px-1 py-0.5 ${tagClassName}`}>
           <Image src={icon} alt="" width={14} height={14} className="size-3.5 shrink-0" />
-          <span className={`text-[9px] leading-[14px] whitespace-nowrap ${tagTextClassName}`}>{label}</span>
+          <span className={`text-micro leading-[18px] whitespace-nowrap ${tagTextClassName}`}>{label}</span>
         </div>
       </div>
-      <p className="text-sm font-normal leading-5 text-[#6a7282]">{description}</p>
+      <p className="text-sm font-normal leading-[24px] text-[#6a7282]">{description}</p>
     </div>
   );
 }
@@ -103,7 +103,7 @@ export function MutualFundLegendModal({
           title={LEGEND_TITLE}
           showClose
           onClose={onClose}
-          className="!max-w-[440px] w-[calc(100vw-3rem)]"
+          className="!max-w-[440px] w-[calc(var(--vw)*100-3rem)]"
         >
           <MutualFundLegendContent />
         </Modal>

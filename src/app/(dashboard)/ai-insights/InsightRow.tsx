@@ -36,14 +36,14 @@ export function InsightRow({
             <Icon size={13} weight="duotone" style={{ color }} />
           </div>
           <Tag text={tagText} variant={tagVariant} size="small" />
-          <span className="text-[11px] font-medium text-muted-foreground">{insight.tier}</span>
+          <span className="text-meta font-medium text-muted-foreground">{insight.tier}</span>
         </div>
-        <p className="text-[14px] font-semibold text-foreground leading-snug">{maskedName}</p>
+        <p className="text-body font-semibold text-foreground leading-snug">{maskedName}</p>
         <p className="type-body-2 text-muted-foreground leading-snug">{insight.insight}</p>
         <div className="flex items-center gap-3">
-          <span className="text-[11px] font-semibold tabular-nums" style={{ color: confColor }}>{insight.confidence}% confidence</span>
-          {!isRisk && <span className="text-[11px] font-medium text-success">{insight.revenueImpact} potential</span>}
-          {isRisk && <span className="text-[11px] font-medium" style={{ color: "var(--text-danger-primary)" }}>Risk Reduction</span>}
+          <span className="text-meta font-semibold tabular-nums" style={{ color: confColor }}>{insight.confidence}% confidence</span>
+          {!isRisk && <span className="text-meta font-medium text-success">{insight.revenueImpact} potential</span>}
+          {isRisk && <span className="text-meta font-medium" style={{ color: "var(--text-danger-primary)" }}>Risk Reduction</span>}
         </div>
         <div className="flex items-center justify-end gap-2">
           <Button variant="plain" size="sm" onClick={(e) => e.stopPropagation()}>Snooze 24h</Button>
@@ -59,14 +59,14 @@ export function InsightRow({
         <div className="flex-1 min-w-0 flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <Tag text={tagText} variant={tagVariant} size="small" />
-            <span className="text-[11px] font-medium text-muted-foreground">{insight.tier}</span>
+            <span className="text-meta font-medium text-muted-foreground">{insight.tier}</span>
           </div>
-          <p className="text-[14px] font-semibold text-foreground leading-snug">{maskedName}</p>
+          <p className="text-body font-semibold text-foreground leading-snug">{maskedName}</p>
           <p className="type-body-2 text-muted-foreground leading-snug">{insight.insight}</p>
           <div className="flex items-center gap-3 mt-0.5">
-            <span className="text-[11px] font-semibold tabular-nums" style={{ color: confColor }}>{insight.confidence}% confidence</span>
-            {!isRisk && <span className="text-[11px] font-medium text-success">{insight.revenueImpact} potential</span>}
-            {isRisk && <span className="text-[11px] font-medium" style={{ color: "var(--text-danger-primary)" }}>Risk Reduction</span>}
+            <span className="text-meta font-semibold tabular-nums" style={{ color: confColor }}>{insight.confidence}% confidence</span>
+            {!isRisk && <span className="text-meta font-medium text-success">{insight.revenueImpact} potential</span>}
+            {isRisk && <span className="text-meta font-medium" style={{ color: "var(--text-danger-primary)" }}>Risk Reduction</span>}
           </div>
         </div>
         <div className="flex flex-col gap-1.5 shrink-0 items-end">

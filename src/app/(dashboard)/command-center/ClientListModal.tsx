@@ -35,7 +35,7 @@ export function ClientListModal({
     >
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         {sorted.length === 0 ? (
-          <p className="py-6 text-center text-[13px] text-muted-foreground">
+          <p className="py-6 text-center text-body-sm text-muted-foreground">
             ไม่มีลูกค้าในระบบ
           </p>
         ) : (
@@ -51,14 +51,14 @@ export function ClientListModal({
                 >
                   <Avatar type="text" initials={getInitials(name)} size="m" />
                   <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-                    <p className="truncate text-[14px] font-bold text-foreground">
+                    <p className="truncate text-body font-bold text-foreground">
                       {name}
                     </p>
-                    <p className="truncate text-[11px] text-muted-foreground">
+                    <p className="truncate text-meta text-muted-foreground">
                       {client.tier}
                     </p>
                   </div>
-                  <span className="shrink-0 text-[12px] font-bold tabular-nums text-foreground">
+                  <span className="shrink-0 text-label font-bold tabular-nums text-foreground">
                     {formatAumThb(client.aum)}
                   </span>
                   <CaretRightIcon

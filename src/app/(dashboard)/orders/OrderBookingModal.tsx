@@ -812,7 +812,7 @@ function StatusGrid({
           type matches that block's own so the two headings in this panel are
           the same heading. */}
       <div className="flex flex-wrap items-center gap-2 pb-1">
-        <span className="text-[13px] font-bold text-foreground">
+        <span className="text-body-sm font-bold text-foreground">
           {ORDER_WORDS[bookingModeFor(product)].prereq}
         </span>
         {/* The same word the customer list gave this client a moment ago — the
@@ -860,7 +860,7 @@ function StatusGrid({
                   type="button"
                   disabled={inFlight}
                   onClick={() => void sendOne(item)}
-                  className="shrink-0 cursor-pointer text-[12px] font-semibold text-primary-action hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
+                  className="shrink-0 cursor-pointer text-label font-semibold text-primary-action hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
                 >
                   {inFlight ? "กำลังส่ง…" : "ส่งให้ลูกค้า"}
                 </button>
@@ -868,7 +868,7 @@ function StatusGrid({
             }
           >
             {item.value ? (
-              <span className={`text-[13px] font-bold ${chip.fg}`}>{item.value}</span>
+              <span className={`text-body-sm font-bold ${chip.fg}`}>{item.value}</span>
             ) : (
               <Icon size={20} weight="fill" className={`shrink-0 ${chip.fg}`} />
             )}
@@ -1056,7 +1056,7 @@ function ActionLink({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="cursor-pointer text-xs leading-4 font-medium text-[#0a6ee7] hover:underline disabled:cursor-default disabled:text-muted-foreground/50 disabled:no-underline"
+      className="cursor-pointer text-xs leading-[20px] font-medium text-[#0a6ee7] hover:underline disabled:cursor-default disabled:text-muted-foreground/50 disabled:no-underline"
     >
       {label}
     </button>
@@ -1347,7 +1347,7 @@ function AmountSection({
                   key={v}
                   type="button"
                   onClick={() => onRawChange(v.toLocaleString("en-US"))}
-                  className={`shrink-0 cursor-pointer rounded-full border px-4 py-2 text-[13px] font-semibold tabular-nums transition-colors ${
+                  className={`shrink-0 cursor-pointer rounded-full border px-4 py-2 text-body-sm font-semibold tabular-nums transition-colors ${
                     typed === v
                       ? "border-primary-action bg-primary-action-light text-primary-action"
                       : "border-border bg-white text-foreground hover:border-[var(--border-hover)] hover:bg-[var(--bg-default-secondary)]"
@@ -1578,7 +1578,7 @@ function EvidenceSection({
                 type="button"
                 aria-pressed={callSource === o.id}
                 onClick={() => pickCallSource(o.id)}
-                className={`flex-1 cursor-pointer rounded-md px-3 py-1.5 text-[13px] font-semibold transition-colors ${
+                className={`flex-1 cursor-pointer rounded-md px-3 py-1.5 text-body-sm font-semibold transition-colors ${
                   callSource === o.id
                     ? "bg-white text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"

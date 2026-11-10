@@ -26,7 +26,7 @@ export function PromotionBody({ campaign }: { campaign: Campaign }) {
             {campaign.description.map((paragraph) => (
               <p
                 key={paragraph}
-                className="text-[14px] leading-relaxed text-foreground"
+                className="text-body leading-relaxed text-foreground"
               >
                 {paragraph}
               </p>
@@ -48,7 +48,7 @@ export function PromotionBody({ campaign }: { campaign: Campaign }) {
             {campaign.conditions.map((condition) => (
               <li
                 key={condition}
-                className="flex items-start gap-3 text-[13.5px] leading-relaxed"
+                className="flex items-start gap-3 text-body-sm leading-relaxed"
               >
                 {/* One line tall, so the badge centres on the first line of
                     text rather than sitting on its top edge. */}
@@ -70,10 +70,10 @@ export function PromotionBody({ campaign }: { campaign: Campaign }) {
             {campaign.terms.map((term, index) => (
               <li
                 key={term}
-                className="flex items-start gap-3 text-[13.5px] leading-relaxed"
+                className="flex items-start gap-3 text-body-sm leading-relaxed"
               >
                 <span className="flex h-lh shrink-0 items-center">
-                  <span className="flex size-6 items-center justify-center rounded-full bg-primary-action-light text-[11px] font-bold tabular-nums text-primary-action">
+                  <span className="flex size-6 items-center justify-center rounded-full bg-primary-action-light text-meta font-bold tabular-nums text-primary-action">
                     {index + 1}
                   </span>
                 </span>

@@ -26,9 +26,9 @@ export function MutualFundInvestmentPolicyModal({
         rightSide="action"
         actionLabel="Close"
         onActionClick={onClose}
-        contentClassName="flex max-h-[calc(100dvh-10rem)] flex-col overflow-y-auto pt-0 pb-10"
+        contentClassName="flex max-h-[calc(var(--dvh)*100-10rem)] flex-col overflow-y-auto pt-0 pb-10"
       >
-        <p className="text-sm leading-5 text-[#4a5565] whitespace-pre-wrap">{policy}</p>
+        <p className="text-sm leading-[24px] text-[#4a5565] whitespace-pre-wrap">{policy}</p>
       </BottomSheet>
     );
   }
@@ -50,10 +50,10 @@ export function MutualFundInvestmentPolicyModal({
           showClose
           onClose={onClose}
           actionLayout="none"
-          className="!max-w-[460px] w-[calc(100vw-3rem)]"
+          className="!max-w-[460px] w-[calc(var(--vw)*100-3rem)]"
         >
           <div className="max-h-[260px] overflow-y-auto">
-            <p className="text-sm leading-5 text-[#4a5565] whitespace-pre-wrap">{policy}</p>
+            <p className="text-sm leading-[24px] text-[#4a5565] whitespace-pre-wrap">{policy}</p>
           </div>
         </Modal>
       </div>

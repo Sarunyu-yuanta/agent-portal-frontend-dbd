@@ -419,7 +419,7 @@ export function RiskAlertRowItem({
         {/* Line one: **who**, how bad — and, hard right, since when. */}
         <div className="flex min-w-0 items-center gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          <p className="truncate text-[14px] font-bold text-foreground">
+          <p className="truncate text-body font-bold text-foreground">
             {row.displayName}
           </p>
           {/* `shrink-0` on the `Tag` itself, not on a wrapper. A wrapper
@@ -451,7 +451,7 @@ export function RiskAlertRowItem({
           <span
             suppressHydrationWarning
             title={detectedAtLabel(alert.detectedAt, new Date())}
-            className="shrink-0 text-[12px] tabular-nums text-muted-foreground"
+            className="shrink-0 text-label tabular-nums text-muted-foreground"
           >
             {detectedAgoLabel(alert.detectedAt, new Date())}
           </span>
@@ -463,7 +463,7 @@ export function RiskAlertRowItem({
             where the category and the account behind it are context. One run,
             so `truncate` drops them right-to-left: exactly the order they
             matter least in. */}
-        <p className="min-w-0 truncate text-[12px] text-foreground" title={alert.title}>
+        <p className="min-w-0 truncate text-label text-foreground" title={alert.title}>
           {alert.title}
           <span className="text-muted-foreground">
             {` · ${category.label}`}
@@ -553,7 +553,7 @@ export function RiskAlertRowItem({
                  its padding the pill came out 30px against the button's 28
                  and quietly made every row with a deadline two pixels deeper
                  than the rest. */
-              className={`inline-flex h-7 min-w-0 shrink translate-x-3 translate-y-3 items-center gap-1 truncate rounded-tl-xl px-3 text-[12px] font-bold ${deadlineToneClass(
+              className={`inline-flex h-7 min-w-0 shrink translate-x-3 translate-y-3 items-center gap-1 truncate rounded-tl-xl px-3 text-label font-bold ${deadlineToneClass(
                 alert.daysLeft,
               )}`}
             >

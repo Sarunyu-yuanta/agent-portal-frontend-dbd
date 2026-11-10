@@ -32,7 +32,7 @@ function SummaryChip({
 }) {
   return (
     <span
-      className={`inline-flex w-fit items-center gap-1 rounded-[4px] px-2 py-1 text-xs leading-4 whitespace-nowrap ${TAG_CHIP_TONE[variant]}`}
+      className={`inline-flex w-fit items-center gap-1 rounded-[4px] px-2 py-1 text-xs leading-[20px] whitespace-nowrap ${TAG_CHIP_TONE[variant]}`}
     >
       <span className="shrink-0 flex items-center">{icon}</span>
       {children}

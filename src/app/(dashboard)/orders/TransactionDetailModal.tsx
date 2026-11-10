@@ -98,7 +98,7 @@ function Body({ t }: { t: ClientTransaction }) {
               below, so a heading reading "ขายสำเร็จ" was saying half of that
               twice. Coloured because it is the word the sheet was opened for. */}
           <p
-            className={`pt-3 text-[20px] leading-7 font-bold ${TONE[STATUS_TAG[t.status].variant].text}`}
+            className={`pt-3 text-title-lg leading-[32px] font-bold ${TONE[STATUS_TAG[t.status].variant].text}`}
           >
             {STATUS_TAG[t.status].text}
           </p>
@@ -114,15 +114,15 @@ function Body({ t }: { t: ClientTransaction }) {
           <div className="flex max-w-full flex-col items-center gap-1 pt-4">
             <span className="flex items-center gap-2">
               <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${SIDE_PILL[t.side]}`}
+                className={`shrink-0 rounded-full px-2 py-0.5 text-meta font-semibold ${SIDE_PILL[t.side]}`}
               >
                 {SIDE_LABEL[t.side]}
               </span>
-              <span className="text-[16px] leading-6 font-bold text-foreground">{t.symbol}</span>
+              <span className="text-title-sm leading-[28px] font-bold text-foreground">{t.symbol}</span>
             </span>
             {/* Wraps rather than ellipsising: the name is on its own line to
                 be read in full, so cutting it here would undo the point. */}
-            <span className="max-w-full text-[12px] leading-4 text-balance text-muted-foreground">
+            <span className="max-w-full text-label leading-[20px] text-balance text-muted-foreground">
               {t.name}
             </span>
           </div>
@@ -170,15 +170,15 @@ function Body({ t }: { t: ClientTransaction }) {
               cancelled ? "bg-[var(--fill-gray-100)]" : "bg-[var(--fill-p1-100)]"
             }`}
           >
-            <p className="text-[13px] font-bold text-foreground">รวม</p>
+            <p className="text-body-sm font-bold text-foreground">รวม</p>
             <p
-              className={`text-[20px] leading-7 font-bold tabular-nums ${
+              className={`text-title-lg leading-[32px] font-bold tabular-nums ${
                 cancelled ? "text-muted-foreground line-through" : "text-primary-action"
               }`}
             >
               {formatAmount(t.amount)}
               <span
-                className={`ml-1 text-[12px] font-medium ${
+                className={`ml-1 text-label font-medium ${
                   cancelled ? "text-muted-foreground" : "text-primary-action"
                 }`}
               >

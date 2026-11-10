@@ -31,6 +31,10 @@ import { usePageChrome } from "./page-chrome";
 import { useNotificationFeed } from "./calendar/use-notification-feed";
 import { useKycNotificationFeed } from "./use-kyc-notification-feed";
 import { useOrderNotificationFeed } from "./orders/use-order-notification-feed";
+import {
+  OrderSubmissionDetailModal,
+  type OrderSubmissionRef,
+} from "./orders/OrderSubmissionDetailModal";
 import { useDayItemModals } from "./calendar/use-day-item-modals";
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
@@ -66,8 +70,9 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     useNotificationFeed(notes, clients);
   const { kycNotificationRows, kycNotificationTargets } =
     useKycNotificationFeed(clients);
-  const { orderNotificationRows, orderNotificationTargets } =
+  const { orderNotificationRows, orderNotificationTargets, orderSubmissionTargets } =
     useOrderNotificationFeed();
+  const [openSubmission, setOpenSubmission] = useState<OrderSubmissionRef | null>(null);
 
   /**
    * The three feeds merged into one list and grouped once, rather than
@@ -106,6 +111,13 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   }, [notificationRows, kycNotificationRows, orderNotificationRows]);
 
   const handleNotificationClick = (notifItem: NotificationItem) => {
+    // An answered order opens its receipt over whatever page is underneath —
+    // the row is about one order, and the list it lives in is one more click.
+    const submission = orderSubmissionTargets.get(notifItem.id);
+    if (submission) {
+      setOpenSubmission(submission);
+      return;
+    }
     // An order row carries its own destination, since one of them (a book that
     // has filled up) is about a product rather than a client and has no
     // client-shaped landing page to derive.
@@ -284,7 +296,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                         className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 shrink-0"
                         style={{ background: "#1e2337" }}
                       >
-                        <span className="text-[13px] font-bold text-white leading-none">
+                        <span className="text-body-sm font-bold text-white leading-none">
                           B+
                         </span>
                       </div>
@@ -303,6 +315,12 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           reason the bell itself is: the reminder it points at can belong to
           whichever client you aren't currently looking at. */}
       {REMINDERS_ENABLED && reminderModals}
+      {ORDER_BOOKING_ENABLED && (
+        <OrderSubmissionDetailModal
+          target={openSubmission}
+          onClose={() => setOpenSubmission(null)}
+        />
+      )}
 
       {/* Rendered last on purpose — its scroll restore has to win over any
           `main.scrollTop` reset a page does in its own mount effect. */}

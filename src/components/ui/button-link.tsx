@@ -26,9 +26,9 @@ const BASE =
   "inline-flex select-none items-center justify-center gap-0.5 whitespace-nowrap font-medium no-underline transition-colors duration-150 cursor-pointer";
 
 const SIZE = {
-  sm: "h-[28px] rounded-md px-2 text-sm leading-5",
-  md: "h-8 rounded-md px-2.5 text-sm leading-5",
-  lg: "h-9 rounded-lg px-3.5 text-sm leading-5",
+  sm: "h-[28px] rounded-md px-2 text-sm leading-[24px]",
+  md: "h-8 rounded-md px-2.5 text-sm leading-[24px]",
+  lg: "h-9 rounded-lg px-3.5 text-sm leading-[24px]",
 } as const;
 
 const VARIANT = {

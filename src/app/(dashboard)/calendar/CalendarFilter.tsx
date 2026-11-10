@@ -241,7 +241,7 @@ export function CalendarFilterMenu({
     // space above the first row, below the last and either side of a divider
     // the same 8px — a panel padded on top of padded rows ends up with a band
     // under the final row that reads as a gap nobody put there.
-    <div className="flex w-[352px] max-w-[calc(100vw-2rem)] flex-col overflow-x-hidden">
+    <div className="flex w-[352px] max-w-[calc(var(--vw)*100-2rem)] flex-col overflow-x-hidden">
       {LAYERS.map((layer) => {
         const layerShown = !state.hiddenLayers.has(layer.key);
         const child = childrenOf(layer.key);

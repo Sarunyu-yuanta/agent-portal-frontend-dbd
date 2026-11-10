@@ -92,7 +92,7 @@ export function NbaComingSoonCard({
             <p className="type-body-2 leading-relaxed text-muted-foreground">
               {message}
             </p>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-action">
+            <p className="text-meta font-semibold uppercase tracking-widest text-primary-action">
               Coming Soon
             </p>
           </div>

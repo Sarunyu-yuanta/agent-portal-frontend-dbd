@@ -59,7 +59,7 @@ export function KycDetailPanel({ row, onClose: _onClose }: { row: KycRow; onClos
               className="flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl bg-[var(--bg-default-secondary)] border border-primary-action/20 hover:bg-[var(--bg-brand-light)] hover:border-[var(--bg-brand-primary)] transition-colors cursor-pointer"
             >
               <span className="text-primary-action">{icon}</span>
-              <span className="text-[11px] font-medium text-primary-action leading-none">{label}</span>
+              <span className="text-meta font-medium text-primary-action leading-none">{label}</span>
             </button>
           ))}
         </div>
@@ -71,7 +71,7 @@ export function KycDetailPanel({ row, onClose: _onClose }: { row: KycRow; onClos
         <div className="grid grid-cols-2 gap-2">
           {kpis.map((kpi) => (
             <div key={kpi.label} className="flex flex-col justify-between gap-2 p-3 rounded-xl bg-[var(--bg-default-primary-medium)] border border-[var(--border-default)] min-h-[72px]">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide leading-none">{kpi.label}</p>
+              <p className="text-meta font-semibold text-muted-foreground uppercase tracking-wide leading-none">{kpi.label}</p>
               <div>
                 {typeof kpi.value === "string"
                   ? <p className={`type-subtitle-1 font-bold leading-tight ${kpi.accent ?? "text-foreground"}`}>{kpi.value}</p>
@@ -85,7 +85,7 @@ export function KycDetailPanel({ row, onClose: _onClose }: { row: KycRow; onClos
         {(urgent || soon) && (
           <div className={`flex items-start gap-2.5 rounded-xl p-3.5 ${urgent ? "bg-[var(--bg-danger-light)] border border-[var(--border-danger)]" : "bg-[var(--bg-warning-light)] border border-[var(--border-warning)]"}`}>
             <ClockIcon size={13} weight="fill" className={`${urgent ? "text-[var(--text-danger-primary)]" : "text-[var(--text-warning-primary)]"} shrink-0 mt-0.5`} />
-            <p className={`text-[12px] leading-relaxed ${urgent ? "text-[var(--text-danger-primary)]" : "text-[var(--text-warning-primary)]"}`}>
+            <p className={`text-label leading-relaxed ${urgent ? "text-[var(--text-danger-primary)]" : "text-[var(--text-warning-primary)]"}`}>
               {urgent ? "KYC expires in less than 7 days. Immediate action required." : `KYC expires in ${row.daysUntilExpiry} days. Schedule review soon.`}
             </p>
           </div>
@@ -94,14 +94,14 @@ export function KycDetailPanel({ row, onClose: _onClose }: { row: KycRow; onClos
         {/* Related compliance alerts */}
         {relatedAlerts.length > 0 && (
           <div className="flex flex-col gap-2">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Compliance Alerts</p>
+            <p className="text-meta font-semibold text-muted-foreground uppercase tracking-wide">Compliance Alerts</p>
             <div className="flex flex-col gap-0.5">
               {relatedAlerts.map((a) => (
                 <div key={a.id} className="flex items-start gap-2.5 px-3 py-3 rounded-xl bg-[var(--bg-default-primary-medium)] border border-[var(--border-default)]">
                   <WarningCircleIcon size={14} weight="fill" className={`${a.type === "critical" ? "text-destructive" : "text-warning"} shrink-0 mt-0.5`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-semibold text-foreground leading-tight">{a.title}</p>
-                    <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{a.message}</p>
+                    <p className="text-label font-semibold text-foreground leading-tight">{a.title}</p>
+                    <p className="text-meta text-muted-foreground leading-snug mt-0.5">{a.message}</p>
                   </div>
                 </div>
               ))}

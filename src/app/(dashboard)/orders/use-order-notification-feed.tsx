@@ -34,6 +34,7 @@ import type { ZonedNotification } from "../notification-zones";
 import { zoneForDays } from "../notification-zones";
 import { formatOrderAmount, isBookFull } from "./order-book";
 import { useOrderBooks } from "./use-order-books";
+import type { OrderSubmissionRef } from "./OrderSubmissionDetailModal";
 
 /** Whole days since `iso`, counted in calendar days rather than hours. */
 function daysSince(iso: string): number {
@@ -72,6 +73,9 @@ export function useOrderNotificationFeed() {
     // to carry a destination — so this is the side table the click reads. Same
     // arrangement the KYC feed uses.
     const targets = new Map<string, string>();
+    // Rows that open a receipt over the page instead of navigating — an
+    // answered order has one (`OrderSubmissionDetailModal`).
+    const submissionTargets = new Map<string, OrderSubmissionRef>();
     const rows: ZonedNotification[] = [];
 
     const add = (
@@ -127,6 +131,10 @@ export function useOrderNotificationFeed() {
         // off a list of statuses a later member could fall out of.
         if (!submission.settledAt) continue;
         const ok = submission.status === "completed";
+        submissionTargets.set(`order-sub-${submission.id}`, {
+          productId: book.productId,
+          submissionId: submission.id,
+        });
         add(
           `order-sub-${submission.id}`,
           daysSince(submission.settledAt),
@@ -173,6 +181,10 @@ export function useOrderNotificationFeed() {
       );
     }
 
-    return { orderNotificationRows: rows, orderNotificationTargets: targets };
+    return {
+      orderNotificationRows: rows,
+      orderNotificationTargets: targets,
+      orderSubmissionTargets: submissionTargets,
+    };
   }, [requirementRequests, books]);
 }

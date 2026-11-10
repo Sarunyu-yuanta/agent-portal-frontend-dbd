@@ -35,14 +35,14 @@ export function GlobalBondTopPickAccordion() {
             >
               <BondLogo src={row.logo} className="size-8 rounded" />
               <div className="flex flex-1 min-w-0 flex-col gap-0.5">
-                <span className="text-sm font-bold leading-5 text-[#101828] truncate">{row.name}</span>
+                <span className="text-sm font-bold leading-[24px] text-[#101828] truncate">{row.name}</span>
                 <div className="flex gap-0.5 items-center min-h-[18px]">
-                  <span className="text-xs leading-4 text-[#4a5565]">{row.isin}</span>
+                  <span className="text-xs leading-[20px] text-[#4a5565]">{row.isin}</span>
                   <TopPickTag small />
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <span className="text-sm leading-5 text-[#101828]">{row.yieldPct}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.yieldPct}</span>
                 {expanded ? (
                   <CaretUpIcon size={22} className="text-[#101828]" />
                 ) : (
@@ -59,7 +59,7 @@ export function GlobalBondTopPickAccordion() {
                   <DetailRow label="ผลตอบแทนโดยประมาณ" value={row.yieldPct} />
                   <DetailRow label="วันครบกำหนด" value={row.maturity} />
                   <DetailRow label="ระยะเวลา (ปี)" value={row.duration} />
-                  <div className="flex gap-3 items-start w-full text-sm leading-5">
+                  <div className="flex gap-3 items-start w-full text-sm leading-[24px]">
                     <span className="flex-1 text-[#4a5565]">เอกสารที่เกี่ยวข้อง</span>
                     <button type="button" className="inline-flex items-center gap-0.5 border-none bg-transparent p-0 cursor-pointer">
                       <span className="text-sm text-[#2b7fff] underline">Factsheet</span>

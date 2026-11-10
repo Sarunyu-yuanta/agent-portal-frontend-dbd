@@ -215,12 +215,16 @@ function NavSection({
     markSectionEntry(item.href);
   };
 
+  // The sidebar keeps its original, compact type sizes; the rest of the app
+  // uses the larger scale in `globals.css`. They are written
+  // `text-[length:Npx]` because a plain `text-[11px]` is enlarged globally by
+  // `app/typography.css`. Same in `SidebarUserMenu`.
   return (
     <div className="flex flex-col gap-0.5 mt-2">
       {/* Section label fades out when collapsed */}
       <div className="h-7 flex items-end px-4 pb-1 overflow-hidden">
         <p
-          className={`text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 -translate-x-1" : "opacity-100 translate-x-0"
+          className={`text-[length:11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 -translate-x-1" : "opacity-100 translate-x-0"
             }`}
         >
           {label}
@@ -255,7 +259,7 @@ function NavSection({
               {/* Text fades + collapses. max-width (not width:auto) so the collapse
                   itself can be transitioned — CSS can't interpolate to/from "auto". */}
               <span
-                className={`text-[13.5px] leading-[18px] whitespace-nowrap transition-all duration-300 ease-in-out overflow-hidden ${collapsed ? "max-w-0 opacity-0" : "max-w-[160px] opacity-100"
+                className={`text-[length:13.5px] leading-[18px] whitespace-nowrap transition-all duration-300 ease-in-out overflow-hidden ${collapsed ? "max-w-0 opacity-0" : "max-w-[160px] opacity-100"
                   } ${isActive ? "text-white" : "text-slate-300"} font-medium`}
               >
                 {item.label}
@@ -263,7 +267,7 @@ function NavSection({
 
               {item.badge != null && (
                 <span
-                  className={`bg-slate-700 text-slate-300 text-[11px] font-semibold py-0.5 rounded-full tabular-nums whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${collapsed
+                  className={`bg-slate-700 text-slate-300 text-[length:11px] font-semibold py-0.5 rounded-full tabular-nums whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${collapsed
                     ? "max-w-0 opacity-0 p-0"
                     : "max-w-[48px] opacity-100 px-2"
                     }`}
@@ -379,7 +383,7 @@ export function AppSidebar({
               : <EyeIcon size={16} className="text-slate-400 shrink-0" />
             }
           </div>
-          <span className={`text-[13px] leading-normal whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${collapsed ? "max-w-0 opacity-0" : "max-w-[140px] opacity-100"} ${isPrivate ? "text-primary-action font-medium" : "text-slate-300"}`}>
+          <span className={`text-[length:13px] leading-normal whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${collapsed ? "max-w-0 opacity-0" : "max-w-[140px] opacity-100"} ${isPrivate ? "text-primary-action font-medium" : "text-slate-300"}`}>
             ซ่อนชื่อลูกค้า
           </span>
           {/* Switch indicator */}

@@ -80,7 +80,7 @@ const ROBO_DESKTOP_DESCRIPTION_LINES = [
 
 function RoboAdvisoryDescription() {
   return (
-    <div className="w-full min-w-0 text-sm leading-5 text-[#4a5565] lg:text-base lg:leading-5 lg:text-black/60">
+    <div className="w-full min-w-0 text-sm leading-[24px] text-[#4a5565] lg:text-base lg:leading-[24px] lg:text-black/60">
       <div className="max-lg:w-full max-lg:max-w-[311px] lg:hidden">
         {ROBO_COMPACT_DESCRIPTION_LINES.map((line, index) => (
           <p
@@ -124,7 +124,7 @@ function RoboAdvisoryCard({ onSelect }: { onSelect?: () => void }) {
     >
       <div className="relative z-[1] flex w-full min-w-0 flex-1 flex-col gap-2 lg:gap-[7.864px]">
         <div className="flex w-full min-w-0 items-start justify-between">
-          <p className={`min-w-0 flex-1 text-base font-bold leading-6 text-[#101828] transition-colors ${HOVER_TRANSITION} group-hover:text-[#0a1629] lg:text-black/75 lg:group-hover:text-black/85`}>
+          <p className={`min-w-0 flex-1 text-base font-bold leading-[28px] text-[#101828] transition-colors ${HOVER_TRANSITION} group-hover:text-[#0a1629] lg:text-black/75 lg:group-hover:text-black/85`}>
             Robo Advisory
           </p>
           <ArrowRightIcon />
@@ -169,12 +169,12 @@ function DefinitCard({ onSelect }: { onSelect?: () => void }) {
     >
       <div className="relative z-[1] flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex w-full min-w-0 items-start justify-between gap-2">
-          <p className={`min-w-0 flex-1 text-base font-bold leading-6 text-[#101828] transition-colors ${HOVER_TRANSITION} group-hover:text-[#0a1629]`}>
+          <p className={`min-w-0 flex-1 text-base font-bold leading-[28px] text-[#101828] transition-colors ${HOVER_TRANSITION} group-hover:text-[#0a1629]`}>
             Definit by finnomena.
           </p>
           <ArrowRightIcon />
         </div>
-        <div className="w-full min-w-0 text-sm leading-5 text-[#4a5565] lg:text-base lg:leading-5">
+        <div className="w-full min-w-0 text-sm leading-[24px] text-[#4a5565] lg:text-base lg:leading-[24px]">
           <div className="max-lg:max-w-[311px] lg:hidden">
             {DEFINIT_COMPACT_DESCRIPTION_LINES.map((line, index) => (
               <p
@@ -204,10 +204,10 @@ function DefinitCard({ onSelect }: { onSelect?: () => void }) {
 function PortfolioAdvisoryHeader() {
   return (
     <div className="flex flex-col">
-      <h2 className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-lg font-bold leading-6 text-transparent lg:text-xl lg:leading-[30px]">
+      <h2 className="bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-lg font-bold leading-[28px] text-transparent lg:text-xl lg:leading-[34px]">
         บริการวางแผนพอร์ต
       </h2>
-      <p className="text-sm leading-5 text-black/60">
+      <p className="text-sm leading-[24px] text-black/60">
         ให้ Yuanta ช่วยคุณบริหารสินทรัพย์ด้วยแผนการลงทุน Robo Advisory และจากผู้เชี่ยวชาญ
       </p>
     </div>

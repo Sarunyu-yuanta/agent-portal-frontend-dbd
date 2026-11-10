@@ -10,7 +10,7 @@ export function AIRecommendCard() {
         <p className="type-subtitle-2 font-bold text-foreground">AI Recommend</p>
         <p className="type-caption text-muted-foreground leading-relaxed">AI-powered client matching and recommendations will appear here.</p>
       </div>
-      <p className="text-[10px] font-semibold text-primary-action uppercase tracking-widest">Coming Soon</p>
+      <p className="text-meta font-semibold text-primary-action uppercase tracking-widest">Coming Soon</p>
     </div>
   );
 }

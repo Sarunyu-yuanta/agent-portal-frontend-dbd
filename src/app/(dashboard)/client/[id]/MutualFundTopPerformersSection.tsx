@@ -39,7 +39,7 @@ export function MutualFundTopPerformersSection({
             height={16}
             className="h-[15.625px] w-[17.5px] shrink-0 object-contain"
           />
-          <h2 className="flex-1 text-lg font-bold leading-7 text-[#101828]">กองทุนผลตอบแทนเด่น</h2>
+          <h2 className="flex-1 text-lg font-bold leading-[32px] text-[#101828]">กองทุนผลตอบแทนเด่น</h2>
         </div>
 
         <div className="-mx-4 md:-mx-8 lg:mx-0">
@@ -61,7 +61,7 @@ export function MutualFundTopPerformersSection({
 
       <div className="flex flex-col gap-2 rounded-xl bg-[#f3f4f6] p-2">
         <div className="flex h-8 items-center justify-end px-3">
-          <span className="text-xs font-semibold leading-4 text-[#101828]">
+          <span className="text-xs font-semibold leading-[20px] text-[#101828]">
             ผลดำเนินงานย้อนหลัง 1 ปี
           </span>
         </div>

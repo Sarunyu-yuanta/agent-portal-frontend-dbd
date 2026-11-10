@@ -52,12 +52,12 @@ function AllocationSummary({ requestNotionalSize, confirmedRequest }: { requestN
       style={{ border: `1px solid ${BORDER_COLOR}` }}
     >
       <div className="flex flex-col gap-1 px-4 py-3 bg-[#f9fafb] items-center text-center" style={{ borderRight: `1px solid ${BORDER_COLOR}` }}>
-        <span className="text-xs leading-4 font-bold text-[#6a7282]">Request / Notional Size</span>
-        <span className={`text-base leading-6 font-semibold ${isFull(requestNotionalSize) ? "text-[#0a6ee7]" : "text-[#101828]"}`}>{requestNotionalSize}</span>
+        <span className="text-xs leading-[20px] font-bold text-[#6a7282]">Request / Notional Size</span>
+        <span className={`text-base leading-[28px] font-semibold ${isFull(requestNotionalSize) ? "text-[#0a6ee7]" : "text-[#101828]"}`}>{requestNotionalSize}</span>
       </div>
       <div className="flex flex-col gap-1 px-4 py-3 bg-[#f9fafb] items-center text-center">
-        <span className="text-xs leading-4 font-bold text-[#6a7282]">Confirmed / Request</span>
-        <span className={`text-base leading-6 font-semibold ${isFull(confirmedRequest) ? "text-[#008236]" : "text-[#101828]"}`}>{confirmedRequest}</span>
+        <span className="text-xs leading-[20px] font-bold text-[#6a7282]">Confirmed / Request</span>
+        <span className={`text-base leading-[28px] font-semibold ${isFull(confirmedRequest) ? "text-[#008236]" : "text-[#101828]"}`}>{confirmedRequest}</span>
       </div>
     </div>
   );
@@ -72,7 +72,7 @@ export function DetailTable({ rows }: { rows: DetailRow[] }) {
       {rows.map((row, i) => (
         <div
           key={row.label}
-          className={`flex gap-3 items-start px-4 py-2 w-full text-base leading-5 ${
+          className={`flex gap-3 items-start px-4 py-2 w-full text-base leading-[24px] ${
             i % 2 === 0 ? "bg-[#f9fafb]" : "bg-white"
           }`}
         >
@@ -88,7 +88,7 @@ export function DetailTable({ rows }: { rows: DetailRow[] }) {
           ) : row.link ? (
             <button
               type="button"
-              className="flex-1 min-w-0 text-left text-[#0a6ee7] underline border-none bg-transparent p-0 cursor-pointer text-base leading-5"
+              className="flex-1 min-w-0 text-left text-[#0a6ee7] underline border-none bg-transparent p-0 cursor-pointer text-base leading-[24px]"
             >
               {row.value}
             </button>
@@ -183,7 +183,7 @@ export function StructuredProductDetail({
         <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="flex-1 min-w-0 text-lg font-bold leading-[26px] text-[#101828] truncate">
+        <h1 className="flex-1 min-w-0 text-lg font-bold leading-[30px] text-[#101828] truncate">
           {product.underlying}
         </h1>
       </div>
@@ -215,7 +215,7 @@ export function StructuredProductDetail({
               {showPrincipalTag && (
                 <span className="inline-flex items-center gap-0.5 shrink-0 rounded px-2 py-1 bg-[#eff6ff]">
                   <ShieldCheckIcon size={14} weight="fill" color="#2b7fff" className="shrink-0" />
-                  <span className="text-xs leading-4 text-[#074ea4] whitespace-nowrap">
+                  <span className="text-xs leading-[20px] text-[#074ea4] whitespace-nowrap">
                     รับประกันเงินต้น
                   </span>
                 </span>
@@ -224,16 +224,16 @@ export function StructuredProductDetail({
 
             <div className="flex gap-2 items-center w-full">
               <div className="flex flex-1 min-w-0 flex-col gap-0.5">
-                <p className="text-base font-bold leading-6 text-[#101828] truncate w-full">
+                <p className="text-base font-bold leading-[28px] text-[#101828] truncate w-full">
                   {product.underlying}
                 </p>
-                <p className="text-xs leading-4 text-[#4a5565]">Underlying</p>
+                <p className="text-xs leading-[20px] text-[#4a5565]">Underlying</p>
               </div>
               <div className="flex flex-col gap-0.5 items-end shrink-0">
                 <p className="text-2xl font-bold leading-8 text-[#0a6ee7] whitespace-nowrap">
                   {product.coupon}
                 </p>
-                <p className="text-xs leading-4 font-medium text-[#4a5565]">Coupon</p>
+                <p className="text-xs leading-[20px] font-medium text-[#4a5565]">Coupon</p>
               </div>
             </div>
           </div>
@@ -263,7 +263,7 @@ export function StructuredProductDetail({
                 confirmedRequest={product.confirmedRequest}
               />
             )}
-            <p className="text-xs leading-4 text-[#6a7282] text-center whitespace-nowrap">
+            <p className="text-xs leading-[20px] text-[#6a7282] text-center whitespace-nowrap">
               {round
                 ? round.previousRef
                   ? `ส่งแล้ว (${round.previousRef})`

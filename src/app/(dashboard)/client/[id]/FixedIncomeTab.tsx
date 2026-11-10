@@ -93,7 +93,7 @@ function MarketSwitcher({
           <BuildingsIcon size={20} weight="fill" color="#101828" />
         )}
         <span
-          className="text-sm leading-5 whitespace-nowrap"
+          className="text-sm leading-[24px] whitespace-nowrap"
           style={{
             fontWeight: market === "primary" ? 700 : 400,
             color: market === "primary" ? "#101828" : "#6a7282",
@@ -115,7 +115,7 @@ function MarketSwitcher({
           <HandshakeIcon size={20} weight="fill" color="#101828" />
         )}
         <span
-          className="text-sm leading-5 whitespace-nowrap"
+          className="text-sm leading-[24px] whitespace-nowrap"
           style={{
             fontWeight: market === "secondary" ? 700 : 400,
             color: market === "secondary" ? "#101828" : "#6a7282",
@@ -142,7 +142,7 @@ function ActionButton({ bond, onBook }: { bond: FixedIncomeBond; onBook: OnBook 
     <button
       type="button"
       onClick={(e) => e.stopPropagation()}
-      className="inline-flex items-center justify-center px-1.5 py-1 rounded text-xs font-medium leading-[18px] whitespace-nowrap max-w-[343px]"
+      className="inline-flex items-center justify-center px-1.5 py-1 rounded text-xs font-medium leading-[22px] whitespace-nowrap max-w-[343px]"
       style={{ backgroundColor: "#0a6ee7", color: "white", cursor: "pointer" }}
     >
       สร้างคำสั่งซื้อ
@@ -203,27 +203,27 @@ function FixedIncomeCard({
       <div className="flex flex-col gap-2 w-full">
         <div className="flex gap-2 items-start w-full">
           <StatusTag status={bond.status} label={bond.statusLabel} />
-          <span className="flex-1 min-w-0 text-base font-bold leading-6 text-[#101828] truncate">
+          <span className="flex-1 min-w-0 text-base font-bold leading-[28px] text-[#101828] truncate">
             {bond.symbol}
           </span>
           <div className="flex gap-1 items-center shrink-0 whitespace-nowrap">
-            <span className="text-base font-bold leading-6 text-[#101828]">
+            <span className="text-base font-bold leading-[28px] text-[#101828]">
               {bond.ytm}
             </span>
-            <span className="text-xs leading-4 text-[#6a7282]">YTM</span>
+            <span className="text-xs leading-[20px] text-[#6a7282]">YTM</span>
           </div>
         </div>
-        <div className="flex gap-2 items-center w-full text-xs leading-4 text-[#101828]">
+        <div className="flex gap-2 items-center w-full text-xs leading-[20px] text-[#101828]">
           <span className="flex-1 min-w-0">{bond.companyRating}</span>
           <span className="shrink-0 whitespace-nowrap">
             {bond.couponPeriod}
           </span>
         </div>
-        <div className="flex gap-2 items-center w-full text-xs leading-4 text-[#101828]">
+        <div className="flex gap-2 items-center w-full text-xs leading-[20px] text-[#101828]">
           <span className="flex-1 min-w-0">ครบกำหนด: {bond.maturity}</span>
           <span className="shrink-0 whitespace-nowrap">{bond.tenor}</span>
         </div>
-        <div className="flex gap-2 items-center w-full text-xs leading-4 text-[#101828]">
+        <div className="flex gap-2 items-center w-full text-xs leading-[20px] text-[#101828]">
           <OfferTypeTag offerType={bond.offerType} />
           <span className="shrink-0 whitespace-nowrap">
             {getBookingLabel(bond)}
@@ -241,10 +241,10 @@ function FixedIncomeCard({
           className="size-8 rounded"
         />
         <div className="flex flex-1 min-w-0 gap-3 items-center overflow-hidden">
-          <span className="text-xs font-bold leading-4 text-[#101828] truncate shrink-0">
+          <span className="text-xs font-bold leading-[20px] text-[#101828] truncate shrink-0">
             {bond.companyName}
           </span>
-          <span className="text-xs leading-4 text-[#4a5565] whitespace-nowrap shrink-0">
+          <span className="text-xs leading-[20px] text-[#4a5565] whitespace-nowrap shrink-0">
             {bond.bondRating} / Risk {getRiskNumber(bond.risk)}
           </span>
         </div>
@@ -387,7 +387,7 @@ function BondTableRow({
         style={border()}
       >
         <BondLogo src={BOND_LOGOS[bond.logoIdx]} logoCrop={bond.logoCrop} className="size-8 rounded" />
-        <span className="flex-1 min-w-0 text-sm font-bold leading-5 text-[#101828]">
+        <span className="flex-1 min-w-0 text-sm font-bold leading-[24px] text-[#101828]">
           {bond.symbol}
         </span>
       </div>
@@ -398,22 +398,22 @@ function BondTableRow({
         className="flex w-[136px] items-center justify-center px-3 py-3.5"
         style={border()}
       >
-        <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">
+        <span className="text-sm font-bold leading-[24px] text-[#101828] whitespace-nowrap">
           {bond.ytm}
         </span>
       </div>
       <div className="flex w-[120px] items-center justify-center px-3 py-3.5" style={border()}>
-        <span className="text-sm leading-5 text-[#101828] whitespace-nowrap">
+        <span className="text-sm leading-[24px] text-[#101828] whitespace-nowrap">
           {bond.couponPeriod}
         </span>
       </div>
       <div className="flex w-32 items-center px-3 py-3.5" style={border()}>
-        <span className="text-sm leading-5 text-[#101828] whitespace-nowrap">
+        <span className="text-sm leading-[24px] text-[#101828] whitespace-nowrap">
           {bond.tenor}
         </span>
       </div>
       <div className="flex w-[120px] items-center px-3 py-3.5" style={border()}>
-        <span className="text-sm leading-5 text-[#101828]">
+        <span className="text-sm leading-[24px] text-[#101828]">
           {bond.maturity}
         </span>
       </div>
@@ -421,7 +421,7 @@ function BondTableRow({
         className="flex w-[106px] items-center justify-center px-3 py-3.5"
         style={border()}
       >
-        <span className="text-sm leading-5 text-[#101828] text-center">
+        <span className="text-sm leading-[24px] text-[#101828] text-center">
           {bond.companyRating}
         </span>
       </div>
@@ -429,12 +429,12 @@ function BondTableRow({
         className="flex w-[106px] items-center justify-center px-3 py-3.5"
         style={border()}
       >
-        <span className="text-sm leading-5 text-[#101828] text-center">
+        <span className="text-sm leading-[24px] text-[#101828] text-center">
           {bond.bondRating}
         </span>
       </div>
       <div className="flex w-[112px] items-center px-3 py-3.5" style={border()}>
-        <span className="text-sm leading-5 text-[#101828]">{bond.risk}</span>
+        <span className="text-sm leading-[24px] text-[#101828]">{bond.risk}</span>
       </div>
       <div className="flex w-[140px] items-center px-3 py-3.5" style={border()}>
         <OfferTypeTag offerType={bond.offerType} />
@@ -443,7 +443,7 @@ function BondTableRow({
         className="flex flex-1 min-w-[140px] items-center px-3 py-3.5"
         style={border()}
       >
-        <span className="text-sm leading-5 text-[#101828]">
+        <span className="text-sm leading-[24px] text-[#101828]">
           {bond.subscriptionPeriod}
         </span>
       </div>
@@ -562,13 +562,13 @@ export function FixedIncomeTab({
             )}
           </div>
         </div>
-        <div className="flex items-center justify-end w-full px-1 text-sm leading-5 text-[#6a7282] whitespace-nowrap">
+        <div className="flex items-center justify-end w-full px-1 text-sm leading-[24px] text-[#6a7282] whitespace-nowrap">
           <span>อัปเดตล่าสุด 25 August 2026 - 9:00</span>
         </div>
       </div>
 
       {/* ── Mobile/Tablet: count text ── */}
-      <div className="flex items-center justify-between w-full px-1 text-xs leading-4 text-[#6a7282] whitespace-nowrap lg:hidden">
+      <div className="flex items-center justify-between w-full px-1 text-xs leading-[20px] text-[#6a7282] whitespace-nowrap lg:hidden">
         <span>อัปเดตล่าสุด 25 Aug 2026 - 9:00</span>
       </div>
 
@@ -624,14 +624,14 @@ export function FixedIncomeTab({
       {/* Pagination bar */}
       <div className="flex flex-wrap-reverse items-center justify-end gap-3 w-full">
         <div className="flex items-center gap-2">
-          <p className="text-[12px] text-muted-foreground whitespace-nowrap">Show per page</p>
+          <p className="text-label text-muted-foreground whitespace-nowrap">Show per page</p>
           <select
             value={pageSize}
             onChange={(e) => {
               setPageSize(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="text-[12px] border border-border rounded-md px-2 py-1 bg-background text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-action"
+            className="text-label border border-border rounded-md px-2 py-1 bg-background text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-action"
           >
             {PAGE_SIZE_OPTIONS.map((n) => (
               <option key={n} value={n}>{n}</option>
@@ -639,7 +639,7 @@ export function FixedIncomeTab({
           </select>
         </div>
         <div className="flex items-center gap-3">
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             Showing{" "}
             <span className="font-medium text-foreground">
               {(safePage - 1) * pageSize + 1}
@@ -663,7 +663,7 @@ export function FixedIncomeTab({
       {isLoading && (
         <div className="flex gap-1 items-center justify-center w-full py-2.5 px-3 pl-3 pr-4">
           <CircleNotchIcon size={20} className="animate-spin text-[#6a7282]" />
-          <span className="text-sm font-bold leading-5 text-[#6a7282]">
+          <span className="text-sm font-bold leading-[24px] text-[#6a7282]">
             กำลังโหลดข้อมูล
           </span>
         </div>

@@ -123,8 +123,8 @@ export function ShareDialog({
           <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/30 py-1.5 pl-3 pr-1.5">
             <LinkSimpleIcon size={16} weight="bold" className="shrink-0 text-primary-action" />
             <div className="flex min-w-0 flex-1 flex-col">
-              <span className="text-[11px] text-muted-foreground">ลิงก์เข้าร่วมงาน</span>
-              <span className="truncate text-[12.5px] font-medium text-foreground">
+              <span className="text-meta text-muted-foreground">ลิงก์เข้าร่วมงาน</span>
+              <span className="truncate text-label font-medium text-foreground">
                 {joinUrl}
               </span>
             </div>
@@ -147,7 +147,7 @@ export function ShareDialog({
 
         {selectable.length > 0 && (
           <div className="-mb-1 flex items-center justify-between pl-1">
-            <span className="text-[12.5px] font-semibold text-muted-foreground">
+            <span className="text-label font-semibold text-muted-foreground">
               รายชื่อลูกค้า
             </span>
             <Button
@@ -162,9 +162,9 @@ export function ShareDialog({
           </div>
         )}
 
-        <div className="-mx-1 flex max-h-[46vh] flex-col gap-2 overflow-y-auto px-1 py-0.5">
+        <div className="-mx-1 flex max-h-[calc(var(--vh)*46)] flex-col gap-2 overflow-y-auto px-1 py-0.5">
           {eligibleRows.length === 0 && (
-            <p className="rounded-xl bg-muted/40 px-4 py-6 text-center text-[12.5px] text-muted-foreground">
+            <p className="rounded-xl bg-muted/40 px-4 py-6 text-center text-label text-muted-foreground">
               ไม่มีลูกค้าที่ส่งได้ในแคมเปญนี้
             </p>
           )}
@@ -185,7 +185,7 @@ export function ShareDialog({
                   onChange={(next) => toggle(row.client.id, next)}
                 />
                 <Avatar type="text" initials={getInitials(name)} size="s" />
-                <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-foreground">
+                <span className="min-w-0 flex-1 truncate text-body-sm font-semibold text-foreground">
                   {name}
                 </span>
                 <TierBadge tier={row.client.membershipTier} className="shrink-0" />
@@ -198,7 +198,7 @@ export function ShareDialog({
         <div className="flex flex-col gap-3 border-t border-border pt-4">
           {/* Said plainly, because it is not true yet: the record is written,
               the mail is not sent. */}
-          <p className="flex items-start gap-1.5 text-[12px] leading-snug text-muted-foreground">
+          <p className="flex items-start gap-1.5 text-label leading-snug text-muted-foreground">
             <EnvelopeSimpleIcon size={14} className="mt-0.5 shrink-0" />
             ระบบหลังบ้านจะส่งอีเมลให้ลูกค้าที่เลือก และบันทึกการส่งไว้เพื่อการตรวจสอบ
           </p>

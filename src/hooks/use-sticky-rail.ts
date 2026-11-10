@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useIsoLayoutEffect } from "./use-iso-layout-effect";
+import { pageZoom } from "@/lib/page-zoom";
 
 /**
  * Where a sticky side rail should pin, measured rather than guessed.
@@ -78,9 +79,11 @@ export function useStickyRailTop<T extends HTMLElement = HTMLElement>() {
     const naturalTop = (padTop: number) => {
       const restore = rail.style.top;
       rail.style.top = "auto";
+      // The rects are screen pixels; `scrollTop`, the paddings and the `top`
+      // this feeds are the page's own (see `pageZoom`).
       const y =
-        rail.getBoundingClientRect().top -
-        (main?.getBoundingClientRect().top ?? 0) +
+        (rail.getBoundingClientRect().top - (main?.getBoundingClientRect().top ?? 0)) /
+          pageZoom() +
         (main?.scrollTop ?? 0) -
         padTop;
       rail.style.top = restore;
@@ -88,7 +91,7 @@ export function useStickyRailTop<T extends HTMLElement = HTMLElement>() {
     };
 
     const measure = () => {
-      const port = main?.clientHeight ?? window.innerHeight;
+      const port = main?.clientHeight ?? window.innerHeight / pageZoom();
       // `clientHeight` is the padding box, so both paddings come off it to get
       // the content box the offsets are insets from.
       const style = main ? getComputedStyle(main) : null;

@@ -99,7 +99,7 @@ export function GlobalBondDetail({
           >
             <ArrowLeftIcon size={20} />
           </Button>
-          <h1 className="text-lg font-bold leading-[26px] text-[#101828]">
+          <h1 className="text-lg font-bold leading-[30px] text-[#101828]">
             ไม่พบข้อมูล
           </h1>
         </div>
@@ -123,7 +123,7 @@ export function GlobalBondDetail({
         >
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="flex-1 min-w-0 text-base lg:text-lg font-bold leading-6 lg:leading-[26px] text-[#101828] text-left truncate">
+        <h1 className="flex-1 min-w-0 text-base lg:text-lg font-bold leading-[28px] lg:leading-[30px] text-[#101828] text-left truncate">
           {issuer.title}
         </h1>
       </div>
@@ -161,10 +161,10 @@ export function GlobalBondDetail({
             <>
               <div className="flex flex-col gap-4 w-full">
                 <div className="flex items-center justify-between w-full gap-3">
-                  <p className="text-sm font-bold leading-5 text-[#101828] md:text-base md:leading-6">
+                  <p className="text-sm font-bold leading-[24px] text-[#101828] md:text-base md:leading-[28px]">
                     จำนวน {filteredBonds.length} รายการ
                   </p>
-                  <span className="text-xs leading-4 text-[#6a7282] md:text-sm md:leading-5 whitespace-nowrap shrink-0">
+                  <span className="text-xs leading-[20px] text-[#6a7282] md:text-sm md:leading-[24px] whitespace-nowrap shrink-0">
                     <span className="md:hidden">
                       อัปเดตล่าสุด {updatedAtMobile}
                     </span>

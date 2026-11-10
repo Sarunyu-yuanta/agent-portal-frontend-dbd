@@ -603,9 +603,9 @@ function Total({
 }) {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-black/10 px-4 py-3">
-      <span className="text-xs uppercase leading-4 tracking-wide text-[#6a7282]">{label}</span>
+      <span className="text-xs uppercase leading-[20px] tracking-wide text-[#6a7282]">{label}</span>
       <span
-        className={`text-lg font-bold leading-6 tabular-nums ${
+        className={`text-lg font-bold leading-[28px] tabular-nums ${
           tone === "green" ? "text-[var(--fill-green-600)]" : "text-[#101828]"
         }`}
       >

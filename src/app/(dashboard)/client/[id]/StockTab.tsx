@@ -76,7 +76,7 @@ function SectionHeading({ icon, title, desc }: { icon?: ReactNode; title: string
     <div className="flex flex-col gap-2 w-full">
       <div className="flex items-center gap-2">
         {icon}
-        <p className="font-bold text-[18px] leading-6" style={{ color: "rgba(0,0,0,0.75)" }}>
+        <p className="font-bold text-title leading-[28px]" style={{ color: "rgba(0,0,0,0.75)" }}>
           {title}
         </p>
       </div>
@@ -569,7 +569,7 @@ function CrossSellSection({ catalog }: { catalog: MarketCatalog }) {
         {isUsEtf ? (
           <div className="flex gap-2 items-center w-full">
             <div className="flex flex-col gap-2 flex-1 min-w-0">
-              <p className="font-bold text-[18px] leading-6" style={{ color: "rgba(0,0,0,0.75)" }}>
+              <p className="font-bold text-title leading-[28px]" style={{ color: "rgba(0,0,0,0.75)" }}>
                 ETF (Exchange Traded Fund)
               </p>
               <p className="text-sm" style={{ color: "rgba(0,0,0,0.6)" }}>

@@ -76,7 +76,7 @@ function ActionBadge({
     <span
       role="img"
       aria-label={actionKindName(kind)}
-      className={`flex shrink-0 self-center items-center justify-center rounded-full text-[11px] font-semibold leading-none ${
+      className={`flex shrink-0 self-center items-center justify-center rounded-full text-meta font-semibold leading-none ${
         size === "small" ? "size-7" : "size-8"
       }`}
       style={{ backgroundColor: palette.tint, color: palette.text }}
@@ -547,7 +547,7 @@ function CompanyEventsSection({
                       onChange={(next) => toggleKind(kind, next)}
                       label={
                         <span
-                          className={`text-sm leading-5 ${shown ? "text-[#0a6ee7]" : "text-[rgba(0,0,0,0.35)]"}`}
+                          className={`text-sm leading-[24px] ${shown ? "text-[#0a6ee7]" : "text-[rgba(0,0,0,0.35)]"}`}
                         >
                           {kind}
                         </span>

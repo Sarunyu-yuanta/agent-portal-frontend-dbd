@@ -28,7 +28,7 @@ function PickTag() {
     <span className="inline-flex shrink-0 items-center gap-0.5 rounded bg-[#eff6ff] px-1 py-0.5">
       <Image src={MF_ASSETS.performersTagHighlight} alt="" width={11} height={11} className="size-[11px] shrink-0" />
       <span
-        className="text-[7px] leading-[11px] font-normal bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-transparent"
+        className="text-micro leading-[15px] font-normal bg-gradient-to-r from-[#00a1e9] to-[#004eba] bg-clip-text text-transparent"
       >
         Pick
       </span>
@@ -57,7 +57,7 @@ export function RiskBadge({ risk, inline }: { risk: number; inline?: boolean }) 
   const pill = (
     <span className="inline-flex h-5 shrink-0 self-start items-center gap-1 rounded-2xl border border-black/10 bg-white px-2">
       <RiskMeterIcon risk={risk} />
-      <span className="text-xs font-semibold leading-4 text-[#4a5565] whitespace-nowrap">risk: {risk}</span>
+      <span className="text-xs font-semibold leading-[20px] text-[#4a5565] whitespace-nowrap">risk: {risk}</span>
     </span>
   );
 
@@ -106,7 +106,7 @@ export function TagFilterChip({
           icon
         )}
       </span>
-      <span className={`text-xs leading-4 whitespace-nowrap ${active ? "text-[#0a6ee7]" : "text-[#4a5565]"}`}>
+      <span className={`text-xs leading-[20px] whitespace-nowrap ${active ? "text-[#0a6ee7]" : "text-[#4a5565]"}`}>
         {label}
       </span>
       {active && selectedBadge ? (
@@ -140,7 +140,7 @@ function ListCardMetaTag({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={iconSrc} alt="" className="absolute inset-0 block size-full max-w-none" />
       </span>
-      <span className={`text-[9px] font-normal leading-[14px] whitespace-nowrap ${labelClassName}`}>{label}</span>
+      <span className={`text-micro font-normal leading-[18px] whitespace-nowrap ${labelClassName}`}>{label}</span>
     </span>
   );
 }
@@ -178,7 +178,7 @@ function ListCardPercentPill({ changePct }: { changePct: string }) {
 
   return (
     <span
-      className={`inline-flex items-center overflow-hidden rounded px-1.5 py-0.5 text-xs leading-4 ${
+      className={`inline-flex items-center overflow-hidden rounded px-1.5 py-0.5 text-xs leading-[20px] ${
         positive ? "bg-[#dbfce7] text-[#008236]" : "bg-[#fee2e2] text-[#fb2c36]"
       }`}
     >
@@ -195,17 +195,17 @@ function ListCardPriceChange({ fund }: { fund: MutualFund }) {
 
   return (
     <div className="flex shrink-0 flex-col items-end whitespace-nowrap">
-      <div className="flex items-center justify-end gap-1 text-sm font-bold leading-5 text-[#101828]">
+      <div className="flex items-center justify-end gap-1 text-sm font-bold leading-[24px] text-[#101828]">
         <span>{fund.price}</span>
         <span>{fund.currency}</span>
       </div>
       {absNeutral ? (
         <div className="flex w-[105px] items-center gap-1">
-          <span className="h-4 flex-1 text-right text-xs leading-4 text-[#4a5565]">{fund.changeAbs}</span>
+          <span className="h-4 flex-1 text-right text-xs leading-[20px] text-[#4a5565]">{fund.changeAbs}</span>
           <ListCardPercentPill changePct={fund.changePct} />
         </div>
       ) : (
-        <div className="flex items-center gap-1 text-xs leading-4 text-[#008236]">
+        <div className="flex items-center gap-1 text-xs leading-[20px] text-[#008236]">
           <span className="flex items-center">
             <span>+</span>
             <span>{absValue}</span>
@@ -224,13 +224,13 @@ function PriceChange({ fund }: { fund: MutualFund }) {
 
   return (
     <div className="flex flex-col items-end shrink-0 whitespace-nowrap">
-      <div className="flex items-center gap-1 text-sm font-bold leading-5 text-[#101828]">
+      <div className="flex items-center gap-1 text-sm font-bold leading-[24px] text-[#101828]">
         <span>{fund.price}</span>
         <span>{fund.currency}</span>
       </div>
-      <div className="flex items-center gap-1 text-xs leading-4" style={{ color: valueColor }}>
+      <div className="flex items-center gap-1 text-xs leading-[20px]" style={{ color: valueColor }}>
         <span>{fund.changeAbs}</span>
-        <span className="inline-flex items-center rounded px-1.5 py-0.5 text-xs leading-4 bg-[#dbfce7] text-[#008236]">
+        <span className="inline-flex items-center rounded px-1.5 py-0.5 text-xs leading-[20px] bg-[#dbfce7] text-[#008236]">
           {fund.changePct}
         </span>
       </div>
@@ -318,8 +318,8 @@ export function MutualFundListCard({
     <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-clip">
       <div className="flex w-full items-start gap-2">
         <div className="flex h-[52px] min-w-0 flex-1 flex-col gap-1">
-          <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">{fund.symbol}</span>
-          <p className="line-clamp-2 text-xs leading-4 text-[#4a5565]">{fund.name}</p>
+          <span className="text-sm font-bold leading-[24px] text-[#101828] whitespace-nowrap">{fund.symbol}</span>
+          <p className="line-clamp-2 text-xs leading-[20px] text-[#4a5565]">{fund.name}</p>
         </div>
         <Sparkline fund={fund} />
         <ListCardPriceChange fund={fund} />
@@ -389,8 +389,8 @@ export function MutualFundListCardMobile({
     <div className="flex w-full flex-col gap-2">
       <div className="flex w-full items-start justify-end gap-2">
         <div className="flex h-[52px] min-w-0 flex-1 flex-col gap-1">
-          <span className="truncate text-sm font-bold leading-5 text-[#101828]">{fund.symbol}</span>
-          <p className="line-clamp-2 text-xs leading-4 text-[#4a5565]">{fund.name}</p>
+          <span className="truncate text-sm font-bold leading-[24px] text-[#101828]">{fund.symbol}</span>
+          <p className="line-clamp-2 text-xs leading-[20px] text-[#4a5565]">{fund.name}</p>
         </div>
         <Sparkline fund={fund} />
         <ListCardPriceChange fund={fund} />
@@ -457,12 +457,12 @@ export function MutualFundCard({
       <div className="flex items-center gap-2 min-w-0">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex min-w-0 items-center gap-1">
-            <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">
+            <span className="text-sm font-bold leading-[24px] text-[#101828] whitespace-nowrap">
               {fund.symbol}
             </span>
             {fund.isPick && <PickTag />}
           </div>
-          <p className="truncate text-xs leading-4 text-[#4a5565]">{fund.name}</p>
+          <p className="truncate text-xs leading-[20px] text-[#4a5565]">{fund.name}</p>
         </div>
         <Sparkline fund={fund} />
         <PriceChange fund={fund} />
@@ -544,7 +544,7 @@ function MutualFundThemeRow({
     >
       <div className="flex flex-col gap-2">
         <div className="flex w-full items-center gap-2">
-          <span className="min-w-0 flex-1 self-start break-words text-sm font-bold leading-5 text-[#101828]">
+          <span className="min-w-0 flex-1 self-start break-words text-sm font-bold leading-[24px] text-[#101828]">
             {fund.symbol}
           </span>
           <Sparkline fund={fund} />

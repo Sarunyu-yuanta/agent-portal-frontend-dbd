@@ -106,17 +106,17 @@ function SolutionHeroBannerMobile({ solution }: { solution: InvestmentSolution }
 
   const textBlock = (
     <div className="relative z-10 flex flex-1 flex-col gap-0 items-start justify-center min-w-0">
-      <p className="font-bold text-[16px] leading-6 text-[#101828] truncate w-full">{solution.name}</p>
-      <p className="text-[12px] leading-4 text-[#6a7282] truncate w-full">{solution.desc}</p>
+      <p className="font-bold text-title-sm leading-[28px] text-[#101828] truncate w-full">{solution.name}</p>
+      <p className="text-label leading-[20px] text-[#6a7282] truncate w-full">{solution.desc}</p>
     </div>
   );
 
   const couponBlock = solution.showCoupon ? (
     <div className="relative z-10 flex flex-col gap-0.5 items-end justify-center shrink-0">
       <div className="flex items-center px-1 rounded-md bg-white">
-        <span className="font-bold text-[18px] leading-6 text-[#008236]">{solution.couponRange}</span>
+        <span className="font-bold text-title leading-[28px] text-[#008236]">{solution.couponRange}</span>
       </div>
-      <span className="text-xs leading-4 text-[#6a7282]">Coupon</span>
+      <span className="text-xs leading-[20px] text-[#6a7282]">Coupon</span>
     </div>
   ) : null;
 
@@ -151,8 +151,8 @@ function SolutionHeroBannerMobile({ solution }: { solution: InvestmentSolution }
           className="relative z-10 flex flex-1 flex-col gap-0 items-start justify-center min-w-0"
           style={{ marginLeft: gapAfterIcon }}
         >
-          <p className="font-bold text-[16px] leading-6 text-[#101828] truncate w-full">{solution.name}</p>
-          <p className="text-[12px] leading-4 text-[#6a7282] truncate w-full">{solution.desc}</p>
+          <p className="font-bold text-title-sm leading-[28px] text-[#101828] truncate w-full">{solution.name}</p>
+          <p className="text-label leading-[20px] text-[#6a7282] truncate w-full">{solution.desc}</p>
         </div>
 
         {couponBlock}
@@ -202,17 +202,17 @@ function SolutionHeroBannerTablet({ solution }: { solution: InvestmentSolution }
 
   const textBlock = (
     <div className="relative z-10 flex flex-1 flex-col gap-0 items-start justify-center min-w-0">
-      <p className="font-bold text-[16px] leading-6 text-[#101828] truncate w-full">{solution.name}</p>
-      <p className="text-[12px] leading-4 text-[#6a7282] truncate w-full">{solution.desc}</p>
+      <p className="font-bold text-title-sm leading-[28px] text-[#101828] truncate w-full">{solution.name}</p>
+      <p className="text-label leading-[20px] text-[#6a7282] truncate w-full">{solution.desc}</p>
     </div>
   );
 
   const couponBlock = solution.showCoupon ? (
     <div className="relative z-10 flex flex-col gap-0.5 items-end justify-center shrink-0">
       <div className="flex items-center px-1 rounded-md bg-white">
-        <span className="font-bold text-[18px] leading-6 text-[#008236]">{solution.couponRange}</span>
+        <span className="font-bold text-title leading-[28px] text-[#008236]">{solution.couponRange}</span>
       </div>
-      <span className="text-xs leading-4 text-[#6a7282]">Coupon</span>
+      <span className="text-xs leading-[20px] text-[#6a7282]">Coupon</span>
     </div>
   ) : null;
 
@@ -246,8 +246,8 @@ function SolutionHeroBannerTablet({ solution }: { solution: InvestmentSolution }
           className="relative z-10 flex flex-1 flex-col gap-0 items-start justify-center min-w-0"
           style={{ marginLeft: gapAfterIcon }}
         >
-          <p className="font-bold text-[16px] leading-6 text-[#101828] truncate w-full">{solution.name}</p>
-          <p className="text-[12px] leading-4 text-[#6a7282] truncate w-full">{solution.desc}</p>
+          <p className="font-bold text-title-sm leading-[28px] text-[#101828] truncate w-full">{solution.name}</p>
+          <p className="text-label leading-[20px] text-[#6a7282] truncate w-full">{solution.desc}</p>
         </div>
 
         {couponBlock}
@@ -313,16 +313,16 @@ function SolutionHeroBannerDesktop({ solution }: { solution: InvestmentSolution 
         </div>
 
         <div className="relative z-10 flex flex-1 flex-col gap-2 items-start justify-center min-w-[141px] pl-[120px]">
-          <p className="font-bold text-lg leading-6 text-[#101828] truncate w-full">{solution.name}</p>
-          <p className="text-sm leading-5 text-[#6a7282] truncate w-full">{solution.desc}</p>
+          <p className="font-bold text-lg leading-[28px] text-[#101828] truncate w-full">{solution.name}</p>
+          <p className="text-sm leading-[24px] text-[#6a7282] truncate w-full">{solution.desc}</p>
         </div>
 
         {solution.showCoupon && (
           <div className="relative z-10 flex flex-col gap-2 items-end justify-center shrink-0">
             <div className="flex items-center px-1 rounded-md bg-white">
-              <span className="font-bold text-xl leading-[30px] text-[#008236]">{solution.couponRange}</span>
+              <span className="font-bold text-xl leading-[34px] text-[#008236]">{solution.couponRange}</span>
             </div>
-            <span className="text-xs leading-4 text-[#6a7282]">Coupon</span>
+            <span className="text-xs leading-[20px] text-[#6a7282]">Coupon</span>
           </div>
         )}
       </div>
@@ -366,7 +366,7 @@ export function InvestmentSolutionDetail({
         <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="flex-1 min-w-0 text-base font-bold leading-6 text-[#101828] truncate lg:text-lg lg:leading-[26px]">
+        <h1 className="flex-1 min-w-0 text-base font-bold leading-[28px] text-[#101828] truncate lg:text-lg lg:leading-[30px]">
           <span className="md:hidden">Investment Solution</span>
           <span className="hidden md:inline">{solution.name}</span>
         </h1>
@@ -378,7 +378,7 @@ export function InvestmentSolutionDetail({
         <div className="relative z-10 w-full bg-white rounded-t-[24px] pt-4 pb-10 md:max-lg:pt-4 md:max-lg:px-8 lg:pt-6">
         <div className="flex flex-col gap-2 items-center w-full max-w-[1280px] mx-auto px-4 md:max-lg:px-0 md:px-8 lg:px-20">
           <div className="flex gap-3 items-center w-full">
-            <p className="flex-1 min-w-0 text-sm leading-5 text-[#4a5565] lg:text-base lg:leading-5">
+            <p className="flex-1 min-w-0 text-sm leading-[24px] text-[#4a5565] lg:text-base lg:leading-[24px]">
               {products.length} รายการ
             </p>
             {/* Mobile filter */}
@@ -409,7 +409,7 @@ export function InvestmentSolutionDetail({
               ตัวกรอง
             </Button>
           </div>
-          <p className="w-full text-[9px] leading-[14px] text-[#6a7282] lg:text-xs lg:leading-4">
+          <p className="w-full text-micro leading-[18px] text-[#6a7282] lg:text-xs lg:leading-[20px]">
             <span className="lg:hidden">อัปเดตล่าสุด {INVESTMENT_SOLUTION_UPDATED_AT_MOBILE}</span>
             <span className="hidden lg:inline">อัปเดตล่าสุด {INVESTMENT_SOLUTION_UPDATED_AT}</span>
           </p>

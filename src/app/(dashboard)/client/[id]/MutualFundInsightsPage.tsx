@@ -32,7 +32,7 @@ export function MutualFundInsightsPage({ onBack }: { onBack: () => void }) {
         >
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="min-w-0 flex-1 truncate text-lg font-bold leading-[26px] text-[#101828]">
+        <h1 className="min-w-0 flex-1 truncate text-lg font-bold leading-[30px] text-[#101828]">
           บทวิเคราะห์ทั้งหมด
         </h1>
       </div>

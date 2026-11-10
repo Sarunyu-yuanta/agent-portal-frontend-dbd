@@ -174,11 +174,11 @@ export function SendProposalDialog({
             className="mt-0.5 shrink-0 text-primary-action"
           />
           <div className="flex min-w-0 flex-col">
-            <span className="truncate text-[12.5px] font-semibold text-foreground">
+            <span className="truncate text-label font-semibold text-foreground">
               {product.underlying}
               {product.coupon ? ` ${product.coupon}` : ""}
             </span>
-            <span className="text-[11px] leading-snug text-muted-foreground">
+            <span className="text-meta leading-snug text-muted-foreground">
               {product.documents ?? "Presentation PDF และชุดเอกสาร"}
             </span>
           </div>
@@ -201,7 +201,7 @@ export function SendProposalDialog({
               aria-label={showRecipients ? "ซ่อนรายชื่อ" : `ดูรายชื่อทั้งหมด ${recipients.length} คน`}
               className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted/40"
             >
-              <span className="min-w-0 flex-1 text-[12.5px] text-muted-foreground">
+              <span className="min-w-0 flex-1 text-label text-muted-foreground">
                 ส่งถึง{" "}
                 <span className="font-semibold text-foreground">{recipients.length} คน</span>
               </span>
@@ -216,7 +216,7 @@ export function SendProposalDialog({
                 {recipients.map(({ id, name }) => (
                   <span
                     key={id}
-                    className="inline-flex items-center gap-1 rounded-full bg-muted/50 py-0.5 pl-2 pr-1 text-[11.5px] font-medium text-foreground"
+                    className="inline-flex items-center gap-1 rounded-full bg-muted/50 py-0.5 pl-2 pr-1 text-meta font-medium text-foreground"
                   >
                     {name}
                     <button
@@ -236,7 +236,7 @@ export function SendProposalDialog({
 
         {step === "clients" && rows.length > 0 && (
           <div className="-mb-1 flex items-center justify-between pl-1">
-            <span className="text-[12.5px] font-semibold text-muted-foreground">
+            <span className="text-label font-semibold text-muted-foreground">
               รายชื่อลูกค้า
             </span>
             <Button
@@ -254,7 +254,7 @@ export function SendProposalDialog({
         )}
 
         {step === "clients" && (
-          <div className="-mx-1 flex max-h-[46vh] flex-col gap-2 overflow-y-auto px-1 py-0.5">
+          <div className="-mx-1 flex max-h-[calc(var(--vh)*46)] flex-col gap-2 overflow-y-auto px-1 py-0.5">
             {rows.map(({ client, sent, outcome }) => {
               const name = maskName(client.name, isPrivate);
               const checked = picked.has(client.id);
@@ -272,7 +272,7 @@ export function SendProposalDialog({
                     onChange={(next) => toggle(client.id, next)}
                   />
                   <Avatar type="text" initials={getInitials(name)} size="s" />
-                  <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-foreground">
+                  <span className="min-w-0 flex-1 truncate text-body-sm font-semibold text-foreground">
                     {name}
                   </span>
                   {/* Where they already stand. Nothing for a client never
@@ -305,7 +305,7 @@ export function SendProposalDialog({
         {step === "channels" && (
           <div className="flex flex-col gap-2">
             <div className="-mb-1 flex items-center justify-between pl-1">
-              <span className="text-[12.5px] font-semibold text-muted-foreground">
+              <span className="text-label font-semibold text-muted-foreground">
                 ช่องทางการส่ง
               </span>
               <Button
@@ -347,10 +347,10 @@ export function SendProposalDialog({
                     <Icon size={18} weight="fill" />
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="text-[13.5px] font-semibold text-foreground">
+                    <span className="text-body-sm font-semibold text-foreground">
                       {label}
                     </span>
-                    <span className="truncate text-[11.5px] text-muted-foreground">
+                    <span className="truncate text-meta text-muted-foreground">
                       {hint}
                     </span>
                   </span>
@@ -379,7 +379,7 @@ export function SendProposalDialog({
             <>
               {/* Said plainly, because it is not true yet: the record is
                   written, nothing is delivered. */}
-              <p className="flex items-start gap-1.5 text-[12px] leading-snug text-muted-foreground">
+              <p className="flex items-start gap-1.5 text-label leading-snug text-muted-foreground">
                 <PaperPlaneTiltIcon size={14} className="mt-0.5 shrink-0" />
                 ระบบหลังบ้านจะส่งเอกสารผ่านช่องทางที่เลือก
                 และบันทึกการส่งไว้เพื่อวัดผล

@@ -148,9 +148,9 @@ function ReminderRow({
       </RowIcon>
 
       <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-        <p className="truncate text-[14px] font-bold text-foreground">{title}</p>
+        <p className="truncate text-body font-bold text-foreground">{title}</p>
         {meta ? (
-          <p className="truncate text-[11px] text-muted-foreground">{meta}</p>
+          <p className="truncate text-meta text-muted-foreground">{meta}</p>
         ) : null}
       </div>
     </div>
@@ -163,7 +163,7 @@ function MoreRow({ count }: { count: number }) {
       href={REMINDERS_PAGE}
       className="flex w-full items-center gap-2 p-3 text-left no-underline transition-colors hover:bg-[var(--fill-p1-100)]"
     >
-      <p className="min-w-0 flex-1 truncate text-[13px] font-bold text-foreground">
+      <p className="min-w-0 flex-1 truncate text-body-sm font-bold text-foreground">
         ดูอีก {count} รายการ
       </p>
       <CaretRightIcon

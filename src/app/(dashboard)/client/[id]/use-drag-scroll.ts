@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import { pageZoom } from "@/lib/page-zoom";
 
 /**
  * Attach `ref` to a horizontally-scrollable element and spread the returned
@@ -26,7 +27,8 @@ export function useDragScroll() {
     if (!isDragging.current || !ref.current) return;
     e.preventDefault();
     const x = e.pageX - ref.current.offsetLeft;
-    const walk = (x - startX.current) * 1.2;
+    // Pointer travel is screen pixels; `scrollLeft` is the page's own.
+    const walk = ((x - startX.current) * 1.2) / pageZoom();
     ref.current.scrollLeft = scrollLeft.current - walk;
   }, []);
 

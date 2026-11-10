@@ -149,7 +149,7 @@ export function MiniCalendar({
           {WEEKDAY_TH.map((label, i) => (
             <div
               key={WEEKDAY_LABELS[i]}
-              className="pb-1.5 text-center text-[10px] font-semibold text-[var(--text-default-placeholder)]"
+              className="pb-1.5 text-center text-meta font-semibold text-[var(--text-default-placeholder)]"
             >
               {label}
             </div>
@@ -352,7 +352,7 @@ function DayCell({
           would read as a single blob the moment they touched. 24px is also the
           day number's size in both full calendars (`DayCell`). */}
       <span
-        className={`flex size-6 items-center justify-center rounded-full text-[12px] tabular-nums transition-colors ${
+        className={`flex size-6 items-center justify-center rounded-full text-label tabular-nums transition-colors ${
           isToday
             ? "bg-primary-action font-bold text-white group-hover:bg-[var(--primary-action-hover)]!"
             : open

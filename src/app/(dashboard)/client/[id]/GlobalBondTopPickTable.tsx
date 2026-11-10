@@ -62,7 +62,7 @@ export function GlobalBondTopPickTable({
                 {...rowCellProps(i, isLastRow(i))}
               >
                 <BondLogo src={row.logo} className="size-8 rounded" />
-                <span className="flex-1 min-w-0 truncate text-sm leading-5 text-[#101828]">
+                <span className="flex-1 min-w-0 truncate text-sm leading-[24px] text-[#101828]">
                   {row.name}
                 </span>
               </div>
@@ -91,7 +91,7 @@ export function GlobalBondTopPickTable({
             </div>
             {TOP_PICK_ROWS.map((row, i) => (
               <div key={i} className={`flex flex-1 items-center px-4 py-3.5 min-h-[52px] ${ROW_CELL_CLS}`} {...rowCellProps(i, isLastRow(i))}>
-                <span className="text-sm leading-5 text-[#101828]">{row.isin}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.isin}</span>
               </div>
             ))}
           </div>
@@ -102,7 +102,7 @@ export function GlobalBondTopPickTable({
             </div>
             {TOP_PICK_ROWS.map((row, i) => (
               <div key={i} className={`flex flex-1 items-center justify-center px-4 py-3.5 min-h-[52px] ${ROW_CELL_CLS}`} {...rowCellProps(i, isLastRow(i))}>
-                <span className="text-sm leading-5 text-[#101828]">{row.currency}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.currency}</span>
               </div>
             ))}
           </div>
@@ -113,7 +113,7 @@ export function GlobalBondTopPickTable({
             </div>
             {TOP_PICK_ROWS.map((row, i) => (
               <div key={i} className={`flex flex-1 items-center justify-end px-4 py-3.5 min-h-[52px] ${ROW_CELL_CLS}`} {...rowCellProps(i, isLastRow(i))}>
-                <span className="text-sm leading-5 text-[#101828]">{row.couponRate}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.couponRate}</span>
               </div>
             ))}
           </div>
@@ -124,7 +124,7 @@ export function GlobalBondTopPickTable({
             </div>
             {TOP_PICK_ROWS.map((row, i) => (
               <div key={i} className={`flex flex-1 items-center justify-end px-4 py-3.5 min-h-[52px] ${ROW_CELL_CLS}`} {...rowCellProps(i, isLastRow(i))}>
-                <span className="text-sm leading-5 text-[#101828]">{row.price}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.price}</span>
               </div>
             ))}
           </div>
@@ -135,7 +135,7 @@ export function GlobalBondTopPickTable({
             </div>
             {TOP_PICK_ROWS.map((row, i) => (
               <div key={i} className={`flex flex-1 items-center justify-end px-4 py-3.5 min-h-[52px] ${ROW_CELL_CLS}`} {...rowCellProps(i, isLastRow(i))}>
-                <span className="text-sm leading-5 text-[#101828]">{row.yieldPct}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.yieldPct}</span>
               </div>
             ))}
           </div>
@@ -146,7 +146,7 @@ export function GlobalBondTopPickTable({
             </div>
             {TOP_PICK_ROWS.map((row, i) => (
               <div key={i} className={`flex flex-1 items-center justify-center px-4 py-3.5 min-h-[52px] ${ROW_CELL_CLS}`} {...rowCellProps(i, isLastRow(i))}>
-                <span className="text-sm leading-5 text-[#101828]">{row.maturity}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.maturity}</span>
               </div>
             ))}
           </div>
@@ -157,7 +157,7 @@ export function GlobalBondTopPickTable({
             </div>
             {TOP_PICK_ROWS.map((row, i) => (
               <div key={i} className={`flex flex-1 items-center justify-end px-4 py-3.5 min-h-[52px] ${ROW_CELL_CLS}`} {...rowCellProps(i, isLastRow(i))}>
-                <span className="text-sm leading-5 text-[#101828]">{row.duration}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.duration}</span>
               </div>
             ))}
           </div>

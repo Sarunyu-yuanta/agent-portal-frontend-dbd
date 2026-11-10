@@ -282,12 +282,12 @@ export function ClientDetailPanel({
                   }`}
                 >
                   <span className={`text-primary-action ${comingSoon ? "opacity-40" : ""}`}>{icon}</span>
-                  <span className={`text-[11px] font-medium text-primary-action leading-none ${comingSoon ? "opacity-40" : ""}`}>
+                  <span className={`text-meta font-medium text-primary-action leading-none ${comingSoon ? "opacity-40" : ""}`}>
                     {label}
                   </span>
                   {comingSoon && (
                     <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-default-secondary)]/70">
-                      <span className="text-[10px] font-semibold text-primary-action bg-[var(--bg-brand-light)] border border-primary-action/30 px-1.5 py-0.5 rounded-full">Coming soon</span>
+                      <span className="text-meta font-semibold text-primary-action bg-[var(--bg-brand-light)] border border-primary-action/30 px-1.5 py-0.5 rounded-full">Coming soon</span>
                     </div>
                   )}
                 </button>

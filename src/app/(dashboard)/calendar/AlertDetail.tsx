@@ -244,7 +244,7 @@ export function AlertDetail({
 
       {/* `max-h` rather than `flex-1`, for the reason `HolderContact` gives: a
           pane in the sliding track needs a height of its own to be measured. */}
-      <ul className="flex max-h-[40vh] flex-col overflow-y-auto pb-2">
+      <ul className="flex max-h-[calc(var(--vh)*40)] flex-col overflow-y-auto pb-2">
         {holders.map((holder) => (
           <li key={holder.id}>
             {/* Into this panel's contact view, not out to the client's page. An

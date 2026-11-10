@@ -119,7 +119,7 @@ export function CreateOrderButton({ desk, clientId }: { desk?: Desk; clientId?: 
       >
         {!activeDesk ? (
           <div className="flex flex-col gap-3 pt-1">
-            <p className="pl-1 text-[12.5px] font-semibold text-muted-foreground">เลือกสินทรัพย์</p>
+            <p className="pl-1 text-label font-semibold text-muted-foreground">เลือกสินทรัพย์</p>
             <div className="flex flex-col gap-2">
               {DESKS.map(({ desk: d, label }) => {
                 const count = openFor(d).length;
@@ -136,8 +136,8 @@ export function CreateOrderButton({ desk, clientId }: { desk?: Desk; clientId?: 
                     }`}
                   >
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="text-[13.5px] font-semibold text-foreground">{label}</span>
-                      <span className="text-[12px] text-muted-foreground">
+                      <span className="text-body-sm font-semibold text-foreground">{label}</span>
+                      <span className="text-label text-muted-foreground">
                         {count > 0 ? `เปิดรับ ${count} รายการ` : "ไม่มีสินค้าที่เปิดรับ"}
                       </span>
                     </span>
@@ -157,12 +157,12 @@ export function CreateOrderButton({ desk, clientId }: { desk?: Desk; clientId?: 
               size="sm"
               className="w-full"
             />
-            <p className="pl-1 text-[12.5px] font-semibold text-muted-foreground">
+            <p className="pl-1 text-label font-semibold text-muted-foreground">
               เลือกสินค้า ({shown.length})
             </p>
-            <div className="-mx-1 flex max-h-[52vh] flex-col gap-2 overflow-y-auto px-1 py-0.5">
+            <div className="-mx-1 flex max-h-[calc(var(--vh)*52)] flex-col gap-2 overflow-y-auto px-1 py-0.5">
               {shown.length === 0 ? (
-                <p className="py-8 text-center text-[13px] text-muted-foreground">
+                <p className="py-8 text-center text-body-sm text-muted-foreground">
                   {query ? "ไม่พบสินค้าที่ค้นหา" : "ไม่มีสินค้าที่เปิดรับอยู่ตอนนี้"}
                 </p>
               ) : (
@@ -198,13 +198,13 @@ function ProductRow({ product, onPick }: { product: BookableProduct; onPick: () 
       className="flex cursor-pointer items-center gap-3 rounded-xl border border-border/60 px-3 py-2.5 text-left transition-colors hover:border-border hover:bg-muted/40"
     >
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-[13.5px] font-semibold text-foreground">
+        <span className="truncate text-body-sm font-semibold text-foreground">
           {product.underlying}
           {product.coupon && (
             <span className="ml-1.5 font-semibold text-primary-action">{product.coupon}</span>
           )}
         </span>
-        <span className="truncate text-[12px] text-muted-foreground">
+        <span className="truncate text-label text-muted-foreground">
           {[product.productType, product.currency, product.minInvestment && `ขั้นต่ำ ${product.minInvestment}`]
             .filter(Boolean)
             .join(" · ")}

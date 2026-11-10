@@ -104,7 +104,7 @@ export function NotificationBell({
             gi > 0 ? "border-t" : ""
           }`}
         >
-          <span className="text-xs leading-4 font-medium text-muted-foreground">
+          <span className="text-xs leading-[20px] font-medium text-muted-foreground">
             {group.label}
           </span>
         </div>
@@ -123,16 +123,16 @@ export function NotificationBell({
             </span>
             <span className="min-w-0 flex-1 space-y-1">
               <span className="flex items-start gap-2">
-                <span className="line-clamp-2 min-w-0 flex-1 text-base leading-6 font-semibold text-foreground">
+                <span className="line-clamp-2 min-w-0 flex-1 text-base leading-[28px] font-semibold text-foreground">
                   {item.title}
                 </span>
                 {item.time && (
-                  <span className="shrink-0 whitespace-nowrap text-xs leading-6 text-muted-foreground">
+                  <span className="shrink-0 whitespace-nowrap text-xs leading-[28px] text-muted-foreground">
                     {item.time}
                   </span>
                 )}
               </span>
-              <span className="line-clamp-3 block text-sm leading-5 text-muted-foreground">
+              <span className="line-clamp-3 block text-sm leading-[24px] text-muted-foreground">
                 {item.description}
               </span>
             </span>
@@ -182,7 +182,7 @@ export function NotificationBell({
         <div
           role="dialog"
           aria-label="Notifications"
-          className="absolute right-0 top-full z-50 mt-2 w-[375px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-lg"
+          className="absolute right-0 top-full z-50 mt-2 w-[375px] max-w-[calc(var(--vw)*100-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-lg"
         >
           <div className="max-h-[480px] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {!hasRows && (

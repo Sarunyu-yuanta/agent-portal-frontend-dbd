@@ -16,7 +16,7 @@ export function FilterGroup({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[12.5px] font-semibold text-muted-foreground">{label}</p>
+      <p className="text-label font-semibold text-muted-foreground">{label}</p>
       <div className="flex flex-wrap gap-2">
         <Chip
           label="ทั้งหมด"

@@ -20,6 +20,7 @@ import { FundTagBadges } from "./MutualFundCard";
 import { NoDividendIllustration } from "./NoDividendIllustration";
 import { SendProposalButton } from "@/app/(dashboard)/orders/SendProposalButton";
 import { offeredProductId } from "@/app/(dashboard)/orders/offered-products";
+import { pageZoom } from "@/lib/page-zoom";
 
 const DETAIL_TABS = ["ภาพรวม", "ผลตอบแทน", "สัดส่วนการลงทุน", "ข้อมูลกองทุน"] as const;
 
@@ -41,7 +42,7 @@ function RiskTag({ risk }: { risk: number }) {
           />
         </span>
       </span>
-      <span className="text-xs font-semibold leading-4 text-[#4a5565] whitespace-nowrap">
+      <span className="text-xs font-semibold leading-[20px] text-[#4a5565] whitespace-nowrap">
         risk: {risk}
       </span>
     </span>
@@ -52,7 +53,7 @@ function FxRiskTag({ label }: { label: string }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-1 rounded-2xl border border-black/10 bg-white px-2 py-0.5">
       <Image src={MF_ASSETS.coinsIcon} alt="" width={20} height={20} className="size-5 shrink-0" />
-      <span className="text-xs font-semibold leading-4 text-[#4a5565] whitespace-nowrap">{label}</span>
+      <span className="text-xs font-semibold leading-[20px] text-[#4a5565] whitespace-nowrap">{label}</span>
     </span>
   );
 }
@@ -70,7 +71,7 @@ function CreditCardTag() {
           />
         </span>
       </span>
-      <span className="text-xs font-semibold leading-4 text-[#4a5565] whitespace-nowrap">Credit Card</span>
+      <span className="text-xs font-semibold leading-[20px] text-[#4a5565] whitespace-nowrap">Credit Card</span>
     </span>
   );
 }
@@ -81,10 +82,10 @@ function ReturnCell({ period, value }: { period: string; value: string }) {
 
   return (
     <div className="flex h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-lg bg-[#f9fafb] p-1.5">
-      <span className="text-sm font-bold leading-5" style={{ color }}>
+      <span className="text-sm font-bold leading-[24px]" style={{ color }}>
         {value}
       </span>
-      <span className="text-xs leading-4 text-black text-center">{period}</span>
+      <span className="text-xs leading-[20px] text-black text-center">{period}</span>
     </div>
   );
 }
@@ -100,9 +101,9 @@ function FeeCell({
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-md bg-[#f9fafb] p-1.5">
-      <span className="text-sm leading-5 text-[#4a5565] text-center">{label}</span>
-      <span className="text-[9px] leading-[14px] text-[#4a5565] text-center">{sublabel}</span>
-      <span className="text-sm font-bold leading-5 text-[#101828]">{value}</span>
+      <span className="text-sm leading-[24px] text-[#4a5565] text-center">{label}</span>
+      <span className="text-micro leading-[18px] text-[#4a5565] text-center">{sublabel}</span>
+      <span className="text-sm font-bold leading-[24px] text-[#101828]">{value}</span>
     </div>
   );
 }
@@ -111,13 +112,13 @@ function FundInfoRow({ label, value, link }: { label: string; value: ReactNode; 
   return (
     <div className="flex w-full border-b border-black/10 last:border-b-0">
       <div className="flex min-h-12 flex-1 items-center px-4 py-3.5">
-        <span className="text-sm leading-5 text-[#101828]">{label}</span>
+        <span className="text-sm leading-[24px] text-[#101828]">{label}</span>
       </div>
       <div className="flex min-h-12 flex-1 items-center px-4 py-3.5">
         {link ? (
-          <span className="text-sm leading-5 text-[#0a6ee7]">{value}</span>
+          <span className="text-sm leading-[24px] text-[#0a6ee7]">{value}</span>
         ) : (
-          <span className="text-sm leading-5 text-[#4a5565]">{value}</span>
+          <span className="text-sm leading-[24px] text-[#4a5565]">{value}</span>
         )}
       </div>
     </div>
@@ -140,7 +141,7 @@ function ChartRangeSelector({
             key={range}
             type="button"
             onClick={() => onChange(range)}
-            className={`flex min-h-8 flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-bold leading-4 transition-colors ${
+            className={`flex min-h-8 flex-1 items-center justify-center rounded-full px-2 py-1.5 text-xs font-bold leading-[20px] transition-colors ${
               selected
                 ? "bg-white text-[#292524] shadow-[0px_4px_8px_0px_rgba(28,25,23,0.03),0px_8px_16px_0px_rgba(28,25,23,0.02)]"
                 : "text-black/75"
@@ -183,7 +184,7 @@ function OverviewContent({ fund }: { fund: MutualFundDetailData }) {
       )}
 
       <section className="flex w-full flex-col gap-4 py-4 lg:px-0">
-        <h2 className="text-base font-bold leading-6 text-black">ผลตอบแทนย้อนหลัง</h2>
+        <h2 className="text-base font-bold leading-[28px] text-black">ผลตอบแทนย้อนหลัง</h2>
         <div className="flex flex-col gap-2">
           {returnRows.map((row, rowIndex) => (
             <div key={rowIndex} className="flex gap-2">
@@ -196,12 +197,12 @@ function OverviewContent({ fund }: { fund: MutualFundDetailData }) {
       </section>
 
       <section className="flex w-full flex-col gap-4 py-4 lg:px-0">
-        <h2 className="text-base font-bold leading-6 text-[#101828]">นโยบายการลงทุน</h2>
+        <h2 className="text-base font-bold leading-[28px] text-[#101828]">นโยบายการลงทุน</h2>
         <div className="flex flex-col items-end gap-2.5 rounded-lg border border-black/10 p-3">
-          <p className="w-full text-sm leading-5 text-[#101828] line-clamp-4">{fund.investmentPolicy}</p>
+          <p className="w-full text-sm leading-[24px] text-[#101828] line-clamp-4">{fund.investmentPolicy}</p>
           <button
             type="button"
-            className="border-none bg-transparent p-0 text-sm leading-5 text-[#2b7fff] cursor-pointer"
+            className="border-none bg-transparent p-0 text-sm leading-[24px] text-[#2b7fff] cursor-pointer"
             onClick={() => setPolicyModalOpen(true)}
           >
             อ่านเพิ่มเติม
@@ -216,7 +217,7 @@ function OverviewContent({ fund }: { fund: MutualFundDetailData }) {
       />
 
       <section className="flex w-full flex-col gap-4 py-4 lg:px-0">
-        <h2 className="text-base font-bold leading-6 text-[#101828]">ค่าธรรมเนียม</h2>
+        <h2 className="text-base font-bold leading-[28px] text-[#101828]">ค่าธรรมเนียม</h2>
         <div className="flex gap-2.5 rounded-lg border border-black/10 p-3">
           <FeeCell label="ซื้อ" sublabel="(Front-end Fee)" value={fund.fees.frontEnd} />
           <FeeCell label="ขาย" sublabel="(Front-end Fee)" value={fund.fees.backEnd} />
@@ -226,20 +227,20 @@ function OverviewContent({ fund }: { fund: MutualFundDetailData }) {
 
       {fund.dividend && (
         <section className="flex w-full flex-col gap-4 py-4 lg:px-0">
-          <h2 className="text-base font-bold leading-6 text-[#101828]">การจ่ายปันผลครั้งล่าสุด</h2>
+          <h2 className="text-base font-bold leading-[28px] text-[#101828]">การจ่ายปันผลครั้งล่าสุด</h2>
           <div className="rounded-lg border border-black/10 p-3">
             <div className="flex gap-2.5">
               <div className="flex flex-1 flex-col items-center gap-0.5 p-1.5">
-                <span className="text-xs leading-4 text-[#4a5565] text-center">วันที่ปิดสมุด</span>
-                <span className="text-sm font-bold leading-5 text-[#101828]">{fund.dividend.bookCloseDate}</span>
+                <span className="text-xs leading-[20px] text-[#4a5565] text-center">วันที่ปิดสมุด</span>
+                <span className="text-sm font-bold leading-[24px] text-[#101828]">{fund.dividend.bookCloseDate}</span>
               </div>
               <div className="flex flex-1 flex-col items-center gap-0.5 p-1.5">
-                <span className="text-xs leading-4 text-[#4a5565] text-center">วันที่จ่าย</span>
-                <span className="text-sm font-bold leading-5 text-[#101828]">{fund.dividend.paymentDate}</span>
+                <span className="text-xs leading-[20px] text-[#4a5565] text-center">วันที่จ่าย</span>
+                <span className="text-sm font-bold leading-[24px] text-[#101828]">{fund.dividend.paymentDate}</span>
               </div>
               <div className="flex flex-1 flex-col items-center gap-0.5 p-1.5">
-                <span className="text-xs leading-4 text-[#4a5565] text-center">บาท/หน่วย</span>
-                <span className="text-sm font-bold leading-5 text-[#101828]">{fund.dividend.amountPerUnit}</span>
+                <span className="text-xs leading-[20px] text-[#4a5565] text-center">บาท/หน่วย</span>
+                <span className="text-sm font-bold leading-[24px] text-[#101828]">{fund.dividend.amountPerUnit}</span>
               </div>
             </div>
           </div>
@@ -247,7 +248,7 @@ function OverviewContent({ fund }: { fund: MutualFundDetailData }) {
       )}
 
       <section className="flex w-full flex-col gap-4 py-4 lg:px-0">
-        <h2 className="text-base font-bold leading-6 text-[#101828]">รายละเอียดกองทุน</h2>
+        <h2 className="text-base font-bold leading-[28px] text-[#101828]">รายละเอียดกองทุน</h2>
         <div className="overflow-hidden rounded-lg border border-black/10">
           <FundInfoRow
             label="หนังสือชี้ชวน"
@@ -286,7 +287,7 @@ function valueColor(value: string): string {
 
 function SectionTitle({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <h2 className={`text-base font-bold leading-6 text-[#101828] ${className}`}>{children}</h2>
+    <h2 className={`text-base font-bold leading-[28px] text-[#101828] ${className}`}>{children}</h2>
   );
 }
 
@@ -300,7 +301,7 @@ function DataTableHeader({ columns }: { columns: { label: string; align?: "left"
             col.align === "center" ? "justify-center text-center" : col.align === "right" ? "justify-end text-right" : ""
           }`}
         >
-          <span className="text-xs leading-4 text-[#6a7282]">{col.label}</span>
+          <span className="text-xs leading-[20px] text-[#6a7282]">{col.label}</span>
         </div>
       ))}
     </div>
@@ -322,7 +323,7 @@ function DataTableCell({
         striped ? "bg-[#f9fafb]" : "bg-white"
       } ${align === "center" ? "justify-center text-center" : align === "right" ? "justify-end text-right" : ""}`}
     >
-      <span className="text-sm leading-5" style={{ color: valueColor(value) }}>
+      <span className="text-sm leading-[24px]" style={{ color: valueColor(value) }}>
         {value}
       </span>
     </div>
@@ -334,8 +335,8 @@ function KeyValueBox({ rows }: { rows: { label: string; value: string }[] }) {
     <div className="flex w-full flex-col gap-3 rounded-lg border border-black/10 p-3">
       {rows.map((row) => (
         <div key={row.label} className="flex w-full items-end gap-2">
-          <span className="flex-1 text-sm leading-5 text-[#4a5565]">{row.label}</span>
-          <span className="shrink-0 text-sm leading-5 text-[#101828] whitespace-nowrap">{row.value}</span>
+          <span className="flex-1 text-sm leading-[24px] text-[#4a5565]">{row.label}</span>
+          <span className="shrink-0 text-sm leading-[24px] text-[#101828] whitespace-nowrap">{row.value}</span>
         </div>
       ))}
     </div>
@@ -348,13 +349,13 @@ function FeeDetailsTable({ rows }: { rows: { label: string; actual: string; maxi
     <div className="w-full overflow-hidden rounded-lg border border-black/10">
       <div className="flex w-full">
         <div className="flex h-12 min-w-0 flex-1 items-center border-b border-black/10 bg-white px-4 py-3.5">
-          <span className="text-sm leading-5 text-[#4a5565]">รายการค่าธรรมเนียม</span>
+          <span className="text-sm leading-[24px] text-[#4a5565]">รายการค่าธรรมเนียม</span>
         </div>
         <div className="flex h-12 w-20 shrink-0 items-center border-b border-black/10 bg-white px-4 py-3.5">
-          <span className="text-sm leading-5 text-[#4a5565]">เก็บจริง</span>
+          <span className="text-sm leading-[24px] text-[#4a5565]">เก็บจริง</span>
         </div>
         <div className="flex h-12 w-[81px] shrink-0 items-center border-b border-black/10 bg-white px-4 py-3.5">
-          <span className="text-sm leading-5 text-[#4a5565]">ไม่เกิน</span>
+          <span className="text-sm leading-[24px] text-[#4a5565]">ไม่เกิน</span>
         </div>
       </div>
       {rows.map((row, index) => {
@@ -366,13 +367,13 @@ function FeeDetailsTable({ rows }: { rows: { label: string; actual: string; maxi
         return (
           <div key={row.label} className="flex w-full">
             <div className={`flex min-h-12 min-w-0 flex-1 items-center px-4 py-3.5 ${rowBorder} ${bg}`}>
-              <span className="text-sm leading-5 text-[#101828]">{row.label}</span>
+              <span className="text-sm leading-[24px] text-[#101828]">{row.label}</span>
             </div>
             <div className={`flex min-h-12 w-20 shrink-0 items-center px-4 py-3.5 ${rowBorder} ${bg}`}>
-              <span className="text-sm leading-5 text-[#101828]">{row.actual}</span>
+              <span className="text-sm leading-[24px] text-[#101828]">{row.actual}</span>
             </div>
             <div className={`flex min-h-12 w-[81px] shrink-0 items-center px-4 py-3.5 ${rowBorder} ${bg}`}>
-              <span className="text-sm leading-5 text-[#101828]">{row.maximum}</span>
+              <span className="text-sm leading-[24px] text-[#101828]">{row.maximum}</span>
             </div>
           </div>
         );
@@ -392,7 +393,7 @@ function AllocationSection({
     return (
       <section className="flex w-full flex-col gap-3 bg-white py-4 lg:bg-transparent">
         <SectionTitle className="lg:px-0">{title}</SectionTitle>
-        <p className="text-sm leading-5 text-[#6a7282] lg:px-0">ไม่มีข้อมูล</p>
+        <p className="text-sm leading-[24px] text-[#6a7282] lg:px-0">ไม่มีข้อมูล</p>
       </section>
     );
   }
@@ -410,8 +411,8 @@ function AllocationSection({
                   className="size-2 shrink-0 rounded-full"
                   style={{ backgroundColor: item.color ?? ["#074EA4", "#51A2FF", "#A3B3FF"][index % 3] }}
                 />
-                <span className="flex-1 text-sm leading-5 text-[#4a5565]">{item.label}</span>
-                <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">
+                <span className="flex-1 text-sm leading-[24px] text-[#4a5565]">{item.label}</span>
+                <span className="text-sm font-bold leading-[24px] text-[#101828] whitespace-nowrap">
                   {item.percent}%
                 </span>
               </div>
@@ -467,7 +468,7 @@ function PerformanceContent({ fund }: { fund: MutualFundDetailData }) {
         ) : (
           <div className="flex w-full items-center gap-[15px]">
             <NoDividendIllustration />
-            <p className="text-center text-sm leading-5 text-[#4a5565]">กองทุนนี้ไม่มีการจ่ายปันผล</p>
+            <p className="text-center text-sm leading-[24px] text-[#4a5565]">กองทุนนี้ไม่มีการจ่ายปันผล</p>
           </div>
         )}
       </section>
@@ -581,9 +582,11 @@ export function MutualFundDetail({
     const main = document.querySelector("main");
     if (!main || !tabsEl || !tabsAnchorEl) return null;
     const stickyTop = parseFloat(getComputedStyle(tabsEl).top) || 0;
+    // The rects are screen pixels; `stickyTop` and `scrollTop` are the page's
+    // own (see `pageZoom`).
     return (
-      tabsAnchorEl.getBoundingClientRect().top -
-      main.getBoundingClientRect().top -
+      (tabsAnchorEl.getBoundingClientRect().top - main.getBoundingClientRect().top) /
+        pageZoom() -
       stickyTop
     );
   };
@@ -640,8 +643,8 @@ export function MutualFundDetail({
             <ArrowLeftIcon size={18} />
           </Button>
           <div className="flex min-w-0 flex-1 items-center gap-1">
-            <p className="shrink-0 text-base font-bold leading-6 text-[#101828]">{fund.symbol}</p>
-            <p className="min-w-0 flex-1 truncate text-sm leading-5 text-[#4a5565]">
+            <p className="shrink-0 text-base font-bold leading-[28px] text-[#101828]">{fund.symbol}</p>
+            <p className="min-w-0 flex-1 truncate text-sm leading-[24px] text-[#4a5565]">
               {fund.name}
             </p>
           </div>
@@ -668,29 +671,29 @@ export function MutualFundDetail({
             </Button>
             {/* Figma 360:64854 — View / Highlight sit right after the symbol */}
             <div className="flex min-w-0 flex-1 items-center gap-1">
-              <h1 className="min-w-0 text-lg font-bold leading-7 text-[#101828]">{fund.symbol}</h1>
+              <h1 className="min-w-0 text-lg font-bold leading-[32px] text-[#101828]">{fund.symbol}</h1>
               <FundTagBadges fund={fund} />
             </div>
           </div>
           {/* `pl-9` keeps the name under the symbol rather than under the
               arrow — the 28px button plus the row's 8px gap. */}
-          <p className="pb-3 pl-9 pt-1.5 text-sm leading-5 text-[#4a5565] lg:pl-0">{fund.name}</p>
+          <p className="pb-3 pl-9 pt-1.5 text-sm leading-[24px] text-[#4a5565] lg:pl-0">{fund.name}</p>
 
           <div className="flex flex-col gap-2.5 pb-3">
             <div className="flex items-end gap-1">
               <Image src={MF_ASSETS.navPriceIcon} alt="" width={20} height={20} className="size-5 shrink-0" />
               <span className="text-[32px] font-bold leading-[48px] text-[#101828]">{fund.nav}</span>
-              <span className="text-sm leading-5 text-[#6a7282]">{fund.currency}</span>
+              <span className="text-sm leading-[24px] text-[#6a7282]">{fund.currency}</span>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
               <span
-                className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs leading-4 ${
+                className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs leading-[20px] ${
                   isPositive ? "bg-[#dbfce7] text-[#008236]" : "bg-[#fee2e2] text-[#fb2c36]"
                 }`}
               >
                 {fund.changePct}
               </span>
-              <span className="inline-flex items-center gap-1 text-[9px] leading-[14px] text-[#666]">
+              <span className="inline-flex items-center gap-1 text-micro leading-[18px] text-[#666]">
                 <ClockIcon size={16} />
                 {fund.navDate}
               </span>
@@ -722,7 +725,7 @@ export function MutualFundDetail({
                   key={tab}
                   type="button"
                   onClick={() => selectTab(tab)}
-                  className={`flex shrink-0 items-center justify-center border-b-[1.5px] px-3 py-2.5 text-sm font-bold leading-5 whitespace-nowrap md:min-w-[80px] md:flex-1 md:shrink lg:min-w-[80px] lg:flex-1 ${
+                  className={`flex shrink-0 items-center justify-center border-b-[1.5px] px-3 py-2.5 text-sm font-bold leading-[24px] whitespace-nowrap md:min-w-[80px] md:flex-1 md:shrink lg:min-w-[80px] lg:flex-1 ${
                     active
                       ? "border-[#0a6ee7] text-[#0a6ee7]"
                       : "border-black/10 text-black/60"

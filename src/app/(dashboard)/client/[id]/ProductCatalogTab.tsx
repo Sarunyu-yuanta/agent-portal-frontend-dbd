@@ -57,6 +57,7 @@ import {
   TopIdeaStrip,
   TopPickSection,
 } from "./ProductCatalogSections";
+import { pageZoom } from "@/lib/page-zoom";
 
 const SEARCH_MODAL_PADDING = 12;
 const MAX_SEARCH_RESULTS = 20;
@@ -275,8 +276,10 @@ export function ProductCatalogTab({
           desktopSearchWrapRef.current,
         ].find((node) => node && node.offsetParent !== null) ?? null;
       if (!el) return;
+      // Screen pixels, converted to the page's own for `style` (see `pageZoom`).
       const rect = el.getBoundingClientRect();
-      setAnchorRect({ top: rect.top, left: rect.left, width: rect.width });
+      const zoom = pageZoom();
+      setAnchorRect({ top: rect.top / zoom, left: rect.left / zoom, width: rect.width / zoom });
     };
     measure();
     window.addEventListener("resize", measure);
@@ -810,7 +813,7 @@ export function ProductCatalogTab({
                   <div className="flex flex-col gap-4 w-full max-w-[1280px] mx-auto px-4 lg:px-6">
                     <p
                       className="font-bold"
-                      style={{ color: "#101828", fontSize: 20, lineHeight: "30px" }}
+                      style={{ color: "#101828", fontSize: 22, lineHeight: "32px" }}
                     >
                       All Thai FCN
                     </p>

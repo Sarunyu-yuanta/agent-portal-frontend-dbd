@@ -16,7 +16,7 @@ const CARD_STYLE = {
 
 function GroupLabel({ children }: { children: string }) {
   return (
-    <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{children}</p>
+    <p className="text-meta font-bold uppercase tracking-wide text-muted-foreground">{children}</p>
   );
 }
 
@@ -29,8 +29,8 @@ function StatRow({ stats }: { stats: { label: string; value: string }[] }) {
           className="flex flex-col gap-0.5 items-center justify-center flex-1 min-w-0 h-full"
           style={i < stats.length - 1 ? { borderRight: "1px solid rgba(0,0,0,0.1)" } : {}}
         >
-          <p className="text-[9px] leading-[14px] text-[#6a7282] w-full truncate">{s.label}</p>
-          <p className="text-[12px] leading-4 font-semibold text-[#4a5565] w-full truncate">{s.value}</p>
+          <p className="text-micro leading-[18px] text-[#6a7282] w-full truncate">{s.label}</p>
+          <p className="text-label leading-[20px] font-semibold text-[#4a5565] w-full truncate">{s.value}</p>
         </div>
       ))}
     </div>
@@ -44,13 +44,13 @@ function FixedIncomeRelatedCard({ bond }: { bond: FixedIncomeBond }) {
         <div className="flex items-center gap-2 min-w-0">
           <BondLogo src={BOND_LOGOS[bond.logoIdx]} logoCrop={bond.logoCrop} className="size-8 rounded" />
           <div className="flex flex-col min-w-0">
-            <p className="font-bold text-[16px] leading-6 text-[#101828] truncate">{bond.symbol}</p>
-            <p className="text-[12px] leading-4 text-[#6a7282] truncate">{bond.companyName}</p>
+            <p className="font-bold text-title-sm leading-[28px] text-[#101828] truncate">{bond.symbol}</p>
+            <p className="text-label leading-[20px] text-[#6a7282] truncate">{bond.companyName}</p>
           </div>
         </div>
         <div className="flex flex-col items-end shrink-0 whitespace-nowrap">
-          <p className="font-bold text-[16px] leading-6 text-[#101828]">{bond.ytm}</p>
-          <p className="text-[12px] leading-4 text-[#6a7282]">YTM</p>
+          <p className="font-bold text-title-sm leading-[28px] text-[#101828]">{bond.ytm}</p>
+          <p className="text-label leading-[20px] text-[#6a7282]">YTM</p>
         </div>
       </div>
       <StatRow
@@ -74,13 +74,13 @@ function GlobalBondRelatedCard({ issuer }: { issuer: GlobalBondIssuer }) {
             <img alt="" className="absolute inset-0 size-full object-cover" src={issuer.logo} />
           </div>
           <div className="flex flex-col min-w-0">
-            <p className="font-bold text-[16px] leading-6 text-[#101828] truncate">{issuer.title}</p>
-            <p className="text-[12px] leading-4 text-[#6a7282] truncate">{issuer.ticker}</p>
+            <p className="font-bold text-title-sm leading-[28px] text-[#101828] truncate">{issuer.title}</p>
+            <p className="text-label leading-[20px] text-[#6a7282] truncate">{issuer.ticker}</p>
           </div>
         </div>
         <div className="flex flex-col items-end shrink-0 whitespace-nowrap">
-          <p className="font-bold text-[16px] leading-6 text-[#101828]">{issuer.estimatedYield}</p>
-          <p className="text-[12px] leading-4 text-[#6a7282]">Est. Yield</p>
+          <p className="font-bold text-title-sm leading-[28px] text-[#101828]">{issuer.estimatedYield}</p>
+          <p className="text-label leading-[20px] text-[#6a7282]">Est. Yield</p>
         </div>
       </div>
       <StatRow
@@ -130,7 +130,7 @@ export function RelatedProductsCard({
       </div>
 
       {isEmpty ? (
-        <p className="text-[13px] text-muted-foreground text-center py-4">ยังไม่มีสินค้าที่เกี่ยวข้องในขณะนี้</p>
+        <p className="text-body-sm text-muted-foreground text-center py-4">ยังไม่มีสินค้าที่เกี่ยวข้องในขณะนี้</p>
       ) : (
         <div className="flex flex-col gap-6">
           {mutualFund.length > 0 && (

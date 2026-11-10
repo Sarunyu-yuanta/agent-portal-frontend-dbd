@@ -33,7 +33,7 @@ export function AuthPendingScreen({ label = "กำลังเข้าสู�
         alt=""
         width={423}
         height={109}
-        className="w-[220px] sm:w-[320px] max-w-[calc(100vw-3rem)] animate-breathe motion-reduce:animate-none"
+        className="w-[220px] sm:w-[320px] max-w-[calc(var(--vw)*100-3rem)] animate-breathe motion-reduce:animate-none"
       />
 
       <span className="sr-only">{label}</span>

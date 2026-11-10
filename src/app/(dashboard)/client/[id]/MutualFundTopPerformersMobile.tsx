@@ -42,7 +42,7 @@ function MobileCategoryTabs({
               key={group.id}
               type="button"
               onClick={() => onSelect(group.id)}
-              className={`flex min-w-[80px] shrink-0 items-center justify-center border-b-[1.5px] px-3 py-2.5 text-sm font-bold leading-5 whitespace-nowrap ${
+              className={`flex min-w-[80px] shrink-0 items-center justify-center border-b-[1.5px] px-3 py-2.5 text-sm font-bold leading-[24px] whitespace-nowrap ${
                 active ? "border-[#0a6ee7] text-[#0a6ee7]" : "border-black/10 text-[#6a7282]"
               }`}
             >
@@ -62,9 +62,9 @@ function MobileHero({ groupId }: { groupId: MobileFundGroupId }) {
   return (
     <div className="relative flex h-[126px] w-full shrink-0 items-center gap-2.5 overflow-visible bg-[#f9fafb] px-6 pb-2.5 pt-2.5">
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <p className="text-xl font-bold leading-[30px] text-[#074ea4]">{title}</p>
-        <p className="text-sm font-normal leading-5 text-[#4a5565]">{TOP_PERFORMERS_HERO_SUBTITLE}</p>
-        <p className="text-[9px] font-normal leading-[14px] text-[#6a7282]">
+        <p className="text-xl font-bold leading-[34px] text-[#074ea4]">{title}</p>
+        <p className="text-sm font-normal leading-[24px] text-[#4a5565]">{TOP_PERFORMERS_HERO_SUBTITLE}</p>
+        <p className="text-micro font-normal leading-[18px] text-[#6a7282]">
           ข้อมูล ณ วันที่ {TOP_PERFORMERS_LIST_UPDATED_AT}
         </p>
       </div>
@@ -108,7 +108,7 @@ export function MutualFundTopPerformersMobile({
         >
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="min-w-0 flex-1 truncate text-lg font-bold leading-7 text-[#101828]">
+        <h1 className="min-w-0 flex-1 truncate text-lg font-bold leading-[32px] text-[#101828]">
           กองทุนผลตอบแทนเด่น
         </h1>
       </div>
@@ -141,7 +141,7 @@ export function MutualFundTopPerformersMobile({
         />
         <MobilePeriodTabs active={period} onChange={setPeriod} />
 
-        <p className="px-3 text-sm leading-5 text-[#101828]">{listCountLabel}</p>
+        <p className="px-3 text-sm leading-[24px] text-[#101828]">{listCountLabel}</p>
 
         <div className="flex w-full flex-col">
           {tagFunds.map((fund, index) => (

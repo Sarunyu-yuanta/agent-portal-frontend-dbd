@@ -41,23 +41,23 @@ function AiSummaryCard() {
         <SparkleIcon size={16} weight="duotone" className="text-foreground" />
         <p className="type-subtitle-1 text-foreground">Today&apos;s AI Summary</p>
       </div>
-      <p className="text-[12px] text-muted-foreground leading-relaxed">
+      <p className="text-label text-muted-foreground leading-relaxed">
         8 active insights across your book. Focus on{" "}
         <span className="font-semibold text-foreground">Somchai</span> and{" "}
         <span className="font-semibold text-foreground">Nattaporn</span> — highest revenue potential at ฿ 5.6M combined.
       </p>
       <div className="flex flex-col gap-2 pt-1 border-t border-border">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] text-muted-foreground">Model updated</span>
-          <span className="text-[11px] font-medium text-foreground">Today, 08:30</span>
+          <span className="text-meta text-muted-foreground">Model updated</span>
+          <span className="text-meta font-medium text-foreground">Today, 08:30</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-[11px] text-muted-foreground">Avg confidence</span>
-          <span className="text-[11px] font-semibold text-success">83%</span>
+          <span className="text-meta text-muted-foreground">Avg confidence</span>
+          <span className="text-meta font-semibold text-success">83%</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-[11px] text-muted-foreground">Clients analyzed</span>
-          <span className="text-[11px] font-medium text-foreground">24</span>
+          <span className="text-meta text-muted-foreground">Clients analyzed</span>
+          <span className="text-meta font-medium text-foreground">24</span>
         </div>
       </div>
     </Card>
@@ -82,8 +82,8 @@ function AiModelStats() {
         {stats.map((s) => (
           <div key={s.label} className="flex items-center gap-2.5">
             <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-            <span className="text-[12px] text-muted-foreground flex-1">{s.label}</span>
-            <span className="text-[12px] font-semibold text-foreground tabular-nums">{s.count}</span>
+            <span className="text-label text-muted-foreground flex-1">{s.label}</span>
+            <span className="text-label font-semibold text-foreground tabular-nums">{s.count}</span>
           </div>
         ))}
       </div>

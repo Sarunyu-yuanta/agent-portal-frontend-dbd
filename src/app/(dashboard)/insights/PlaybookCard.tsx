@@ -22,9 +22,9 @@ export function PlaybookCard({ strategy, noBorder }: { strategy: Strategy; noBor
       <div className="flex-1 p-6 flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <Tag text={cat} variant={CATEGORY_TAG_VARIANT[cat] ?? "gray"} size="small" />
-          <p className="text-[20px] font-bold text-foreground leading-tight">{strategy.name}</p>
+          <p className="text-title-lg font-bold text-foreground leading-tight">{strategy.name}</p>
         </div>
-        <p className="text-[12px] text-foreground leading-relaxed">{STRATEGY_DETAIL[strategy.id]?.rationale}</p>
+        <p className="text-label text-foreground leading-relaxed">{STRATEGY_DETAIL[strategy.id]?.rationale}</p>
       </div>
     </div>
   );

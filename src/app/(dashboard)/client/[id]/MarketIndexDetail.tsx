@@ -54,13 +54,13 @@ function IndexHeroBand({ page }: { page: MarketIndexPage }) {
         <div className="relative flex min-w-0 flex-1 flex-col gap-2">
           <p className="truncate text-2xl font-bold leading-9 text-[#101828]">{index.code}</p>
           {description && (
-            <p className="text-base leading-5 text-[#4a5565]">{description}</p>
+            <p className="text-base leading-[24px] text-[#4a5565]">{description}</p>
           )}
         </div>
         <div className="relative flex shrink-0 flex-col items-end gap-2">
           <div className="flex items-center gap-2 whitespace-nowrap">
             <span className="text-2xl font-bold leading-9 text-[#101828]">{index.price}</span>
-            <span className="text-base leading-5" style={{ color: HERO_TREND_TEXT[trend] }}>
+            <span className="text-base leading-[24px]" style={{ color: HERO_TREND_TEXT[trend] }}>
               {index.changeAmount}
             </span>
             <HeroPercentPill trend={trend} percentBody={index.changePercent} />

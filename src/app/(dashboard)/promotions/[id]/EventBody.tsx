@@ -33,7 +33,7 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
           {campaign.description.map((paragraph) => (
             <p
               key={paragraph}
-              className="text-[14px] leading-relaxed text-foreground"
+              className="text-body leading-relaxed text-foreground"
             >
               {paragraph}
             </p>
@@ -58,7 +58,7 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
                 className="flex gap-3 sm:gap-4"
               >
                 <div className="flex w-[82px] shrink-0 flex-col items-end pt-0.5 sm:w-[104px]">
-                  <span className="text-[12.5px] font-semibold tabular-nums text-accent-orange">
+                  <span className="text-label font-semibold tabular-nums text-accent-orange">
                     {item.time}
                   </span>
                 </div>
@@ -69,11 +69,11 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
                   )}
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5 pb-5">
-                  <p className="text-[13.5px] font-semibold leading-snug text-foreground">
+                  <p className="text-body-sm font-semibold leading-snug text-foreground">
                     {item.title}
                   </p>
                   {item.speaker && (
-                    <p className="text-[12.5px] text-muted-foreground">
+                    <p className="text-label text-muted-foreground">
                       โดย {item.speaker}
                     </p>
                   )}
@@ -102,16 +102,16 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
                 ) : (
                   <span
                     aria-hidden
-                    className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-[var(--fill-p1-100)] text-[15px] font-bold text-[var(--fill-p1-600)]"
+                    className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-[var(--fill-p1-100)] text-body-lg font-bold text-[var(--fill-p1-600)]"
                   >
                     {speaker.name.replace(/^(ดร\.|คุณ|นาย|นาง|นางสาว)\s*/, "").charAt(0)}
                   </span>
                 )}
                 <div className="flex min-w-0 flex-col gap-0.5">
-                  <p className="text-[13.5px] font-bold leading-snug text-foreground">
+                  <p className="text-body-sm font-bold leading-snug text-foreground">
                     {speaker.name}
                   </p>
-                  <p className="text-[12px] leading-snug text-muted-foreground">
+                  <p className="text-label leading-snug text-muted-foreground">
                     {speaker.title}
                   </p>
                 </div>
@@ -135,10 +135,10 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
               )}
             </span>
             <div className="flex min-w-0 flex-col gap-0.5">
-              <p className="text-[13.5px] font-semibold text-foreground">
+              <p className="text-body-sm font-semibold text-foreground">
                 {campaign.venue ?? "—"}
               </p>
-              <p className="text-[12.5px] text-muted-foreground">
+              <p className="text-label text-muted-foreground">
                 {campaign.eventDate ? thaiDay(campaign.eventDate) : "—"}
                 {campaign.seatsTotal
                   ? ` · ที่นั่งทั้งหมด ${campaign.seatsTotal} ที่นั่ง`
@@ -152,7 +152,7 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
               href={campaign.joinUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 break-all text-[12.5px] font-medium text-primary-action hover:underline"
+              className="flex items-center gap-1.5 break-all text-label font-medium text-primary-action hover:underline"
             >
               <LinkSimpleIcon size={14} weight="bold" className="shrink-0" />
               {campaign.joinUrl}
@@ -166,7 +166,7 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
           {campaign.conditions.map((condition) => (
             <li
               key={condition}
-              className="flex items-start gap-3 text-[13.5px] leading-relaxed"
+              className="flex items-start gap-3 text-body-sm leading-relaxed"
             >
               {/* One line tall, so the badge centres on the first line of
                   text rather than sitting on its top edge. */}
@@ -188,10 +188,10 @@ export function EventBody({ campaign }: { campaign: Campaign }) {
           {campaign.terms.map((term, index) => (
             <li
               key={term}
-              className="flex items-start gap-3 text-[13.5px] leading-relaxed"
+              className="flex items-start gap-3 text-body-sm leading-relaxed"
             >
               <span className="flex h-lh shrink-0 items-center">
-                <span className="flex size-6 items-center justify-center rounded-full bg-primary-action-light text-[11px] font-bold tabular-nums text-primary-action">
+                <span className="flex size-6 items-center justify-center rounded-full bg-primary-action-light text-meta font-bold tabular-nums text-primary-action">
                   {index + 1}
                 </span>
               </span>

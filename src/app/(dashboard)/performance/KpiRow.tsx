@@ -16,7 +16,7 @@ export function KpiRow() {
       {/* Grade card — hidden on mobile, shown on desktop */}
       <div className="hidden lg:flex rounded-2xl p-5 flex-col items-center justify-center gap-2 h-full" style={{ background: "#1e2337" }}>
         <p className="text-[48px] font-bold text-white leading-none tracking-tight">B+</p>
-        <p className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.35)" }}>Overall</p>
+        <p className="text-meta font-bold uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.35)" }}>Overall</p>
       </div>
       {/* KPI Cards — 2 per row on mobile, each takes 1fr on desktop */}
       <div className="grid grid-cols-2 gap-4 lg:contents">

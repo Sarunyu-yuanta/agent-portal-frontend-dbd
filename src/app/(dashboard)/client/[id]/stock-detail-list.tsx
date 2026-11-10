@@ -52,7 +52,7 @@ export function HeroPercentPill({
   const body = percentBody.replace(/^[+-]/, "");
   return (
     <span
-      className="inline-flex items-center rounded px-1.5 py-0.5 text-sm leading-5"
+      className="inline-flex items-center rounded px-1.5 py-0.5 text-sm leading-[24px]"
       style={{ backgroundColor: TREND_PILL_BG[trend], color: HERO_TREND_TEXT[trend] }}
     >
       <span>{sign}</span>
@@ -119,7 +119,7 @@ function SortDropdown({
                 }`}
               >
                 <Icon size={24} className="shrink-0 text-[#4a5565]" />
-                <span className="min-w-0 flex-1 truncate text-sm leading-5 text-[#101828]">
+                <span className="min-w-0 flex-1 truncate text-sm leading-[24px] text-[#101828]">
                   {label}
                 </span>
               </button>
@@ -134,7 +134,7 @@ function SortDropdown({
         className="flex w-[136px] shrink-0 cursor-pointer items-center justify-center gap-1 rounded-lg border border-black/10 bg-white p-2 transition-colors hover:bg-black/[0.02]"
       >
         <SelectedIcon size={20} className="shrink-0 text-[#4a5565]" />
-        <span className="min-w-0 flex-1 truncate text-left text-sm font-semibold leading-5 text-[#4a5565]">
+        <span className="min-w-0 flex-1 truncate text-left text-sm font-semibold leading-[24px] text-[#4a5565]">
           {selected.label}
         </span>
         <CaretDownIcon
@@ -292,12 +292,12 @@ export function StockDetailList({
       <div className={`flex flex-col gap-6 pt-4 ${NARROW}`}>
         <div className="flex w-full flex-col gap-3">
           <div className="flex w-full items-center gap-2 border-b border-black/10 px-3 py-3">
-            <p className="min-w-0 flex-1 text-base leading-5 text-[#4a5565]">
+            <p className="min-w-0 flex-1 text-base leading-[24px] text-[#4a5565]">
               {totalCount} Lists
             </p>
             <SortDropdown value={sort} onChange={setSort} />
           </div>
-          <p className="w-full px-3 text-xs leading-4 text-[#6a7282]">{updatedAt}</p>
+          <p className="w-full px-3 text-xs leading-[20px] text-[#6a7282]">{updatedAt}</p>
         </div>
         <div className="grid w-full grid-cols-1 gap-x-4 gap-y-6 lg:grid-cols-2">
           {sortedStocks.map((row, index) => (
@@ -319,7 +319,7 @@ export function StockDetailList({
         {isLoadingMore ? (
           <div className="flex w-full items-center justify-center gap-1 py-2.5 px-3">
             <CircleNotchIcon size={20} className="animate-spin text-[#6a7282]" />
-            <span className="text-sm font-bold leading-5 text-[#6a7282]">กำลังโหลดข้อมูล</span>
+            <span className="text-sm font-bold leading-[24px] text-[#6a7282]">กำลังโหลดข้อมูล</span>
           </div>
         ) : (
           <div ref={sentinelRef} aria-hidden className="h-px w-full" />

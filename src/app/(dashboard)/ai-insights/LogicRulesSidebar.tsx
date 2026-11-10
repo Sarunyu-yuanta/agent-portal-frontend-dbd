@@ -32,7 +32,7 @@ export function LogicRulesSidebar() {
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-border">
         <GearSixIcon size={15} className="text-muted-foreground" />
-        <p className="text-[13px] font-semibold text-foreground flex-1">AI Logic Rules</p>
+        <p className="text-body-sm font-semibold text-foreground flex-1">AI Logic Rules</p>
         <Tag text="Active" variant="green" size="small" />
       </div>
 
@@ -40,8 +40,8 @@ export function LogicRulesSidebar() {
       <div className="flex flex-col">
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
           <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-medium text-foreground">High Priority threshold</p>
-            <p className="text-[11px] text-muted-foreground">AI Score ≥</p>
+            <p className="text-label font-medium text-foreground">High Priority threshold</p>
+            <p className="text-meta text-muted-foreground">AI Score ≥</p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <input
@@ -49,7 +49,7 @@ export function LogicRulesSidebar() {
               value={highPriorityThreshold}
               onChange={(e) => setHighPriorityThreshold(e.target.value)}
               onBlur={triggerSave}
-              className="w-12 text-center text-[13px] font-semibold border border-border rounded-lg py-1.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-12 text-center text-body-sm font-semibold border border-border rounded-lg py-1.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
             <Toggle label="" checked={toggles.high} onChange={() => handleToggle("high")} />
           </div>
@@ -57,8 +57,8 @@ export function LogicRulesSidebar() {
 
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
           <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-medium text-foreground">Revenue minimum</p>
-            <p className="text-[11px] text-muted-foreground">฿M impact floor</p>
+            <p className="text-label font-medium text-foreground">Revenue minimum</p>
+            <p className="text-meta text-muted-foreground">฿M impact floor</p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <input
@@ -66,7 +66,7 @@ export function LogicRulesSidebar() {
               value={revenueMin}
               onChange={(e) => setRevenueMin(e.target.value)}
               onBlur={triggerSave}
-              className="w-12 text-center text-[13px] font-semibold border border-border rounded-lg py-1.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-12 text-center text-body-sm font-semibold border border-border rounded-lg py-1.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
             <Toggle label="" checked={toggles.revenue} onChange={() => handleToggle("revenue")} />
           </div>
@@ -74,8 +74,8 @@ export function LogicRulesSidebar() {
 
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-medium text-foreground">Engagement alert</p>
-            <p className="text-[11px] text-muted-foreground">Days without contact</p>
+            <p className="text-label font-medium text-foreground">Engagement alert</p>
+            <p className="text-meta text-muted-foreground">Days without contact</p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <input
@@ -83,7 +83,7 @@ export function LogicRulesSidebar() {
               value={engagementDays}
               onChange={(e) => setEngagementDays(e.target.value)}
               onBlur={triggerSave}
-              className="w-12 text-center text-[13px] font-semibold border border-border rounded-lg py-1.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-12 text-center text-body-sm font-semibold border border-border rounded-lg py-1.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
             <Toggle label="" checked={toggles.engagement} onChange={() => handleToggle("engagement")} />
           </div>

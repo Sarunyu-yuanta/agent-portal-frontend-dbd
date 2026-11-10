@@ -68,7 +68,7 @@ export function StructuredProductAllPage({
           <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
             <ArrowLeftIcon size={20} />
           </Button>
-          <h1 className="flex-1 min-w-0 text-lg font-bold leading-[26px] text-[#101828] truncate">
+          <h1 className="flex-1 min-w-0 text-lg font-bold leading-[30px] text-[#101828] truncate">
             Structured Products ทั้งหมด
           </h1>
         </div>
@@ -88,7 +88,7 @@ export function StructuredProductAllPage({
             <p className="text-2xl font-bold leading-9 text-[#101828] lg:text-[32px] lg:leading-[48px] lg:text-[rgba(0,0,0,0.85)]">
               All Structured Products
             </p>
-            <p className="text-sm font-bold leading-5 text-[#4a5565] lg:text-base lg:leading-6 lg:text-[rgba(0,0,0,0.75)]">
+            <p className="text-sm font-bold leading-[24px] text-[#4a5565] lg:text-base lg:leading-[28px] lg:text-[rgba(0,0,0,0.75)]">
               รวม Structured Products ทั้งหมด ที่สามารถทำการซื้อขายได้
             </p>
           </div>
@@ -111,7 +111,7 @@ export function StructuredProductAllPage({
 
         {/* Product list — mobile/tablet: single-col vertical cards; desktop: 3-col grid */}
         <div className="flex flex-col gap-3 lg:gap-4 w-full">
-          <div className="flex items-center justify-between w-full text-xs leading-4 lg:text-sm lg:leading-5 text-[#6a7282]">
+          <div className="flex items-center justify-between w-full text-xs leading-[20px] lg:text-sm lg:leading-[24px] text-[#6a7282]">
             <span>จำนวน {ALL_STRUCTURED_PRODUCTS_COUNT} รายการ</span>
             <span className="text-right shrink-0 ml-2">
               <span className="lg:hidden">อัปเดตล่าสุด {ALL_STRUCTURED_PRODUCTS_UPDATED_AT_TABLET}</span>
@@ -133,7 +133,7 @@ export function StructuredProductAllPage({
           {isLoadingMore && (
             <div className="flex gap-1 items-center justify-center w-full py-2 pl-2.5 pr-3.5 lg:hidden">
               <CircleNotchIcon size={22} className="animate-spin text-black/40" />
-              <span className="text-sm font-semibold leading-[22px] text-black/40">กำลังโหลดข้อมูล</span>
+              <span className="text-sm font-semibold leading-[26px] text-black/40">กำลังโหลดข้อมูล</span>
             </div>
           )}
         </div>

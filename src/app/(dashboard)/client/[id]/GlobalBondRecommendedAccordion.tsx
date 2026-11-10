@@ -42,7 +42,7 @@ export function GlobalBondRecommendedAccordion({
             >
               <BondLogo src={row.logo} className="size-8 rounded" />
               <span
-                className={`flex-1 min-w-0 text-sm font-bold leading-5 truncate ${
+                className={`flex-1 min-w-0 text-sm font-bold leading-[24px] truncate ${
                   expanded ? "text-[#101828]" : "text-[#4a5565]"
                 }`}
               >
@@ -60,7 +60,7 @@ export function GlobalBondRecommendedAccordion({
                   <DetailRow label="Coupon Rate" value={row.couponRate} />
                   <DetailRow label="วันครบกำหนด" value={row.maturity} />
                   <hr className="w-full border-0 m-0" style={{ borderTop: `1px solid ${BORDER_COLOR}` }} />
-                  <span className="text-xs leading-4 text-[#6a7282]">Credit Rating</span>
+                  <span className="text-xs leading-[20px] text-[#6a7282]">Credit Rating</span>
                   <DetailRow label="S&P" value={row.sp} />
                   <DetailRow label="Moody's" value={row.moodys} />
                   <DetailRow label="Fitch" value={row.fitch} />

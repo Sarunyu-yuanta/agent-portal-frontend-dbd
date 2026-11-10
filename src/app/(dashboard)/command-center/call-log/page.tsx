@@ -177,7 +177,7 @@ export default function CallLogPage() {
                 pager stays on the top line when the two cannot share one. */}
             <div className="flex flex-wrap-reverse items-center justify-end gap-3">
               <div className="flex items-center gap-2">
-                <p className="whitespace-nowrap text-[12px] text-muted-foreground">
+                <p className="whitespace-nowrap text-label text-muted-foreground">
                   Show per page
                 </p>
                 <select
@@ -186,7 +186,7 @@ export default function CallLogPage() {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="cursor-pointer rounded-md border border-border bg-background px-2 py-1 text-[12px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary-action"
+                  className="cursor-pointer rounded-md border border-border bg-background px-2 py-1 text-label text-foreground focus:outline-none focus:ring-1 focus:ring-primary-action"
                 >
                   {PAGE_SIZE_OPTIONS.map((n) => (
                     <option key={n} value={n}>
@@ -196,7 +196,7 @@ export default function CallLogPage() {
                 </select>
               </div>
               <div className="flex items-center gap-3">
-                <p className="text-[12px] text-muted-foreground">
+                <p className="text-label text-muted-foreground">
                   Showing{" "}
                   <span className="font-medium text-foreground">
                     {(safePage - 1) * pageSize + 1}

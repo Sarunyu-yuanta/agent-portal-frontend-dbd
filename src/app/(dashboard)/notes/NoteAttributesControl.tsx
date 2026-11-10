@@ -188,7 +188,7 @@ export function NoteAttributesControl({
             setResetKey((k) => k + 1);
           }}
         >
-          <div className="flex min-h-[62vh] flex-col px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="flex min-h-[calc(var(--vh)*62)] flex-col px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             {fields}
             <Button
               variant="primary"

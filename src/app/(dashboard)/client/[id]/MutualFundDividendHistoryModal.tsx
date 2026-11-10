@@ -18,7 +18,7 @@ function DividendHistoryTable({ rows }: { rows: MutualFundDividend[] }) {
               col.align === "center" ? "justify-center text-center" : col.align === "right" ? "justify-end text-right" : ""
             }`}
           >
-            <span className="text-xs leading-4 text-[#6a7282]">{col.label}</span>
+            <span className="text-xs leading-[20px] text-[#6a7282]">{col.label}</span>
           </div>
         ))}
       </div>
@@ -35,7 +35,7 @@ function DividendHistoryTable({ rows }: { rows: MutualFundDividend[] }) {
                 index % 2 === 0 ? "bg-[#f9fafb]" : "bg-white"
               } ${cell.align === "center" ? "justify-center text-center" : cell.align === "right" ? "justify-end text-right" : ""}`}
             >
-              <span className="text-sm leading-5 text-[#101828]">{cell.value}</span>
+              <span className="text-sm leading-[24px] text-[#101828]">{cell.value}</span>
             </div>
           ))}
         </div>
@@ -68,7 +68,7 @@ export function MutualFundDividendHistoryModal({
         rightSide="action"
         actionLabel="Close"
         onActionClick={onClose}
-        contentClassName="flex max-h-[calc(100dvh-10rem)] flex-col overflow-y-auto pt-0 pb-10"
+        contentClassName="flex max-h-[calc(var(--dvh)*100-10rem)] flex-col overflow-y-auto pt-0 pb-10"
       >
         <DividendHistoryTable rows={rows} />
       </BottomSheet>
@@ -92,9 +92,9 @@ export function MutualFundDividendHistoryModal({
           showClose
           onClose={onClose}
           actionLayout="none"
-          className="!max-w-[552px] w-[calc(100vw-3rem)]"
+          className="!max-w-[552px] w-[calc(var(--vw)*100-3rem)]"
         >
-          <div className="max-h-[min(460px,calc(100dvh-8rem))] overflow-y-auto">
+          <div className="max-h-[min(460px,calc(var(--dvh)*100-8rem))] overflow-y-auto">
             <DividendHistoryTable rows={rows} />
           </div>
         </Modal>
@@ -127,7 +127,7 @@ export function DividendHistoryPreview({
               col.align === "center" ? "justify-center text-center" : col.align === "right" ? "justify-end text-right" : ""
             }`}
           >
-            <span className="text-xs leading-4 text-[#6a7282]">{col.label}</span>
+            <span className="text-xs leading-[20px] text-[#6a7282]">{col.label}</span>
           </div>
         ))}
       </div>
@@ -144,7 +144,7 @@ export function DividendHistoryPreview({
                 index % 2 === 0 ? "bg-[#f9fafb]" : "bg-white"
               } ${cell.align === "center" ? "justify-center text-center" : cell.align === "right" ? "justify-end text-right" : ""}`}
             >
-              <span className="text-sm leading-5 text-[#101828]">{cell.value}</span>
+              <span className="text-sm leading-[24px] text-[#101828]">{cell.value}</span>
             </div>
           ))}
         </div>
@@ -153,7 +153,7 @@ export function DividendHistoryPreview({
         <button
           type="button"
           onClick={onViewAll}
-          className="flex h-[38px] w-full items-center justify-center border-none bg-white px-4 py-3.5 text-sm leading-5 text-[#0a6ee7] cursor-pointer"
+          className="flex h-[38px] w-full items-center justify-center border-none bg-white px-4 py-3.5 text-sm leading-[24px] text-[#0a6ee7] cursor-pointer"
         >
           ดูทั้งหมด
         </button>

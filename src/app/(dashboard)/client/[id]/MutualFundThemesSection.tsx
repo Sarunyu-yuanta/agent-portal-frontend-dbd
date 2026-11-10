@@ -102,10 +102,10 @@ function ThemeCard({
       <div className="flex w-full items-start gap-1 px-3">
         <ThemeIcon icon={theme.icon} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-base font-bold leading-6 text-white">
+          <span className="truncate text-base font-bold leading-[28px] text-white">
             {getThemeHeroTitle(theme.id)}
           </span>
-          <span className="truncate text-xs font-normal leading-4 text-white">
+          <span className="truncate text-xs font-normal leading-[20px] text-white">
             {getThemeDescription(theme.id)}
           </span>
         </div>
@@ -179,9 +179,9 @@ export function MutualFundThemesSection({
       <div>
         <div className="flex items-center gap-1">
           <Image src={MF_ASSETS.medal} alt="" width={24} height={24} className="size-6 shrink-0" />
-          <h2 className="text-lg font-bold leading-7 text-[#101828]">5 ธีมกองทุนเด่น</h2>
+          <h2 className="text-lg font-bold leading-[32px] text-[#101828]">5 ธีมกองทุนเด่น</h2>
         </div>
-        <p className="text-sm leading-5 text-[#101828]">ธีมกองทุนผลตอบแทนโดดเด่น</p>
+        <p className="text-sm leading-[24px] text-[#101828]">ธีมกองทุนผลตอบแทนโดดเด่น</p>
       </div>
 
       <div className="relative w-full px-0 lg:px-12">

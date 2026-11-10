@@ -12,7 +12,7 @@ import Link from "next/link";
  * Exported because the Reminders and Call Log cards draw their own headings.
  */
 export const CARD_LINK_CLASS =
-  "inline-flex h-[28px] shrink-0 select-none items-center justify-center whitespace-nowrap rounded-md border border-transparent bg-transparent px-2 text-sm font-medium leading-5 text-primary-action no-underline transition-colors duration-150 cursor-pointer hover:bg-hover-bg active:bg-disabled-bg";
+  "inline-flex h-[28px] shrink-0 select-none items-center justify-center whitespace-nowrap rounded-md border border-transparent bg-transparent px-2 text-sm font-medium leading-[24px] text-primary-action no-underline transition-colors duration-150 cursor-pointer hover:bg-hover-bg active:bg-disabled-bg";
 
 /**
  * `Button variant="outline" size="md"`, as classes, for the same reason
@@ -26,7 +26,7 @@ export const CARD_LINK_CLASS =
  * Width is left to the caller: this is the button, not where it sits.
  */
 export const CARD_BUTTON_CLASS =
-  "inline-flex h-8 select-none items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-3 text-sm font-medium leading-5 text-primary-action no-underline transition-colors duration-150 cursor-pointer hover:bg-hover-bg active:bg-disabled-bg";
+  "inline-flex h-8 select-none items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-3 text-sm font-medium leading-[24px] text-primary-action no-underline transition-colors duration-150 cursor-pointer hover:bg-hover-bg active:bg-disabled-bg";
 
 /**
  * The line every card on this page opens with: a bold title, an optional count,
@@ -80,7 +80,7 @@ export function CardHeader({
  */
 export function CardCount({ value }: { value: number }) {
   return (
-    <span className="shrink-0 rounded-md bg-[var(--fill-p1-100)] px-1.5 py-0.5 text-[12px] font-semibold tabular-nums text-primary-action">
+    <span className="shrink-0 rounded-md bg-[var(--fill-p1-100)] px-1.5 py-0.5 text-label font-semibold tabular-nums text-primary-action">
       {value}
     </span>
   );

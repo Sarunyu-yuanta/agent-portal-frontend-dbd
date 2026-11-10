@@ -45,7 +45,7 @@ function AccountFilterSegments({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(id)}
-            className={`min-w-0 flex-1 cursor-pointer truncate rounded-md px-2 py-1.5 text-xs font-bold leading-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6ee7] ${
+            className={`min-w-0 flex-1 cursor-pointer truncate rounded-md px-2 py-1.5 text-xs font-bold leading-[20px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6ee7] ${
               active
                 ? "bg-white text-[#0a6ee7] shadow-sm"
                 : "text-[#4a5565] hover:bg-white/60 hover:text-[#101828]"
@@ -86,8 +86,8 @@ function ClientRow({
     >
       <Avatar type="text" initials={getInitial(displayName)} size="m" />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="truncate text-sm font-bold leading-5 text-[#101828]">{displayName}</p>
-        <p className="truncate text-xs leading-4 text-[#4a5565]">
+        <p className="truncate text-sm font-bold leading-[24px] text-[#101828]">{displayName}</p>
+        <p className="truncate text-xs leading-[20px] text-[#4a5565]">
           {client.tier} · {riskProfileLabel(client)}
         </p>
       </div>
@@ -175,7 +175,7 @@ function PickerBody({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pb-4 pt-3">
-      <p className="shrink-0 text-sm leading-5 text-[#4a5565]">
+      <p className="shrink-0 text-sm leading-[24px] text-[#4a5565]">
         เลือกลูกค้าเพื่อดูแผน {SERVICE_TITLE[service]} ที่เหมาะกับระดับความเสี่ยงของเขา
       </p>
 
@@ -190,9 +190,9 @@ function PickerBody({
 
       <AccountFilterSegments value={accountFilter} counts={counts} onChange={setAccountFilter} />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto max-lg:max-h-[50dvh] lg:max-h-[45vh]">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto max-lg:max-h-[calc(var(--dvh)*50)] lg:max-h-[calc(var(--vh)*45)]">
         {results.length === 0 ? (
-          <p className="py-8 text-center text-sm leading-5 text-[#4a5565]">ไม่พบลูกค้าที่ค้นหา</p>
+          <p className="py-8 text-center text-sm leading-[24px] text-[#4a5565]">ไม่พบลูกค้าที่ค้นหา</p>
         ) : (
           results.map((client) => (
             <ClientRow

@@ -81,7 +81,7 @@ export function NetValueSummaryModal({
         rightSide="action"
         actionLabel="ปิด"
         onActionClick={onClose}
-        contentClassName="flex min-h-0 max-h-[calc(100dvh-10rem)] flex-col overflow-y-auto pt-0"
+        contentClassName="flex min-h-0 max-h-[calc(var(--dvh)*100-10rem)] flex-col overflow-y-auto pt-0"
       >
         <div className="pt-3 pb-10">
           <NetValueInfoContent mobile />

@@ -152,7 +152,7 @@ function CampaignDetailInner({ id }: { id: string }) {
         <p className="type-subtitle-1 text-foreground">ไม่พบแคมเปญนี้</p>
         <Link
           href="/promotions"
-          className="text-[13px] text-primary-action hover:underline"
+          className="text-body-sm text-primary-action hover:underline"
         >
           กลับไปหน้า Promotion/Events
         </Link>
@@ -275,7 +275,7 @@ function CampaignDetailInner({ id }: { id: string }) {
                   <h1 className="max-w-3xl text-[22px] font-bold leading-[1.2] tracking-tight text-white sm:text-[28px] sm:leading-[1.15]">
                     {campaign.title}
                   </h1>
-                  <p className="max-w-2xl text-[13px] leading-relaxed text-white/75 sm:text-[15px]">
+                  <p className="max-w-2xl text-body-sm leading-relaxed text-white/75 sm:text-body-lg">
                     {campaign.summary}
                   </p>
                 </div>
@@ -453,7 +453,7 @@ function MetaCell({
         {icon}
       </span>
       <div className="flex min-w-0 flex-col gap-0.5">
-        <p className="text-[11px] font-semibold tracking-wider text-muted-foreground">
+        <p className="text-meta font-semibold tracking-wider text-muted-foreground">
           <span className="uppercase">{label}</span>
           {labelHint ? (
             <span className="normal-case font-medium text-destructive">
@@ -463,7 +463,7 @@ function MetaCell({
           ) : null}
         </p>
         <p
-          className={`text-[13.5px] font-semibold leading-snug ${
+          className={`text-body-sm font-semibold leading-snug ${
             critical ? "text-destructive" : "text-foreground"
           }`}
         >

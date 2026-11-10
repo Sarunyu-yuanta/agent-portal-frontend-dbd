@@ -191,7 +191,7 @@ function MoreRow({ count }: { count: number }) {
       href={CALL_LOG_PAGE}
       className="flex w-full items-center gap-2 p-3 text-left no-underline transition-colors hover:bg-[var(--fill-p1-100)]"
     >
-      <p className="min-w-0 flex-1 truncate text-[13px] font-bold text-foreground">
+      <p className="min-w-0 flex-1 truncate text-body-sm font-bold text-foreground">
         ดูอีก {count} รายการ
       </p>
       <CaretRightIcon
@@ -227,11 +227,11 @@ export function CallRow({ row, onOpen }: { row: CallLogRow; onOpen: () => void }
       />
 
       <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-        <p className="truncate text-[14px] font-bold text-foreground">{row.clientName}</p>
+        <p className="truncate text-body font-bold text-foreground">{row.clientName}</p>
         {/* One line. It does cut most summaries mid-sentence, so the full text
             is on the row's tooltip and the whole row opens the client's own
             Call Log tab, where it is not cut at all. */}
-        <p className="truncate text-[11px] text-muted-foreground" title={row.entry.summary}>
+        <p className="truncate text-meta text-muted-foreground" title={row.entry.summary}>
           {row.entry.summary}
         </p>
       </div>

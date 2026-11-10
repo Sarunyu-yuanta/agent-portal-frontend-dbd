@@ -46,7 +46,7 @@ export function AlertCards() {
                   </div>
                   <span className="type-caption text-muted-foreground shrink-0">{ALERT_TIMESTAMPS[i]}</span>
                 </div>
-                <p className="text-[14px] font-semibold text-foreground leading-snug">{alert.title}</p>
+                <p className="text-body font-semibold text-foreground leading-snug">{alert.title}</p>
                 <p className="type-body-2 text-muted-foreground leading-snug">{alert.message}</p>
                 <div className="flex items-center justify-end gap-2">
                   {alert.action2 && <Button variant="plain" size="sm">{alert.action2}</Button>}
@@ -63,7 +63,7 @@ export function AlertCards() {
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-[14px] font-semibold text-foreground leading-snug">{alert.title}</p>
+                      <p className="text-body font-semibold text-foreground leading-snug">{alert.title}</p>
                       <span className="type-caption text-muted-foreground shrink-0">{ALERT_TIMESTAMPS[i]}</span>
                     </div>
                     <div className="flex items-center gap-2">

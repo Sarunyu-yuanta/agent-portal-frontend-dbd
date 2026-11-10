@@ -157,7 +157,7 @@ function HeatmapTile({
       {variant === "sm" && (
         <>
           <span
-            className={`text-xs shrink-0 leading-4 ${wrap ? "whitespace-pre" : ""}`}
+            className={`text-xs shrink-0 leading-[20px] ${wrap ? "whitespace-pre" : ""}`}
             style={{ color: labelColor }}
           >
             {label}
@@ -170,10 +170,10 @@ function HeatmapTile({
       )}
       {variant === "xs" && (
         <>
-          <span className="text-[9px] flex-1 min-w-10 truncate" style={{ color: "#4a5565" }}>
+          <span className="text-micro flex-1 min-w-10 truncate" style={{ color: "#4a5565" }}>
             {label}
           </span>
-          <span className="text-[9px] shrink-0" style={{ color: "#6a7282" }}>
+          <span className="text-micro shrink-0" style={{ color: "#6a7282" }}>
             {changePercent}
           </span>
         </>

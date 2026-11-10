@@ -53,7 +53,7 @@ function CardShell({ open, onClick, children }: { open: boolean; onClick: () => 
    three stacked lines: a small-caps label, one big number, one caption. */
 
 function CardLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{children}</p>;
+  return <p className="text-meta font-semibold uppercase tracking-wider text-muted-foreground">{children}</p>;
 }
 
 function CardValue({ colorClass = "text-foreground", children }: { colorClass?: string; children: React.ReactNode }) {
@@ -61,7 +61,7 @@ function CardValue({ colorClass = "text-foreground", children }: { colorClass?: 
 }
 
 function CardSub({ children }: { children: React.ReactNode }) {
-  return <p className="text-[11px] text-muted-foreground">{children}</p>;
+  return <p className="text-meta text-muted-foreground">{children}</p>;
 }
 
 function StaticCard({ label, value, sub }: { label: string; value: string; sub: string }) {
@@ -157,7 +157,7 @@ function PopoverList({
           expand control beside it. `-mr-1` pulls the icon's own padding back so
           it optically lines up with the 16px margin the rows' amounts end on. */}
       <div className="flex min-h-7 items-center justify-between gap-2 px-4 pt-2 pb-1">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</p>
+        <p className="text-meta font-bold uppercase tracking-wider text-muted-foreground">{title}</p>
         {onExpand && (
           <button
             type="button"
@@ -192,11 +192,11 @@ function ListStickyHeader({ className, children }: { className?: string; childre
 function ClientListRow({ rank, name, sub, right }: { rank?: number; name: string; sub: string; right: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 border-t border-border">
-      {rank !== undefined && <span className="text-[12px] text-muted-foreground w-4 text-right shrink-0">{rank}</span>}
+      {rank !== undefined && <span className="text-label text-muted-foreground w-4 text-right shrink-0">{rank}</span>}
       <Avatar type="text" initials={getInitials(name)} size="xs" />
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-foreground truncate">{name}</p>
-        <p className="text-[11px] text-muted-foreground">{sub}</p>
+        <p className="text-body-sm font-semibold text-foreground truncate">{name}</p>
+        <p className="text-meta text-muted-foreground">{sub}</p>
       </div>
       {right}
     </div>
@@ -303,7 +303,7 @@ function ClientListCard({
             // and dropping it left the list sitting on the heading.
             //
             // `min-h-0` so this can shrink below its content inside the sheet's
-            // `flex flex-col` / `max-h-[80vh]`, which is what lets the scroll
+            // `flex flex-col` / `max-h-[calc(var(--vh)*80)]`, which is what lets the scroll
             // engage. Without it a long list overflowed the sheet upward — the
             // drawer caps its own height but doesn't scroll what's inside.
             contentClassName="flex flex-col px-0 pt-3 pb-0 overflow-y-auto min-h-0"
@@ -324,7 +324,7 @@ function ClientListCard({
         onOpenChange={setAllOpen}
         title={title}
         mobileContentClassName="flex flex-col px-0 pt-3 pb-0 overflow-y-auto min-h-0"
-        desktopContentClassName="flex flex-col min-w-[420px] max-w-[520px] max-h-[70vh] overflow-y-auto"
+        desktopContentClassName="flex flex-col min-w-[420px] max-w-[520px] max-h-[calc(var(--vh)*70)] overflow-y-auto"
       >
         {/* No `px` in either variant: the modal and the sheet both pad their
             own content, and this is the surface where the extra 16px was most
@@ -379,11 +379,11 @@ export function ClientSummaryCards({ clients, isLoading }: { clients: Client[]; 
         <div key={tier} className="flex items-center justify-between gap-6 py-1">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: SEGMENT_COLORS[tier] ?? "#94a3b8" }} />
-            <span className="text-[13px] text-foreground">{tier}</span>
+            <span className="text-body-sm text-foreground">{tier}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[14px] font-bold text-foreground">{count}</span>
-            <span className="text-[11px] text-muted-foreground">({Math.round((count / clients.length) * 100)}%)</span>
+            <span className="text-body font-bold text-foreground">{count}</span>
+            <span className="text-meta text-muted-foreground">({Math.round((count / clients.length) * 100)}%)</span>
           </div>
         </div>
       ))}
@@ -400,7 +400,7 @@ export function ClientSummaryCards({ clients, isLoading }: { clients: Client[]; 
             rank={i + 1}
             name={name}
             sub={c.tier}
-            right={<span className="text-[12px] font-bold text-foreground shrink-0">{formatAumThb(c.aum)}</span>}
+            right={<span className="text-label font-bold text-foreground shrink-0">{formatAumThb(c.aum)}</span>}
           />
         );
       })}
@@ -414,7 +414,7 @@ export function ClientSummaryCards({ clients, isLoading }: { clients: Client[]; 
   const cashListContent = (
     <>
       {cashClients.length === 0
-        ? <p className="text-[13px] text-muted-foreground px-4 py-3">ไม่มีลูกค้าที่มีเงินรอลงทุน</p>
+        ? <p className="text-body-sm text-muted-foreground px-4 py-3">ไม่มีลูกค้าที่มีเงินรอลงทุน</p>
         : cashClients.map(({ client, cashThb }, i) => (
             <ClientListRow
               key={client.id}
@@ -422,7 +422,7 @@ export function ClientSummaryCards({ clients, isLoading }: { clients: Client[]; 
               name={maskName(client.name, isPrivate)}
               sub={`${client.tier} · ${client.cashIdlePct}% ของ AUM`}
               right={
-                <span className="text-[12px] font-bold text-foreground shrink-0">
+                <span className="text-label font-bold text-foreground shrink-0">
                   {formatMillionThb(cashThb)}
                 </span>
               }
@@ -442,7 +442,7 @@ export function ClientSummaryCards({ clients, isLoading }: { clients: Client[]; 
       name={maskName(k.client.name, isPrivate)}
       sub={`${k.client.tier} · ${k.nextReview}`}
       right={
-        <span className={`text-[12px] font-bold shrink-0 ${k.daysUntilExpiry <= 7 ? "text-[var(--text-danger-primary)]" : "text-[var(--text-warning-primary)]"}`}>
+        <span className={`text-label font-bold shrink-0 ${k.daysUntilExpiry <= 7 ? "text-[var(--text-danger-primary)]" : "text-[var(--text-warning-primary)]"}`}>
           {k.daysUntilExpiry}d
         </span>
       }
@@ -493,7 +493,7 @@ export function ClientSummaryCards({ clients, isLoading }: { clients: Client[]; 
           before instead of forcing a tall panel. */}
       <div style={{ minHeight: kycDueClients.length * LIST_ROW_H }}>
         {kycRows.length === 0 ? (
-          <p className="text-[13px] text-muted-foreground px-4 py-3">ไม่มีลูกค้าที่ KYC ใกล้ครบกำหนด</p>
+          <p className="text-body-sm text-muted-foreground px-4 py-3">ไม่มีลูกค้าที่ KYC ใกล้ครบกำหนด</p>
         ) : (
           kycRows.map(renderKycRow)
         )}
@@ -525,7 +525,7 @@ export function ClientSummaryCards({ clients, isLoading }: { clients: Client[]; 
         </CardShell>
         {!isMobile && segmentOpen && clients.length > 0 && (
           <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-border rounded-xl shadow-xl p-4 min-w-[200px]">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2.5">สัดส่วนตาม Segment</p>
+            <p className="text-meta font-bold uppercase tracking-wider text-muted-foreground mb-2.5">สัดส่วนตาม Segment</p>
             {segmentBreakdownContent}
           </div>
         )}

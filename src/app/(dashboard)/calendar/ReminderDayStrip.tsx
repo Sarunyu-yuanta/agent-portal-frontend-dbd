@@ -202,11 +202,11 @@ export function ReminderDayStrip({
                       : "cursor-pointer hover:bg-[var(--fill-gray-100)]"
                 }`}
               >
-                <span className="text-[11px] leading-4 text-[var(--text-default-placeholder)]">
+                <span className="text-meta leading-[20px] text-[var(--text-default-placeholder)]">
                   {WEEKDAY_LABELS[cell.day.getDay()]}
                 </span>
                 <span
-                  className={`flex size-9 items-center justify-center rounded-full text-[14px] tabular-nums transition-colors ${
+                  className={`flex size-9 items-center justify-center rounded-full text-body tabular-nums transition-colors ${
                     cell.isToday
                       ? "bg-primary-action font-bold text-on-primary-action"
                       : isActive
@@ -263,7 +263,7 @@ function MonthDivider({ label, inWeek }: { label: string; inWeek: boolean }) {
         inWeek ? "bg-[var(--fill-p1-100)]" : ""
       }`}
     >
-      <span className="rotate-180 text-[10px] font-bold uppercase tracking-widest text-primary-action [writing-mode:vertical-rl]">
+      <span className="rotate-180 text-meta font-bold uppercase tracking-widest text-primary-action [writing-mode:vertical-rl]">
         {label}
       </span>
     </span>

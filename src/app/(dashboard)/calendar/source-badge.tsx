@@ -62,7 +62,7 @@ export function itemBadge(item: Pick<DayItem, "source" | "kind" | "done">): Item
     const palette = actionPalette(item.kind);
     return {
       icon: (
-        <span className="text-[10px] font-semibold leading-none tracking-tight">{item.kind}</span>
+        <span className="text-meta font-semibold leading-none tracking-tight">{item.kind}</span>
       ),
       label: actionKindName(item.kind),
       className: item.done ? DONE_BADGE_TONE : "",

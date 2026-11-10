@@ -6,6 +6,7 @@ import { Avatar } from "@sarunyu/system-one";
 import { CaretUpDownIcon, SignOutIcon } from "@phosphor-icons/react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Sheet, SheetContent, SheetOverlay } from "@/components/ui/sheet";
+import { pageZoom } from "@/lib/page-zoom";
 
 /**
  * Floor for the panel width, for when the rail is too narrow to derive a usable
@@ -76,8 +77,21 @@ export function SidebarUserMenu({
       setPlacement(null);
       return;
     }
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    const box = triggerRef.current?.getBoundingClientRect();
+    if (!box) return;
+    // The box and the window are screen pixels; the panel's position is
+    // applied in the page's own — they differ on very wide screens (see
+    // `pageZoom`).
+    const zoom = pageZoom();
+    const rect = {
+      left: box.left / zoom,
+      top: box.top / zoom,
+      width: box.width / zoom,
+    };
+    const viewport = {
+      width: window.innerWidth / zoom,
+      height: window.innerHeight / zoom,
+    };
     // The trigger is full-bleed, so its box *is* the rail's — sizing the panel
     // off it makes the panel as wide as the sidebar less an even gap each side,
     // instead of a fixed width that left a 32px gutter on one side and 8px on
@@ -91,9 +105,9 @@ export function SidebarUserMenu({
       // the rail it was measured from.
       left: Math.max(
         MENU_GAP,
-        Math.min(rect.left + MENU_GAP, window.innerWidth - width - MENU_GAP),
+        Math.min(rect.left + MENU_GAP, viewport.width - width - MENU_GAP),
       ),
-      bottom: window.innerHeight - rect.top + MENU_GAP,
+      bottom: viewport.height - rect.top + MENU_GAP,
     });
   }
 
@@ -148,7 +162,10 @@ export function SidebarUserMenu({
       >
         {/* Same fixed icon zone the nav glyphs and the logo line up on, so the
             avatar holds its place as the sidebar collapses. */}
-        <div className="w-[34px] flex items-center justify-center shrink-0">
+        {/* The avatar's initial is the library's `text-xl`, which
+            `app/typography.css` enlarges; held at its original 20px here like
+            the rest of the sidebar. `!` to beat that unlayered rule. */}
+        <div className="w-[34px] flex items-center justify-center shrink-0 [&_span.text-xl]:text-[length:20px]!">
           <Avatar type="text" initials={initials} size="m" />
         </div>
         <div
@@ -156,10 +173,12 @@ export function SidebarUserMenu({
             }`}
         >
           <div className="flex-1 min-w-0 text-left">
-            <p className="text-[13px] font-medium text-white truncate leading-tight whitespace-nowrap">
+            {/* Original sidebar sizes, written `text-[length:Npx]` so
+                `app/typography.css` does not enlarge them — see `AppSidebar`. */}
+            <p className="text-[length:13px] font-medium text-white truncate leading-tight whitespace-nowrap">
               {name}
             </p>
-            <p className="text-[11px] text-slate-400 truncate leading-tight whitespace-nowrap">
+            <p className="text-[length:11px] text-slate-400 truncate leading-tight whitespace-nowrap">
               {role}
             </p>
           </div>
@@ -181,10 +200,10 @@ export function SidebarUserMenu({
           {/* Repeated here because the collapsed rail hides the row's own
               labels — without it the menu gives no clue whose account it is. */}
           <div className="px-3 py-2.5 border-b border-[var(--border-default)]">
-            <p className="text-[13px] font-medium text-foreground truncate leading-tight">
+            <p className="text-[length:13px] font-medium text-foreground truncate leading-tight">
               {name}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate leading-tight">
+            <p className="text-[length:11px] text-muted-foreground truncate leading-tight">
               {role}
             </p>
           </div>
@@ -193,7 +212,7 @@ export function SidebarUserMenu({
               type="button"
               role="menuitem"
               onClick={handleLogout}
-              className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left text-[13px] text-destructive transition-colors hover:bg-[var(--bg-default-secondary)]"
+              className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left text-[length:13px] text-destructive transition-colors hover:bg-[var(--bg-default-secondary)]"
             >
               <SignOutIcon size={16} className="shrink-0" />
               Logout
@@ -233,10 +252,10 @@ export function SidebarUserMenu({
           <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border-default)]">
             <Avatar type="text" initials={initials} size="m" />
             <div className="min-w-0">
-              <p className="text-[15px] font-medium text-foreground truncate leading-tight">
+              <p className="text-[length:15px] font-medium text-foreground truncate leading-tight">
                 {name}
               </p>
-              <p className="text-[12px] text-muted-foreground truncate leading-tight">
+              <p className="text-[length:12px] text-muted-foreground truncate leading-tight">
                 {role}
               </p>
             </div>
@@ -244,7 +263,7 @@ export function SidebarUserMenu({
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full cursor-pointer items-center gap-3 px-4 py-4 text-left text-[15px] text-destructive transition-colors active:bg-[var(--bg-default-secondary)]"
+            className="flex w-full cursor-pointer items-center gap-3 px-4 py-4 text-left text-[length:15px] text-destructive transition-colors active:bg-[var(--bg-default-secondary)]"
           >
             <SignOutIcon size={20} className="shrink-0" />
             Logout

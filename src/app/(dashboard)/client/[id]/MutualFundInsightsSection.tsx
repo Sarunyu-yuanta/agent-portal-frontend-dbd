@@ -80,15 +80,15 @@ export function MutualFundInsightCard({
           holdList ? "gap-2" : "gap-2.5"
         } ${INSIGHT_LIST_CARD_INTERACTIVE} ${className ?? ""}`}
       >
-        <h3 className="line-clamp-2 h-12 shrink-0 text-base font-bold leading-6 text-[#0c244a]">
+        <h3 className="line-clamp-2 h-12 shrink-0 text-base font-bold leading-[28px] text-[#0c244a]">
           {item.title}
         </h3>
-        <p className="shrink-0 text-xs leading-4 text-[#0c244a]">{item.date}</p>
+        <p className="shrink-0 text-xs leading-[20px] text-[#0c244a]">{item.date}</p>
         <div className="flex h-2 shrink-0 w-full items-center">
           <div className="h-px w-full bg-black/10" />
         </div>
         <div className="flex shrink-0 flex-col gap-2">
-          <p className="text-xs leading-4 text-[#0c244a]">กองทุนแนะนำ</p>
+          <p className="text-xs leading-[20px] text-[#0c244a]">กองทุนแนะนำ</p>
           <div className="flex flex-wrap gap-2">
             {item.recommendedFunds.map((symbol) => (
               <MutualFundSymbolTag key={symbol} symbol={symbol} />
@@ -116,13 +116,13 @@ export function MutualFundInsightCard({
         elevated ? INSIGHT_CARD_SHADOW : ""
       } ${carousel ? "w-[266.5px] lg:w-[343px]" : "w-full"} ${INSIGHT_LIST_CARD_INTERACTIVE} ${className ?? ""}`}
     >
-      <h3 className="line-clamp-3 text-base font-bold leading-6 text-[#0c244a]">{item.title}</h3>
-      <p className="mt-2.5 text-xs leading-4 text-[#0c244a]">{item.date}</p>
+      <h3 className="line-clamp-3 text-base font-bold leading-[28px] text-[#0c244a]">{item.title}</h3>
+      <p className="mt-2.5 text-xs leading-[20px] text-[#0c244a]">{item.date}</p>
       <div className="my-2.5 h-2 w-full">
         <div className="h-px w-full bg-black/10" />
       </div>
       <div className="flex flex-col gap-2">
-        <p className="text-xs leading-4 text-[#0c244a]">กองทุนแนะนำ</p>
+        <p className="text-xs leading-[20px] text-[#0c244a]">กองทุนแนะนำ</p>
         <div className="flex flex-wrap gap-2">
           {item.recommendedFunds.map((symbol) => (
             <MutualFundSymbolTag key={symbol} symbol={symbol} />
@@ -204,12 +204,12 @@ export function MutualFundInsightsSection({
           <div className="flex min-w-0 flex-1 flex-col gap-0 lg:gap-1">
             <div className="flex items-center gap-1">
               <Image src={MF_ASSETS.bookOpen} alt="" width={20} height={20} className="size-5 shrink-0" />
-              <h2 className="flex-1 text-lg font-bold leading-7 bg-gradient-to-r from-[#73442b] to-[#b58063] bg-clip-text text-transparent">
+              <h2 className="flex-1 text-lg font-bold leading-[32px] bg-gradient-to-r from-[#73442b] to-[#b58063] bg-clip-text text-transparent">
                 <span className="lg:hidden">เจาะลึกโอกาสลงทุน</span>
                 <span className="hidden lg:inline">เจาะลึกโอกาสลงทุนเด่น</span>
               </h2>
             </div>
-            <p className="text-sm leading-5 bg-gradient-to-r from-[#73442b] to-[#b58063] bg-clip-text text-transparent">
+            <p className="text-sm leading-[24px] bg-gradient-to-r from-[#73442b] to-[#b58063] bg-clip-text text-transparent">
               บทวิเคราะห์จาก Yuanta CIO
             </p>
           </div>

@@ -56,28 +56,28 @@ export function StageAdvanceModal({
           {/* Stage transition */}
           <div className="-mt-2 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STAGE_META[deal.stage as Stage]?.dot }} />
-            <span className="text-[12px] text-muted-foreground">{deal.stage}</span>
+            <span className="text-label text-muted-foreground">{deal.stage}</span>
             <ArrowRightIcon size={11} className="text-muted-foreground/30" weight="bold" />
             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STAGE_META[next]?.dot }} />
-            <span className="text-[12px] font-semibold text-foreground">{next}</span>
+            <span className="text-label font-semibold text-foreground">{next}</span>
           </div>
 
           {/* Deal summary strip */}
           <div className="flex items-center gap-3 bg-muted/50 rounded-xl px-3 py-2.5">
             <Avatar type="text" initials={getInitialsFromWords(maskedClient)} size="s" />
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-foreground truncate">{maskedClient}</p>
-              <p className="text-[11px] text-muted-foreground truncate">{deal.dealSize} · {deal.product}</p>
+              <p className="text-body-sm font-semibold text-foreground truncate">{maskedClient}</p>
+              <p className="text-meta text-muted-foreground truncate">{deal.dealSize} · {deal.product}</p>
             </div>
           </div>
 
           {/* Progress */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+              <p className="text-meta font-semibold text-muted-foreground uppercase tracking-wide">
                 รายการที่ต้องทำก่อน
               </p>
-              <span className={`text-[12px] font-bold tabular-nums transition-colors ${allDone ? "text-success" : "text-muted-foreground"}`}>
+              <span className={`text-label font-bold tabular-nums transition-colors ${allDone ? "text-success" : "text-muted-foreground"}`}>
                 {doneCount} / {total}
               </span>
             </div>
@@ -100,7 +100,7 @@ export function StageAdvanceModal({
                   className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-colors ${done ? "bg-success/10" : "hover:bg-muted/60"}`}
                 >
                   <Checkbox checked={done} onChange={() => toggle(item.id)} />
-                  <p className={`text-[13px] leading-snug flex-1 transition-colors ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                  <p className={`text-body-sm leading-snug flex-1 transition-colors ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
                     {item.label}
                   </p>
                 </div>

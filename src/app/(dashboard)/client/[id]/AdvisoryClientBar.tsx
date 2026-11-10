@@ -80,9 +80,9 @@ export function AdvisoryClientBar({ state }: { state: AdvisoryClientState }) {
     <div className="flex w-full items-center gap-3 rounded-lg border border-black/10 bg-white px-3 py-2">
       <Avatar type="text" initials={getInitial(displayName)} size="m" />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="truncate text-sm font-bold leading-5 text-[#101828]">{displayName}</p>
+        <p className="truncate text-sm font-bold leading-[24px] text-[#101828]">{displayName}</p>
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-          <p className="truncate text-xs leading-4 text-[#4a5565]">{riskProfileLabel(client)}</p>
+          <p className="truncate text-xs leading-[20px] text-[#4a5565]">{riskProfileLabel(client)}</p>
           <AdvisoryAccountTag status={advisoryAccountStatus(client, service)} />
         </div>
       </div>

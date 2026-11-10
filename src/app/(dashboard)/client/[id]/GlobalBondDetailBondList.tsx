@@ -205,15 +205,15 @@ export function GlobalBondDetailAccordion({ bonds }: { bonds: GlobalBondRow[] })
                 <IssuerLogo src={row.logo} />
               </div>
               <div className="flex flex-1 min-w-0 flex-col gap-0.5">
-                <span className="text-sm font-semibold leading-[22px] text-[#101828] truncate">
+                <span className="text-sm font-semibold leading-[26px] text-[#101828] truncate">
                   {row.name}
                 </span>
-                <span className="text-xs leading-[18px] text-[#4a5565]">
+                <span className="text-xs leading-[22px] text-[#4a5565]">
                   {row.isin}
                 </span>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <span className="text-sm leading-[22px] text-[#101828]">
+                <span className="text-sm leading-[26px] text-[#101828]">
                   {row.yieldPct}
                 </span>
                 {expanded ? (
@@ -270,7 +270,7 @@ export function GlobalBondDetailTable({ bonds }: { bonds: GlobalBondRow[] }) {
                 style={cellBorder({ bottom: isLastRow(i) })}
               >
                 <IssuerLogo src={row.logo} />
-                <span className="min-w-0 flex-1 truncate text-sm leading-5 text-[#101828]">
+                <span className="min-w-0 flex-1 truncate text-sm leading-[24px] text-[#101828]">
                   {row.name}
                 </span>
               </div>
@@ -305,7 +305,7 @@ export function GlobalBondDetailTable({ bonds }: { bonds: GlobalBondRow[] }) {
                 className="flex flex-1 items-center px-4 py-3.5 min-h-[52px]"
                 style={cellBorder({ bottom: isLastRow(i) })}
               >
-                <span className="text-sm leading-5 text-[#101828]">{row.isin}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.isin}</span>
               </div>
             ))}
           </div>
@@ -322,7 +322,7 @@ export function GlobalBondDetailTable({ bonds }: { bonds: GlobalBondRow[] }) {
                 className="flex flex-1 items-center justify-center px-4 py-3.5 min-h-[52px]"
                 style={cellBorder({ bottom: isLastRow(i) })}
               >
-                <span className="text-sm leading-5 text-[#101828]">{row.currency}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.currency}</span>
               </div>
             ))}
           </div>
@@ -339,7 +339,7 @@ export function GlobalBondDetailTable({ bonds }: { bonds: GlobalBondRow[] }) {
                 className="flex flex-1 items-center justify-end px-4 py-3.5 min-h-[52px]"
                 style={cellBorder({ bottom: isLastRow(i) })}
               >
-                <span className="text-sm leading-5 text-[#101828]">{row.couponRate}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.couponRate}</span>
               </div>
             ))}
           </div>
@@ -356,7 +356,7 @@ export function GlobalBondDetailTable({ bonds }: { bonds: GlobalBondRow[] }) {
                 className="flex flex-1 items-center justify-end px-4 py-3.5 min-h-[52px]"
                 style={cellBorder({ bottom: isLastRow(i) })}
               >
-                <span className="text-sm leading-5 text-[#101828]">{row.price}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.price}</span>
               </div>
             ))}
           </div>
@@ -373,7 +373,7 @@ export function GlobalBondDetailTable({ bonds }: { bonds: GlobalBondRow[] }) {
                 className="flex flex-1 items-center justify-end px-4 py-3.5 min-h-[52px]"
                 style={cellBorder({ bottom: isLastRow(i) })}
               >
-                <span className="text-sm leading-5 text-[#101828]">{row.yieldPct}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.yieldPct}</span>
               </div>
             ))}
           </div>
@@ -390,7 +390,7 @@ export function GlobalBondDetailTable({ bonds }: { bonds: GlobalBondRow[] }) {
                 className="flex flex-1 items-center justify-center px-4 py-3.5 min-h-[52px]"
                 style={cellBorder({ bottom: isLastRow(i) })}
               >
-                <span className="text-sm leading-5 text-[#101828]">{row.maturity}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.maturity}</span>
               </div>
             ))}
           </div>
@@ -407,7 +407,7 @@ export function GlobalBondDetailTable({ bonds }: { bonds: GlobalBondRow[] }) {
                 className="flex flex-1 items-center justify-end px-4 py-3.5 min-h-[52px]"
                 style={cellBorder({ bottom: isLastRow(i) })}
               >
-                <span className="text-sm leading-5 text-[#101828]">{row.duration}</span>
+                <span className="text-sm leading-[24px] text-[#101828]">{row.duration}</span>
               </div>
             ))}
           </div>

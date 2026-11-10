@@ -81,7 +81,7 @@ function CalendarPageInner() {
   return (
     <div
       className={`flex flex-col gap-3 ${
-        tab === "reminder" ? "h-[calc(100vh-60px)] xl:h-[calc(100vh-60px-3rem)]" : ""
+        tab === "reminder" ? "h-[calc(var(--vh)*100-60px)] xl:h-[calc(var(--vh)*100-60px-3rem)]" : ""
       }`}
     >
       {/* Sticky against the shell's `main`, which is what scrolls on the

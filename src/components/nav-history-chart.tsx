@@ -116,8 +116,8 @@ function NavTooltip({
   const { t, nav } = payload[0].payload;
   return (
     <div className="min-w-[48px] rounded-2xl bg-white p-1.5 text-center shadow-[0px_0px_1px_rgba(102,102,102,0.16),0px_4px_4px_rgba(102,102,102,0.12)]">
-      <p className="text-xs leading-4 text-black/40">{fullDate(t)}</p>
-      <p className="text-sm leading-5 text-black/75">
+      <p className="text-xs leading-[20px] text-black/40">{fullDate(t)}</p>
+      <p className="text-sm leading-[24px] text-black/75">
         {nav.toFixed(4)} <span className="text-black/40">{currency}</span>
       </p>
     </div>
@@ -197,7 +197,7 @@ export function NavHistoryChart({
             tickLine={false}
             axisLine={false}
             minTickGap={24}
-            tick={{ fill: "rgba(0,0,0,0.4)", fontSize: 12 }}
+            tick={{ fill: "rgba(0,0,0,0.4)", fontSize: 14 }}
             tickMargin={8}
           />
           {/* Hidden, but it still sets the scale the line is drawn against. */}

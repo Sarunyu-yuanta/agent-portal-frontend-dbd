@@ -275,7 +275,7 @@ export function HolderContact({
           stretches to fill has no height of its own to measure. Three contact
           rows never reach the cap anyway — it is only there so a future source
           with a dozen fields still can't run off the screen. */}
-      <div className="max-h-[40vh] overflow-y-auto px-3 pb-1">
+      <div className="max-h-[calc(var(--vh)*40)] overflow-y-auto px-3 pb-1">
         <ContactFields clientId={clientId} />
       </div>
 

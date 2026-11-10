@@ -47,7 +47,7 @@ function LogoRow({
             style={{ backgroundColor: "#fdefe6" }}
           >
             <FireIcon size={14} weight="fill" color="#f97316" />
-            <p className="whitespace-nowrap text-[9px] leading-[14px] text-[#101828]">ใกล้เต็ม</p>
+            <p className="whitespace-nowrap text-micro leading-[18px] text-[#101828]">ใกล้เต็ม</p>
           </div>
         )}
         {tags.includes("รับประกันเงินต้น") && (
@@ -56,7 +56,7 @@ function LogoRow({
             style={{ backgroundColor: "#eff6ff" }}
           >
             <ShieldCheckIcon size={14} weight="fill" color="#2b7fff" />
-            <p className="whitespace-nowrap text-[9px] leading-[14px] text-[#101828]">รับประกันเงินต้น</p>
+            <p className="whitespace-nowrap text-micro leading-[18px] text-[#101828]">รับประกันเงินต้น</p>
           </div>
         )}
       </div>
@@ -75,7 +75,7 @@ function LogoRow({
  */
 function ProcessingBand() {
   return (
-    <div className="absolute inset-x-0 top-0 flex h-7 items-center justify-center gap-1 bg-[#eff6ff] text-[12px] font-medium leading-4 text-[#0a6ee7]">
+    <div className="absolute inset-x-0 top-0 flex h-7 items-center justify-center gap-1 bg-[#eff6ff] text-label font-medium leading-[20px] text-[#0a6ee7]">
       <HourglassMediumIcon size={14} weight="fill" />
       กำลังดำเนินการสั่งซื้อ
     </div>
@@ -86,12 +86,12 @@ function UnderlyingCouponRow({ underlying, coupon }: { underlying: string; coupo
   return (
     <div className="flex gap-2 items-center w-full shrink-0">
       <div className="flex flex-col flex-1 min-w-0">
-        <p className="font-bold text-[16px] leading-6 text-[#101828] truncate w-full">{underlying}</p>
-        <p className="text-[12px] leading-4 text-[#6a7282]">Underlying</p>
+        <p className="font-bold text-title-sm leading-[28px] text-[#101828] truncate w-full">{underlying}</p>
+        <p className="text-label leading-[20px] text-[#6a7282]">Underlying</p>
       </div>
       <div className="flex flex-col items-end shrink-0 whitespace-nowrap">
-        <p className="font-bold text-[16px] leading-6 text-[#101828]">{coupon}</p>
-        <p className="text-[12px] leading-4 text-[#6a7282]">Coupon</p>
+        <p className="font-bold text-title-sm leading-[28px] text-[#101828]">{coupon}</p>
+        <p className="text-label leading-[20px] text-[#6a7282]">Coupon</p>
       </div>
     </div>
   );
@@ -116,9 +116,9 @@ function StatsGrid({
           className="flex flex-col gap-0.5 items-center justify-center flex-1 min-w-0 h-full"
           style={i < stats.length - 1 ? { borderRight: "1px solid rgba(0,0,0,0.1)" } : {}}
         >
-          <p className="text-[9px] leading-[14px] text-[#6a7282] w-full">{s.label}</p>
+          <p className="text-micro leading-[18px] text-[#6a7282] w-full">{s.label}</p>
           <p
-            className={`text-[12px] leading-4 text-[#4a5565] w-full ${
+            className={`text-label leading-[20px] text-[#4a5565] w-full ${
               layout === "tablet"
                 ? s.label === "Tenor"
                   ? "font-bold"

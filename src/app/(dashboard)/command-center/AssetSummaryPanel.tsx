@@ -75,7 +75,7 @@ export function AssetSummaryPanel({ clients }: { clients: Client[] }) {
           <p className="text-[28px] font-bold leading-none tabular-nums text-foreground">
             {formatAumThb(animatedAum)}
           </p>
-          <p className="text-[12px] leading-tight text-muted-foreground">
+          <p className="text-label leading-tight text-muted-foreground">
             จาก {clients.length} ลูกค้า · {rows.length} ประเภทสินทรัพย์
           </p>
         </div>

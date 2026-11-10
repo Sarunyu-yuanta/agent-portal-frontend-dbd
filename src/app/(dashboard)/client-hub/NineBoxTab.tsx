@@ -129,7 +129,7 @@ export function NineBoxTab({
         {/* "AUM" rotated title */}
         <div className="flex items-center justify-center">
           <span
-            className="text-[11px] font-bold text-slate-500 select-none tracking-wider"
+            className="text-meta font-bold text-slate-500 select-none tracking-wider"
             style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
           >
             AUM
@@ -149,7 +149,7 @@ export function NineBoxTab({
               }}
             >
               <span
-                className="text-[9px] font-black text-white tracking-[0.15em] uppercase select-none leading-none"
+                className="text-micro font-black text-white tracking-[0.15em] uppercase select-none leading-none"
                 style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
               >
                 {r.label}
@@ -195,7 +195,7 @@ export function NineBoxTab({
                 >
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className={`size-2 rounded-full shrink-0 ${style.dot}`} />
-                    <p className="text-[12px] font-semibold text-foreground leading-4 truncate">{cell.label}</p>
+                    <p className="text-label font-semibold text-foreground leading-[20px] truncate">{cell.label}</p>
                   </div>
                   <div>
                     <p className={`text-3xl font-bold leading-none tracking-tight ${style.count}`}>
@@ -204,7 +204,7 @@ export function NineBoxTab({
                     {(() => {
                       const totalAum = formatTotalAum(cellClients);
                       return totalAum ? (
-                        <p className="text-[13px] text-muted-foreground mt-1 leading-none">
+                        <p className="text-body-sm text-muted-foreground mt-1 leading-none">
                           {totalAum}
                         </p>
                       ) : null;
@@ -230,7 +230,7 @@ export function NineBoxTab({
                 opacity: hoveredCell && hoveredCell.col !== i ? 0.15 : 1,
               }}
             >
-              <span className="text-[9px] font-black text-white tracking-[0.15em] uppercase select-none leading-none">
+              <span className="text-micro font-black text-white tracking-[0.15em] uppercase select-none leading-none">
                 {label}
               </span>
             </div>
@@ -239,7 +239,7 @@ export function NineBoxTab({
 
         {/* "AI Score" title */}
         <div className="flex justify-center">
-          <span className="text-[11px] font-bold text-slate-500 tracking-wider select-none">
+          <span className="text-meta font-bold text-slate-500 tracking-wider select-none">
             AI Score
           </span>
         </div>

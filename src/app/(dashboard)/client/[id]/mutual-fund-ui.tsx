@@ -133,7 +133,7 @@ export function MobilePeriodTabs({
                 key={period}
                 type="button"
                 onClick={() => onChange(period)}
-                className={`flex min-h-8 shrink-0 items-center justify-center rounded-full px-3 py-1.5 text-xs font-semibold leading-4 ${
+                className={`flex min-h-8 shrink-0 items-center justify-center rounded-full px-3 py-1.5 text-xs font-semibold leading-[20px] ${
                   selected
                     ? "bg-white text-[#292524] shadow-[0px_4px_8px_0px_rgba(28,25,23,0.03),0px_8px_16px_0px_rgba(28,25,23,0.02)]"
                     : "text-[#4a5565]"

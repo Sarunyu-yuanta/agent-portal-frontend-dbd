@@ -75,7 +75,7 @@ function QuickActionCard({
       }`}
     >
       <QuickActionArt variant={variant} />
-      <p className="relative text-sm font-bold leading-5 text-[#101828]">
+      <p className="relative text-sm font-bold leading-[24px] text-[#101828]">
         {title[0]}
         <br />
         {title[1]}

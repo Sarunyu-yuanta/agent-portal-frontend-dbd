@@ -144,7 +144,7 @@ export function StrategyPlaybooks({
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <span className="px-2.5 py-1 rounded bg-primary-action-light text-primary-action text-[11px] font-bold">
+                    <span className="px-2.5 py-1 rounded bg-primary-action-light text-primary-action text-meta font-bold">
                       {periodBadgeLabel(group.period)}
                     </span>
                     <p className="type-subtitle-1 font-bold text-foreground">{group.periodLabel}</p>
@@ -239,7 +239,7 @@ export function StrategyPlaybooks({
               title=""
               showClose={false}
               onClose={() => setModalGroup(null)}
-              className="w-[calc(100vw-2rem)] max-w-[720px]"
+              className="w-[calc(var(--vw)*100-2rem)] max-w-[720px]"
             >
               <div className="flex flex-col gap-4">
                 {/* Modal's own `title`/`showClose` header only takes a string,
@@ -247,7 +247,7 @@ export function StrategyPlaybooks({
                     the title. `-mt-4` collapses the now-empty native header. */}
                 <div className="-mt-4 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
-                    <p className="text-[18px] leading-7 font-bold text-foreground truncate">
+                    <p className="text-title leading-[32px] font-bold text-foreground truncate">
                       {modalTitle(modalGroup)}
                     </p>
                     <FullReportButton group={modalGroup} />
@@ -262,7 +262,7 @@ export function StrategyPlaybooks({
                     <XIcon size={20} />
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto hide-scrollbar py-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[calc(var(--vh)*60)] overflow-y-auto hide-scrollbar py-1">
                   {modalGroup.items.map((s) => (
                     <PlaybookCardCompact key={s.id} strategy={s} />
                   ))}

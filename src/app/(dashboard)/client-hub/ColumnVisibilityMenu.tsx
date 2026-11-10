@@ -50,7 +50,7 @@ export function ColumnVisibilityMenu({
       >
         Columns
         {hiddenCount > 0 && (
-          <span className="ml-1 inline-flex items-center justify-center rounded-full bg-primary-action text-white text-[10px] font-bold w-4 h-4 leading-none">
+          <span className="ml-1 inline-flex items-center justify-center rounded-full bg-primary-action text-white text-meta font-bold w-4 h-4 leading-none">
             {hiddenCount}
           </span>
         )}
@@ -60,7 +60,7 @@ export function ColumnVisibilityMenu({
       {open && (
         <div className="hidden lg:block absolute right-0 top-full mt-1 z-50 bg-white border border-[var(--border-default)] rounded-xl shadow-lg w-[260px] overflow-hidden">
           <div className="flex items-center justify-between px-3 py-2.5 border-b border-[var(--border-default)]">
-            <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <p className="text-label font-semibold text-muted-foreground uppercase tracking-wider">
               Show / Hide Columns
             </p>
             <Button variant="plain" size="sm" onClick={onReset}>
@@ -87,7 +87,7 @@ export function ColumnVisibilityMenu({
                   >
                     {checked && <CheckIcon size={10} weight="bold" color="white" />}
                   </span>
-                  <span className="text-[13px] text-foreground leading-tight flex-1">
+                  <span className="text-body-sm text-foreground leading-tight flex-1">
                     {column.label}
                   </span>
                   {column.required && (
@@ -115,12 +115,12 @@ export function ColumnVisibilityMenu({
             <div className="w-[300px]">
               <button
                 type="button"
-                className="text-[12px] text-primary-action hover:underline font-medium mb-2 block"
+                className="text-label text-primary-action hover:underline font-medium mb-2 block"
                 onClick={onReset}
               >
                 Reset
               </button>
-              <div className="max-h-[50vh] overflow-y-auto -mx-1">
+              <div className="max-h-[calc(var(--vh)*50)] overflow-y-auto -mx-1">
                 {columns.map((column) => {
                   const checked = visibleColumns.has(column.id);
                   return (
@@ -139,7 +139,7 @@ export function ColumnVisibilityMenu({
                       >
                         {checked && <CheckIcon size={10} weight="bold" color="white" />}
                       </span>
-                      <span className="text-[13px] text-foreground leading-tight">
+                      <span className="text-body-sm text-foreground leading-tight">
                         {column.label}
                       </span>
                     </button>
@@ -155,14 +155,14 @@ export function ColumnVisibilityMenu({
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="bottom" showCloseButton={false} className="md:hidden rounded-t-2xl px-0 pb-safe">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-default)]">
-            <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <p className="text-label font-semibold text-muted-foreground uppercase tracking-wider">
               Show / Hide Columns
             </p>
             <Button variant="plain" size="sm" onClick={onReset}>
               Reset
             </Button>
           </div>
-          <div className="py-1 max-h-[60vh] overflow-y-auto">
+          <div className="py-1 max-h-[calc(var(--vh)*60)] overflow-y-auto">
             {columns.map((column) => {
               const checked = visibleColumns.has(column.id);
               return (
@@ -181,7 +181,7 @@ export function ColumnVisibilityMenu({
                   >
                     {checked && <CheckIcon size={12} weight="bold" color="white" />}
                   </span>
-                  <span className="text-[14px] text-foreground leading-tight">
+                  <span className="text-body text-foreground leading-tight">
                     {column.label}
                   </span>
                 </button>

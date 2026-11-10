@@ -127,7 +127,7 @@ export function CustomerTable({
                     `onOpenChange` in `client-hub/page.tsx`. */}
                 <TableRow data-client-row="" ref={flipRef(client.id)} className="cursor-pointer transition-colors active:bg-[var(--bg-default-pressed)]" hoverable onClick={() => onRowClick(client)}>
                   <TableCell {...noCellPin}>
-                    <p className="text-[13px] text-muted-foreground">{rowNo}</p>
+                    <p className="text-body-sm text-muted-foreground">{rowNo}</p>
                   </TableCell>
                   {shown.map((col) => (
                     <TableCell key={col.id} {...pinProps(col.id)}>

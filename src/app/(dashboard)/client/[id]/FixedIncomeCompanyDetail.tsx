@@ -49,7 +49,7 @@ const STICKY_ACTION_CELL_CLS =
 
 function CategoryTag({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center justify-center px-2 py-1 rounded bg-[#f3f4f6] text-xs leading-4 text-[#4a5565] whitespace-nowrap">
+    <span className="inline-flex items-center justify-center px-2 py-1 rounded bg-[#f3f4f6] text-xs leading-[20px] text-[#4a5565] whitespace-nowrap">
       {label}
     </span>
   );
@@ -61,13 +61,13 @@ function GuaranteeCell({ value }: { value: string }) {
       <button
         type="button"
         onClick={(e) => e.stopPropagation()}
-        className="text-sm leading-5 text-[#0a6ee7] underline border-none bg-transparent p-0 cursor-pointer whitespace-nowrap"
+        className="text-sm leading-[24px] text-[#0a6ee7] underline border-none bg-transparent p-0 cursor-pointer whitespace-nowrap"
       >
         {value}
       </button>
     );
   }
-  return <span className="text-sm leading-5 text-[#101828] whitespace-nowrap">{value}</span>;
+  return <span className="text-sm leading-[24px] text-[#101828] whitespace-nowrap">{value}</span>;
 }
 
 function ViewInfoButton({ onClick }: { onClick: () => void }) {
@@ -78,7 +78,7 @@ function ViewInfoButton({ onClick }: { onClick: () => void }) {
         e.stopPropagation();
         onClick();
       }}
-      className="inline-flex items-center justify-center px-1.5 py-1 rounded text-xs font-medium leading-[18px] whitespace-nowrap bg-[#0a6ee7] text-white border-none cursor-pointer"
+      className="inline-flex items-center justify-center px-1.5 py-1 rounded text-xs font-medium leading-[22px] whitespace-nowrap bg-[#0a6ee7] text-white border-none cursor-pointer"
     >
       ดูข้อมูล
     </button>
@@ -195,7 +195,7 @@ function BondTableRow({
     >
       <div className={`${cell} gap-2`} style={border()}>
         <BondLogo src={BOND_LOGOS[bond.logoIdx]} logoCrop={bond.logoCrop} className="size-8 rounded" />
-        <span className="flex-1 min-w-0 text-sm font-bold leading-5 text-[#101828] truncate">{bond.symbol}</span>
+        <span className="flex-1 min-w-0 text-sm font-bold leading-[24px] text-[#101828] truncate">{bond.symbol}</span>
       </div>
       {showStatus && (
         <div className={`${cell} justify-end`} style={border()}>
@@ -206,37 +206,37 @@ function BondTableRow({
         <CategoryTag label={bond.bondCategory} />
       </div>
       <div className={`${cell} justify-end`} style={border()}>
-        <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">{bond.ytm}</span>
+        <span className="text-sm font-bold leading-[24px] text-[#101828] whitespace-nowrap">{bond.ytm}</span>
       </div>
       <div className={`${cell} justify-end`} style={border()}>
-        <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">{bond.couponRate}</span>
+        <span className="text-sm font-bold leading-[24px] text-[#101828] whitespace-nowrap">{bond.couponRate}</span>
       </div>
       <div className={`${cell}`} style={border()}>
-        <span className="text-sm leading-5 text-[#101828] whitespace-nowrap">{bond.couponPeriod}</span>
+        <span className="text-sm leading-[24px] text-[#101828] whitespace-nowrap">{bond.couponPeriod}</span>
       </div>
       <div className={`${cell}`} style={border()}>
-        <span className="text-sm leading-5 text-[#101828] whitespace-nowrap">{bond.tenor}</span>
+        <span className="text-sm leading-[24px] text-[#101828] whitespace-nowrap">{bond.tenor}</span>
       </div>
       <div className={`${cell}`} style={border()}>
-        <span className="text-sm leading-5 text-[#101828]">{bond.maturity}</span>
+        <span className="text-sm leading-[24px] text-[#101828]">{bond.maturity}</span>
       </div>
       <div className={`${cell} justify-center`} style={border()}>
-        <span className="text-sm leading-5 text-[#101828] text-center">{bond.companyRating}</span>
+        <span className="text-sm leading-[24px] text-[#101828] text-center">{bond.companyRating}</span>
       </div>
       <div className={`${cell} justify-center`} style={border()}>
-        <span className="text-sm leading-5 text-[#101828] text-center">{bond.bondRating}</span>
+        <span className="text-sm leading-[24px] text-[#101828] text-center">{bond.bondRating}</span>
       </div>
       <div className={`${cell}`} style={border()}>
-        <span className="text-sm leading-5 text-[#101828]">{bond.risk}</span>
+        <span className="text-sm leading-[24px] text-[#101828]">{bond.risk}</span>
       </div>
       <div className={`${cell}`} style={border()}>
         <GuaranteeCell value={bond.guarantee} />
       </div>
       <div className={`${cell}`} style={border()}>
-        <span className="text-sm leading-5 text-[#101828] whitespace-nowrap">{bond.offerType}</span>
+        <span className="text-sm leading-[24px] text-[#101828] whitespace-nowrap">{bond.offerType}</span>
       </div>
       <div className={`${cell} overflow-hidden`} style={border()}>
-        <span className="text-sm leading-5 text-[#101828] whitespace-nowrap truncate">
+        <span className="text-sm leading-[24px] text-[#101828] whitespace-nowrap truncate">
           {bond.subscriptionPeriod}
         </span>
       </div>
@@ -289,7 +289,7 @@ const ASSET_TAG_ICONS = {
 
 function AssetTag({ iconSrc, label }: { iconSrc: string; label: string }) {
   return (
-    <span className="inline-flex items-center gap-0.5 px-2 py-1 rounded bg-[#f9fafb] text-sm leading-5 text-[#4a5565]">
+    <span className="inline-flex items-center gap-0.5 px-2 py-1 rounded bg-[#f9fafb] text-sm leading-[24px] text-[#4a5565]">
       {/* eslint-disable-next-line @next/next/no-img-element -- 14px SVG tag icon; the image optimizer rejects SVG */}
       <img alt="" src={iconSrc} className="size-3.5 shrink-0" />
       {label}
@@ -322,7 +322,7 @@ function BondSection({
         >
           {title}
         </h2>
-        <div className="flex items-center justify-between w-full text-sm leading-5 text-[#6a7282]">
+        <div className="flex items-center justify-between w-full text-sm leading-[24px] text-[#6a7282]">
           <span>จำนวน {bonds.length} รายการ</span>
           <span className="hidden sm:inline">อัปเดตล่าสุด {updatedAt}</span>
         </div>
@@ -365,7 +365,7 @@ export function FixedIncomeCompanyDetail({
           <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ">
             <ArrowLeftIcon size={20} />
           </Button>
-          <h1 className="text-lg font-bold leading-[26px] text-[#101828]">ไม่พบข้อมูลบริษัท</h1>
+          <h1 className="text-lg font-bold leading-[30px] text-[#101828]">ไม่พบข้อมูลบริษัท</h1>
         </div>
       </div>
     );
@@ -382,7 +382,7 @@ export function FixedIncomeCompanyDetail({
         <Button variant="plain" size="icon-sm" onClick={onBack} aria-label="กลับ" className="shrink-0">
           <ArrowLeftIcon size={20} />
         </Button>
-        <h1 className="flex-1 min-w-0 text-lg font-bold leading-[26px] text-[#101828] truncate">
+        <h1 className="flex-1 min-w-0 text-lg font-bold leading-[30px] text-[#101828] truncate">
           {company.fullName}
         </h1>
       </div>
@@ -410,11 +410,11 @@ export function FixedIncomeCompanyDetail({
               </h2>
             </div>
             {company.description && (
-              <p className="text-base leading-6 text-[rgba(0,0,0,0.75)]">{company.description}</p>
+              <p className="text-base leading-[28px] text-[rgba(0,0,0,0.75)]">{company.description}</p>
             )}
           </div>
           <div className="relative flex flex-col gap-4 w-full">
-            <p className="text-base font-bold leading-6 text-[rgba(0,0,0,0.75)]">รายละเอียดสินทรัพย์</p>
+            <p className="text-base font-bold leading-[28px] text-[rgba(0,0,0,0.75)]">รายละเอียดสินทรัพย์</p>
             <div className="flex flex-wrap gap-3 items-start">
               <AssetTag iconSrc={ASSET_TAG_ICONS.ticker} label={`Ticker : ${company.ticker}`} />
               <AssetTag iconSrc={ASSET_TAG_ICONS.offering} label={`ประเภทการเสนอขาย : ${company.offeringType}`} />
