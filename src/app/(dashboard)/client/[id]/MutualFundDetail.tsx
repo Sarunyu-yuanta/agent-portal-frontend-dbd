@@ -16,6 +16,8 @@ import {
   MutualFundDividendHistoryModal,
 } from "./MutualFundDividendHistoryModal";
 import { AllocationDonut } from "@/components/allocation-donut";
+import { FundTagBadges } from "./MutualFundCard";
+import { NoDividendIllustration } from "./NoDividendIllustration";
 import { SendProposalButton } from "@/app/(dashboard)/orders/SendProposalButton";
 import { offeredProductId } from "@/app/(dashboard)/orders/offered-products";
 
@@ -453,15 +455,22 @@ function PerformanceContent({ fund }: { fund: MutualFundDetailData }) {
         </div>
       </section>
 
-      {fund.dividendHistory.length > 0 && (
-        <section className="flex w-full flex-col gap-3 py-4 lg:px-0">
-          <SectionTitle>ประวัติการจ่ายปันผล</SectionTitle>
+      {/* Figma 360:64004 — the section always shows; a fund that pays nothing
+          gets the empty state (360:64499) instead of losing the section. */}
+      <section className="flex w-full flex-col gap-3 py-4 lg:px-0">
+        <SectionTitle>ประวัติการจ่ายปันผล</SectionTitle>
+        {fund.dividendHistory.length > 0 ? (
           <DividendHistoryPreview
             rows={fund.dividendHistory}
             onViewAll={() => setDividendModalOpen(true)}
           />
-        </section>
-      )}
+        ) : (
+          <div className="flex w-full items-center gap-[15px]">
+            <NoDividendIllustration />
+            <p className="text-center text-sm leading-5 text-[#4a5565]">กองทุนนี้ไม่มีการจ่ายปันผล</p>
+          </div>
+        )}
+      </section>
 
       <MutualFundDividendHistoryModal
         open={dividendModalOpen}
@@ -542,37 +551,19 @@ export function MutualFundDetail({
   const [tabsEl, setTabsEl] = useState<HTMLDivElement | null>(null);
   const [tabsAnchorEl, setTabsAnchorEl] = useState<HTMLDivElement | null>(null);
   const [tabsTop, setTabsTop] = useState(0);
-  // A short tab — one table and nothing else — leaves the page too short to
-  // scroll its own tab bar up to the top: the browser clamps the scroll and
-  // you land back at the fund's NAV instead of the panel you asked for. Floor
-  // the panel at the height left under the parked bar and the room is always
-  // there.
-  const [bodyMinHeight, setBodyMinHeight] = useState(0);
+  // No min-height floor on the panel: a short tab ends where its content does
+  // (design ask — no empty band under a fund with no dividends). The cost is
+  // that switching to a short tab from deep in a long one can't park the bar
+  // at the top; the browser clamps the scroll and the page settles lower.
 
   useEffect(() => {
     if (!identityEl || !tabsEl) return;
-    const main = document.querySelector("main");
-    const measure = () => {
-      // The bar parks under the identity block below `lg`; above it that block
-      // scrolls away and the bar parks at the top of `main` — see the classes
-      // on each.
-      const identityHeight = identityEl.offsetHeight;
-      const parkedAt = window.matchMedia("(min-width: 64rem)").matches
-        ? 0
-        : identityHeight;
-      setTabsTop(identityHeight);
-      setBodyMinHeight(
-        Math.max(
-          0,
-          (main?.clientHeight ?? window.innerHeight) - parkedAt - tabsEl.offsetHeight,
-        ),
-      );
-    };
+    // The bar parks under the identity block below `lg` — see its classes.
+    const measure = () => setTabsTop(identityEl.offsetHeight);
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(identityEl);
     observer.observe(tabsEl);
-    if (main) observer.observe(main);
     return () => observer.disconnect();
   }, [identityEl, tabsEl]);
 
@@ -675,9 +666,11 @@ export function MutualFundDetail({
             >
               <ArrowLeftIcon size={18} />
             </Button>
-            <h1 className="min-w-0 flex-1 text-lg font-bold leading-7 text-[#101828]">
-              {fund.symbol}
-            </h1>
+            {/* Figma 360:64854 — View / Highlight sit right after the symbol */}
+            <div className="flex min-w-0 flex-1 items-center gap-1">
+              <h1 className="min-w-0 text-lg font-bold leading-7 text-[#101828]">{fund.symbol}</h1>
+              <FundTagBadges fund={fund} />
+            </div>
           </div>
           {/* `pl-9` keeps the name under the symbol rather than under the
               arrow — the 28px button plus the row's 8px gap. */}
@@ -746,17 +739,17 @@ export function MutualFundDetail({
               on screen, undoing the jump we just made. */}
           <div
             className="flex w-full flex-col"
-            style={{ minHeight: bodyMinHeight, overflowAnchor: "none" }}
+            style={{ overflowAnchor: "none" }}
           >
             <DetailBody fund={fund} activeTab={activeTab} />
-          </div>
 
-          {/* Offered, never booked — see `SendProposalButton`. Under every
-              tab, since all four are about the one fund. */}
-          <SendProposalButton
-            subject={{ id: offeredProductId("mutual-fund", fund.symbol), underlying: fund.symbol, documents: "Fund Fact Sheet" }}
-            className="pt-6"
-          />
+            {/* Offered, never booked — see `SendProposalButton`. Under every
+                tab, since all four are about the one fund. */}
+            <SendProposalButton
+              subject={{ id: offeredProductId("mutual-fund", fund.symbol), underlying: fund.symbol, documents: "Fund Fact Sheet" }}
+              className="pt-6"
+            />
+          </div>
         </div>
       </div>
     </div>

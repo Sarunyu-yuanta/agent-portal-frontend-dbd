@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Tag } from "@sarunyu/system-one";
-import { fundHasHighlightTag, fundHasViewTag, type MutualFund } from "./mutual-fund-data";
+import { useId, useMemo } from "react";
+import { fundHasHighlightTag, fundHasViewTag, getNavHistory, type MutualFund } from "./mutual-fund-data";
 import { MF_ASSETS, mutualFundRiskMeterSrc } from "./mutual-fund-assets";
 
 const LIST_CARD_CLASS =
@@ -144,6 +145,33 @@ function ListCardMetaTag({
   );
 }
 
+/** View / Highlight badges for one fund — only the tags it actually carries. */
+export function FundTagBadges({ fund }: { fund: MutualFund }) {
+  const view = fundHasViewTag(fund);
+  const highlight = fundHasHighlightTag(fund);
+  if (!view && !highlight) return null;
+  return (
+    <>
+      {view ? (
+        <ListCardMetaTag
+          iconSrc={MF_ASSETS.performersTagView}
+          label="View"
+          className="bg-[#f6f3ef]"
+          labelClassName="text-[#935737]"
+        />
+      ) : null}
+      {highlight ? (
+        <ListCardMetaTag
+          iconSrc={MF_ASSETS.performersTagHighlight}
+          label="Highlight"
+          className="bg-[#eff6ff]"
+          labelClassName="text-[#0a6ee7]"
+        />
+      ) : null}
+    </>
+  );
+}
+
 function ListCardPercentPill({ changePct }: { changePct: string }) {
   const positive = changePct.startsWith("+");
   const value = changePct.replace(/^[+-]/, "");
@@ -210,11 +238,66 @@ function PriceChange({ fund }: { fund: MutualFund }) {
   );
 }
 
-function Sparkline() {
+const SPARK_W = 48;
+const SPARK_H = 30;
+const SPARK_SAMPLES = 24;
+
+/**
+ * The fund's last year of NAV as a 48×30 line + fade, styled like the original
+ * sparkline artwork (Figma "Line Chart"): green when the year closed up, red
+ * when down. Same series the detail page charts, so the two always match.
+ */
+function Sparkline({ fund }: { fund: MutualFund }) {
+  const gradientId = useId();
+  const points = useMemo(() => {
+    const history = getNavHistory(fund.id);
+    if (!history || history.points.length < 2) return null;
+    const all = history.points;
+    const latest = Date.parse(all[all.length - 1].date);
+    const year = all.filter((p) => Date.parse(p.date) >= latest - 365 * 86_400_000);
+    const series = year.length >= 2 ? year : all;
+    const step = Math.max(1, (series.length - 1) / (SPARK_SAMPLES - 1));
+    const sampled: number[] = [];
+    for (let i = 0; i < SPARK_SAMPLES && Math.round(i * step) < series.length; i += 1) {
+      sampled.push(series[Math.round(i * step)].nav);
+    }
+    if (sampled[sampled.length - 1] !== series[series.length - 1].nav) sampled.push(series[series.length - 1].nav);
+    return sampled;
+  }, [fund.id]);
+
+  if (!points) return <div className="h-[30px] w-12 shrink-0" />;
+
+  // Floor the vertical range at 4% of the price: a fund that moved 0.7% in a
+  // year should look calm, not have its daily noise stretched to full height.
+  const lo = Math.min(...points);
+  const hi = Math.max(...points);
+  const span = Math.max(hi - lo, ((hi + lo) / 2) * 0.04) || 1;
+  const min = (hi + lo) / 2 - span / 2;
+  const pad = 0.5;
+  const coords = points.map((v, i) => [
+    pad + (i / (points.length - 1)) * (SPARK_W - pad * 2),
+    pad + (1 - (v - min) / span) * (SPARK_H - pad * 2),
+  ]);
+  const line = coords.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`).join("");
+  const area = `${line}L${(SPARK_W - pad).toFixed(2)} ${SPARK_H - pad}L${pad} ${SPARK_H - pad}Z`;
+  const color = points[points.length - 1] >= points[0] ? "#00C951" : "#FB2C36";
+
   return (
-    <div className="relative h-[30px] w-12 shrink-0">
-      <Image src={MF_ASSETS.sparkline} alt="" fill className="object-contain" sizes="48px" />
-    </div>
+    <svg
+      className="h-[30px] w-12 shrink-0 overflow-visible"
+      viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
+      preserveAspectRatio="none"
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop stopColor={color} />
+          <stop offset="1" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill={`url(#${gradientId})`} opacity="0.24" />
+      <path d={line} stroke={color} strokeLinecap="round" strokeLinejoin="round" fill="none" vectorEffect="non-scaling-stroke" />
+    </svg>
   );
 }
 
@@ -238,7 +321,7 @@ export function MutualFundListCard({
           <span className="text-sm font-bold leading-5 text-[#101828] whitespace-nowrap">{fund.symbol}</span>
           <p className="line-clamp-2 text-xs leading-4 text-[#4a5565]">{fund.name}</p>
         </div>
-        <Sparkline />
+        <Sparkline fund={fund} />
         <ListCardPriceChange fund={fund} />
       </div>
       <div className="flex h-5 w-full items-center gap-1">
@@ -309,7 +392,7 @@ export function MutualFundListCardMobile({
           <span className="truncate text-sm font-bold leading-5 text-[#101828]">{fund.symbol}</span>
           <p className="line-clamp-2 text-xs leading-4 text-[#4a5565]">{fund.name}</p>
         </div>
-        <Sparkline />
+        <Sparkline fund={fund} />
         <ListCardPriceChange fund={fund} />
       </div>
       <div className="flex w-full items-center gap-1">
@@ -381,7 +464,7 @@ export function MutualFundCard({
           </div>
           <p className="truncate text-xs leading-4 text-[#4a5565]">{fund.name}</p>
         </div>
-        <Sparkline />
+        <Sparkline fund={fund} />
         <PriceChange fund={fund} />
       </div>
       <RiskBadge risk={fund.risk} />
@@ -464,7 +547,7 @@ function MutualFundThemeRow({
           <span className="min-w-0 flex-1 self-start break-words text-sm font-bold leading-5 text-[#101828]">
             {fund.symbol}
           </span>
-          <Sparkline />
+          <Sparkline fund={fund} />
           <ListCardPriceChange fund={fund} />
         </div>
         <div className="flex h-5 w-full items-center gap-1">

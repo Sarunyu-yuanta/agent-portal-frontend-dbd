@@ -609,74 +609,275 @@ function allCatalogFunds(): MutualFund[] {
   return [...byId.values()];
 }
 
+/* ── Mock detail for funds without a hand-written entry ─────────────────────
+ * Only one fund in the catalog JSON carries full detail data. Every other fund
+ * gets a generated one so all four detail tabs have something real to show —
+ * seeded by fund id, so the same fund always reads the same numbers, and
+ * built to agree with itself: the NAV series hits the returns table exactly,
+ * the dividend section follows the fund's dividend policy, the fund-info rows
+ * follow its category, AMC and tax type. */
+
+/** Latest priced day for generated funds — same as the hand-written one. */
+const MOCK_LATEST_NAV_DATE = "2026-07-08";
+const MOCK_NAV_DATE_LABEL = "ราคาหน่วยลงทุน (NAV) ณ 8 ก.ค 69";
+
+function seededRandom(seed: string): () => number {
+  let state = hashString(seed) || 1;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 2 ** 32;
+  };
+}
+
+function between(rnd: () => number, min: number, max: number): number {
+  return min + rnd() * (max - min);
+}
+
+function formatPct(value: number): string {
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+}
+
+function pick<T>(rnd: () => number, items: readonly T[]): T {
+  return items[Math.floor(rnd() * items.length)];
+}
+
+type MockFundGroup = "thai-equity" | "thai-bond" | "foreign";
+
+function mockFundGroup(fundId: string): MockFundGroup {
+  const category = getFundCategoryIds(fundId)[0];
+  if (category === "thai-equity") return "thai-equity";
+  if (category === "fixed-income") return "thai-bond";
+  return "foreign";
+}
+
+const MOCK_HOLDINGS: Record<MockFundGroup, string[]> = {
+  foreign: [
+    "PIMCO GIS Income Fund 'I' (USD) ACC",
+    "BlackRock Global Funds - World Technology Fund",
+    "JPMorgan Funds - US Select Equity Fund",
+    "Fidelity Funds - Global Dividend Fund",
+    "Schroder ISF Asian Opportunities",
+    "iShares Core S&P 500 UCITS ETF",
+  ],
+  "thai-equity": [
+    "PTT PUBLIC COMPANY LIMITED",
+    "ADVANCED INFO SERVICE PCL",
+    "CP ALL PUBLIC COMPANY LIMITED",
+    "KASIKORNBANK PUBLIC COMPANY LIMITED",
+    "BANGKOK DUSIT MEDICAL SERVICES PCL",
+  ],
+  "thai-bond": [
+    "พันธบัตรรัฐบาล LB336A",
+    "พันธบัตรธนาคารแห่งประเทศไทย CB26",
+    "หุ้นกู้ ปตท. PTTC29",
+    "หุ้นกู้ ซีพี ออลล์ CPALL27",
+    "เงินฝากธนาคารกสิกรไทย",
+  ],
+};
+
+const MOCK_ALLOCATION_LABELS: Record<MockFundGroup, [string, string, string]> = {
+  foreign: ["หน่วยลงทุน", "เงินฝาก/ตราสารเทียบเท่า", "สินทรัพย์อื่นๆ/หนี้สินอื่นๆ"],
+  "thai-equity": ["หุ้นสามัญ", "เงินฝาก/ตราสารเทียบเท่า", "สินทรัพย์อื่นๆ/หนี้สินอื่นๆ"],
+  "thai-bond": ["พันธบัตรรัฐบาล", "หุ้นกู้", "เงินฝาก/ตราสารเทียบเท่า"],
+};
+
+const MOCK_POLICY: Record<MockFundGroup, string> = {
+  foreign:
+    "กองทุนมีนโยบายลงทุนในหน่วยลงทุนของกองทุนรวมต่างประเทศ (Master Fund) โดยเฉลี่ยในรอบปีบัญชีไม่น้อยกว่าร้อยละ 80 ของมูลค่าทรัพย์สินสุทธิของกองทุน ส่วนที่เหลืออาจลงทุนในเงินฝากหรือตราสารที่เทียบเท่าเงินฝาก และอาจใช้สัญญาซื้อขายล่วงหน้าเพื่อป้องกันความเสี่ยงจากอัตราแลกเปลี่ยนตามดุลยพินิจของผู้จัดการกองทุน",
+  "thai-equity":
+    "กองทุนมีนโยบายลงทุนในหุ้นของบริษัทจดทะเบียนในตลาดหลักทรัพย์แห่งประเทศไทยที่มีปัจจัยพื้นฐานดีและมีแนวโน้มการเติบโตของกำไรอย่างต่อเนื่อง โดยเฉลี่ยในรอบปีบัญชีไม่น้อยกว่าร้อยละ 80 ของมูลค่าทรัพย์สินสุทธิของกองทุน มุ่งหวังผลตอบแทนที่สูงกว่าดัชนีชี้วัดในระยะยาว",
+  "thai-bond":
+    "กองทุนมีนโยบายลงทุนในตราสารหนี้ภาครัฐ ตราสารหนี้ภาคเอกชนที่มีอันดับความน่าเชื่อถืออยู่ในระดับที่สามารถลงทุนได้ และเงินฝาก โดยมีอายุเฉลี่ยของตราสารที่ลงทุนไม่เกิน 3 ปี เพื่อสร้างรายได้สม่ำเสมอและรักษาเงินต้นในระดับที่เหมาะสม",
+};
+
+const MOCK_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MOCK_THAI_MONTHS = ["ม.ค", "ก.พ", "มี.ค", "เม.ย", "พ.ค", "มิ.ย", "ก.ค", "ส.ค", "ก.ย", "ต.ค", "พ.ย", "ธ.ค"];
+
+function formatEnDate(date: Date): string {
+  return `${String(date.getUTCDate()).padStart(2, "0")} ${MOCK_MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+}
+
+/** Quarterly dividends, newest first: book closes at quarter end, pays ~2 weeks later. */
+function mockDividendHistory(rnd: () => number): MutualFundDividend[] {
+  const rows: MutualFundDividend[] = [];
+  const count = 6 + Math.floor(rnd() * 5);
+  for (let i = 0; i < count; i += 1) {
+    // Quarter ends counting back from Mar 2026.
+    const monthIndex = 2 - i * 3;
+    const year = 2026 + Math.floor(monthIndex / 12);
+    const month = ((monthIndex % 12) + 12) % 12;
+    const bookClose = new Date(Date.UTC(year, month + 1, 0));
+    const payment = new Date(Date.UTC(year, month + 1, 10 + Math.floor(rnd() * 8)));
+    rows.push({
+      bookCloseDate: formatEnDate(bookClose),
+      paymentDate: formatEnDate(payment),
+      amountPerUnit: (Math.round(between(rnd, 2, 8)) * 0.05).toFixed(4),
+    });
+  }
+  return rows;
+}
+
+function mockAllocation(rnd: () => number, labels: string[], first: [number, number]): MutualFundAllocationItem[] {
+  const colors = ["#074EA4", "#51A2FF", "#A3B3FF"];
+  const a = Number(between(rnd, first[0], first[1]).toFixed(2));
+  const b = Number(((100 - a) * between(rnd, 0.45, 0.8)).toFixed(2));
+  const c = Number((100 - a - b).toFixed(2));
+  return [a, b, c].map((percent, i) => ({ label: labels[i], percent, color: colors[i] }));
+}
+
 function defaultDetailFields(fund: MutualFund): MutualFundDetailFields {
+  const rnd = seededRandom(`detail-${fund.id}`);
+  const group = mockFundGroup(fund.id);
+  const foreign = group === "foreign";
+  const categoryId = getFundCategoryIds(fund.id)[0];
+  const categoryLabel = MUTUAL_FUND_CATEGORIES.find((c) => c.id === categoryId)?.label ?? "อื่นๆ";
+  const amcId = getFundManagementCompanyId(fund.id);
+  const amcLabel = FUND_MANAGEMENT_COMPANIES.find((c) => c.id === amcId)?.label ?? "-";
+  const taxType = getFundTaxSavingType(fund.id);
+  const dividendPolicy = getFundDividendPolicy(fund.id);
+
+  // Returns: 1Y is the card's own figure (list cards label it "ผลดำเนินงาน
+  // ย้อนหลัง 1 ปี"), so the card, its sparkline and this page all agree; the
+  // shorter windows scale off it with noise.
+  const cardReturn = parseFloat(fund.changePct);
+  const r1y = Number.isFinite(cardReturn) ? cardReturn : between(rnd, -4, 20);
+  const returns = {
+    "1W": between(rnd, -0.8, 1.2),
+    "1M": r1y * 0.1 + between(rnd, -1.5, 1.5),
+    "3M": r1y * 0.28 + between(rnd, -2, 2),
+    "6M": r1y * 0.55 + between(rnd, -2.5, 2.5),
+    YTD: r1y * 0.5 + between(rnd, -2, 2),
+    "1Y": r1y,
+  };
+  const historicalReturns = (Object.keys(returns) as (keyof typeof returns)[]).map((period) => ({
+    period,
+    value: formatPct(returns[period]),
+  }));
+  const volatility1y = between(rnd, 4, 18);
+  const drawdown1y = -between(rnd, 2, 15);
+  const performanceReturns = [
+    ...historicalReturns.map((r) => ({
+      period: r.period,
+      return: r.value,
+      volatility: r.period === "1Y" ? formatPct(volatility1y) : "-",
+      maxDrawdown: r.period === "1Y" ? formatPct(drawdown1y) : "-",
+    })),
+    { period: "3Y", return: formatPct(between(rnd, -2, 12)), volatility: formatPct(volatility1y * 1.1), maxDrawdown: formatPct(drawdown1y * 1.6) },
+    { period: "5Y", return: formatPct(between(rnd, -1, 10)), volatility: formatPct(volatility1y * 1.2), maxDrawdown: formatPct(drawdown1y * 2) },
+    { period: "SI", return: formatPct(between(rnd, 0, 8)), volatility: "-", maxDrawdown: "-" },
+  ];
+
+  const managementFee = between(rnd, 0.5, 1.8).toFixed(2);
+  const frontEnd = pick(rnd, ["0.00%", "1.00%", "1.50%"] as const);
+  const backEnd = pick(rnd, ["0.00%", "1.00%"] as const);
+  const dividendHistory = dividendPolicy === "จ่าย" ? mockDividendHistory(rnd) : [];
+
+  const holdingPool = [...MOCK_HOLDINGS[group]].sort(() => rnd() - 0.5);
+  const topHoldings = mockAllocation(rnd, holdingPool.slice(0, 3), foreign ? [85, 97] : [8, 14]).map(
+    (item, i) => (foreign ? item : { ...item, percent: Number(between(rnd, 9 - i * 2, 12 - i * 2).toFixed(2)) }),
+  );
+  const assetAllocation = mockAllocation(rnd, MOCK_ALLOCATION_LABELS[group], group === "thai-bond" ? [50, 70] : [85, 97]);
+
+  const regYear = 60 + Math.floor(rnd() * 8);
+  const nav = between(rnd, 500_000_000, 40_000_000_000);
+
   return {
     nav: fund.price,
-    navDate: "ราคาหน่วยลงทุน (NAV) ณ วันล่าสุด",
+    navDate: MOCK_NAV_DATE_LABEL,
     changePct: fund.changePct,
-    fxRisk: "ความเสี่ยง FX: -",
+    fxRisk: foreign ? "ความเสี่ยง FX: ป้องกันบางส่วน" : "ความเสี่ยง FX: ไม่มี",
     acceptsCreditCard: false,
-    investmentPolicy:
-      "กองทุนนี้มุ่งเน้นการลงทุนตามนโยบายที่ระบุในหนังสือชี้ชวน โดยคำนึงถึงความเสี่ยงและผลตอบแทนที่เหมาะสมกับวัตถุประสงค์การลงทุนของกองทุน",
-    fees: {
-      frontEnd: "0.00%",
-      backEnd: "1.00%",
-      management: "0.75%",
-    },
-    historicalReturns: [
-      { period: "1W", value: fund.changePct },
-      { period: "1M", value: fund.changePct },
-      { period: "3M", value: fund.changePct },
-      { period: "6M", value: fund.changePct },
-      { period: "YTD", value: fund.changePct },
-      { period: "1Y", value: fund.changePct },
-    ],
-    performanceReturns: [
-      { period: "1W", return: fund.changePct, volatility: "-", maxDrawdown: "-" },
-      { period: "1M", return: fund.changePct, volatility: "-", maxDrawdown: "-" },
-      { period: "3M", return: fund.changePct, volatility: "-", maxDrawdown: "-" },
-      { period: "6M", return: fund.changePct, volatility: "-", maxDrawdown: "-" },
-      { period: "YTD", return: fund.changePct, volatility: "-", maxDrawdown: "-" },
-      { period: "1Y", return: fund.changePct, volatility: "-", maxDrawdown: "-" },
-      { period: "3Y", return: "-", volatility: "-", maxDrawdown: "-" },
-      { period: "5Y", return: "-", volatility: "-", maxDrawdown: "-" },
-      { period: "SI", return: "-", volatility: "-", maxDrawdown: "-" },
-    ],
-    dividendHistory: [],
-    topHoldings: [],
-    assetAllocation: [],
+    investmentPolicy: MOCK_POLICY[group],
+    fees: { frontEnd, backEnd, management: `${managementFee}%` },
+    dividend: dividendHistory[0],
+    historicalReturns,
+    performanceReturns,
+    dividendHistory,
+    topHoldings,
+    assetAllocation,
     tradingInfo: {
-      minInitialPurchase: "-",
-      minSubsequentPurchase: "-",
-      minRedemption: "-",
-      purchaseCutoff: "-",
-      redemptionCutoff: "-",
-      settlementDays: "-",
+      minInitialPurchase: "0.01 บาท",
+      minSubsequentPurchase: "0.01 บาท",
+      minRedemption: "0.00 บาท",
+      purchaseCutoff: "ก่อน 15:30",
+      redemptionCutoff: "ก่อน 15:30",
+      settlementDays: foreign ? "5 วันหลังทำรายการขาย (T+5)" : "3 วันหลังทำรายการขาย (T+3)",
     },
     feeDetails: [
-      { label: "ค่าธรรมเนียมการซื้อ", actual: "0%", maximum: "2%" },
-      { label: "ค่าธรรมเนียมการขาย", actual: "0%", maximum: "1%" },
-      { label: "ค่าธรรมเนียมการสับเปลี่ยนเข้า", actual: "0%", maximum: "2%" },
-      { label: "ค่าธรรมเนียมการสับเปลี่ยนออก", actual: "0%", maximum: "1%" },
-      { label: "ค่าธรรมเนียมการจัดการ", actual: "0.75%", maximum: "2.14%" },
-      { label: "ค่าใช้จ่ายรวมทั้งหมด", actual: "-", maximum: "-" },
+      { label: "ค่าธรรมเนียมการซื้อ", actual: frontEnd.replace(".00", ""), maximum: "2%" },
+      { label: "ค่าธรรมเนียมการขาย", actual: backEnd.replace(".00", ""), maximum: "1%" },
+      { label: "ค่าธรรมเนียมการสับเปลี่ยนเข้า", actual: frontEnd.replace(".00", ""), maximum: "2%" },
+      { label: "ค่าธรรมเนียมการสับเปลี่ยนออก", actual: backEnd.replace(".00", ""), maximum: "1%" },
+      { label: "ค่าธรรมเนียมการจัดการ", actual: `${managementFee}%`, maximum: "2.14%" },
+      { label: "ค่าใช้จ่ายรวมทั้งหมด", actual: `${(Number(managementFee) + 0.1).toFixed(2)}%`, maximum: "5.35%" },
     ],
     fundInfo: {
       prospectusUrl: "#",
-      managementCompany: "-",
-      fundType: "-",
-      taxBenefit: "-",
-      foreignInvestment: "-",
-      fxRiskPolicy: "-",
+      managementCompany: amcLabel,
+      fundType: categoryLabel,
+      taxBenefit: taxType ? `มี (${taxType})` : "ไม่มี",
+      foreignInvestment: foreign ? "มี" : "ไม่มี",
+      fxRiskPolicy: foreign ? "มี" : "ไม่มี",
       riskScore: fund.risk,
-      dividendPolicy: "ไม่จ่าย",
-      currencyPolicy: "-",
-      managementFee: "0.75% ต่อปี",
-      minimumInvestment: "-",
-      registrationDate: "-",
-      netAssetValue: "-",
+      dividendPolicy,
+      currencyPolicy: foreign
+        ? "ป้องกันความเสี่ยงอัตราแลกเปลี่ยนตามดุลยพินิจของผู้จัดการกองทุน"
+        : "ไม่มีความเสี่ยงอัตราแลกเปลี่ยน",
+      managementFee: `${managementFee}% ต่อปี`,
+      minimumInvestment: pick(rnd, ["1 บาท", "500 บาท", "1,000 บาท"] as const),
+      registrationDate: `${1 + Math.floor(rnd() * 28)} ${pick(rnd, MOCK_THAI_MONTHS)} ${regYear}`,
+      netAssetValue: `${nav.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท`,
     },
   };
+}
+
+const DAY_MS = 86_400_000;
+
+/**
+ * NAV series for a fund with no recorded history: five years, weekly until a
+ * year back and every business day after (the recorded series' shape). It
+ * passes exactly through the NAV each `historicalReturns` window implies, so
+ * the chart and the returns grid under it agree; between anchors it wanders.
+ */
+function mockNavHistory(fund: MutualFundDetail): NavHistory {
+  const rnd = seededRandom(`nav-${fund.id}`);
+  const latestNav = Number(fund.nav) || 10;
+  const latest = Date.parse(`${MOCK_LATEST_NAV_DATE}T00:00:00Z`);
+  const ytdDays = Math.round((latest - Date.UTC(new Date(latest).getUTCFullYear(), 0, 1)) / DAY_MS);
+  const windowDays: Record<string, number> = { "1W": 7, "1M": 30, "3M": 91, "6M": 182, YTD: ytdDays, "1Y": 365 };
+
+  const anchors: [number, number][] = [[0, latestNav]];
+  for (const r of fund.historicalReturns) {
+    const days = windowDays[r.period];
+    const pct = parseFloat(r.value);
+    if (days !== undefined && Number.isFinite(pct)) anchors.push([days, latestNav / (1 + pct / 100)]);
+  }
+  const navAt1y = anchors.find(([d]) => d === 365)?.[1] ?? latestNav;
+  anchors.push([1826, navAt1y / (1 + between(rnd, -0.1, 0.35))]);
+  anchors.sort((a, b) => a[0] - b[0]);
+  const phase = rnd() * Math.PI * 2;
+
+  const navAtDay = (day: number) => {
+    let i = 0;
+    while (i < anchors.length - 2 && anchors[i + 1][0] < day) i += 1;
+    const [d0, v0] = anchors[i];
+    const [d1, v1] = anchors[i + 1];
+    const t = d1 === d0 ? 0 : (day - d0) / (d1 - d0);
+    const base = Math.exp(Math.log(v0) + (Math.log(v1) - Math.log(v0)) * t);
+    // Gentle drift that fades to zero at both anchors: a slow swing plus a
+    // little day-to-day noise, so the line reads like a fund, not a seismograph.
+    const wobble = Math.sin(Math.PI * t) * (Math.sin(day * 0.09 + phase) * 0.006 + (rnd() - 0.5) * 0.003);
+    return base * (1 + wobble);
+  };
+
+  const points: NavPoint[] = [];
+  for (let day = 1826; day >= 0; day -= day > 365 ? 7 : 1) {
+    const date = new Date(latest - day * DAY_MS);
+    const weekday = date.getUTCDay();
+    if (day <= 365 && day !== 0 && (weekday === 0 || weekday === 6)) continue;
+    points.push({ date: date.toISOString().slice(0, 10), nav: Number(navAtDay(day).toFixed(4)) });
+  }
+  return { currency: fund.currency, points };
 }
 
 /** One mutual fund by id, merged with detail fields when available. */
@@ -715,9 +916,21 @@ const NAV_HISTORY: Record<
   { currency: string; points: (string | number)[][] } | undefined
 > = navHistoryRaw;
 
+const NAV_HISTORY_CACHE = new Map<string, NavHistory | undefined>();
+
 export function getNavHistory(fundId: string): NavHistory | undefined {
+  if (NAV_HISTORY_CACHE.has(fundId)) return NAV_HISTORY_CACHE.get(fundId);
+  const history = buildNavHistory(fundId);
+  NAV_HISTORY_CACHE.set(fundId, history);
+  return history;
+}
+
+function buildNavHistory(fundId: string): NavHistory | undefined {
   const raw = NAV_HISTORY[fundId];
-  if (!raw) return undefined;
+  if (!raw) {
+    const fund = getMutualFund(fundId);
+    return fund ? mockNavHistory(fund) : undefined;
+  }
   return {
     currency: raw.currency,
     points: raw.points.map(([date, nav]) => ({ date: String(date), nav: Number(nav) })),
