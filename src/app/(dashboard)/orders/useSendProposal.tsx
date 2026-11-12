@@ -90,14 +90,19 @@ function Opened({
           // an id it cannot name, and reporting the request would overstate it.
           const rows = await sendProposal({ productId: product.id, clientIds, channels });
           onClose();
-          onNotice(
-            rows.length === 1
-              ? `ส่ง Proposal ${product.underlying} ให้ ${rows[0].clientName} แล้ว`
-              : `ส่ง Proposal ${product.underlying} ให้ลูกค้า ${rows.length} คนแล้ว`,
-            "success",
-          );
+          onNotice(proposalSentMessage(product.underlying, rows), "success");
         })();
       }}
     />
   );
+}
+
+/** The toast after a send — one wording wherever a Proposal goes from. */
+export function proposalSentMessage(
+  underlying: string,
+  rows: { clientName: string }[],
+): string {
+  return rows.length === 1
+    ? `ส่ง Proposal ${underlying} ให้ ${rows[0].clientName} แล้ว`
+    : `ส่ง Proposal ${underlying} ให้ลูกค้า ${rows.length} คนแล้ว`;
 }

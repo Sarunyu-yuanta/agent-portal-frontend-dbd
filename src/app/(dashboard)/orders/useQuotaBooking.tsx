@@ -50,6 +50,13 @@ export function useQuotaBooking(options?: {
    * standing up a second `<Toaster>` over the first.
    */
   notice: (message: string, status: ToastStatus) => void;
+  /**
+   * What the modal's `onBooked` does here — for a host that mounts its own
+   * `OrderBookingModal` (`CreateOrderButton`, whose picker steps live inside
+   * it) but reports into this stack, so the success toast still links to the
+   * order.
+   */
+  markBooked: (booking: Booking) => void;
   /** The modal and its toasts — render once, anywhere on the page. */
   ui: ReactNode;
 } {
@@ -74,6 +81,11 @@ export function useQuotaBooking(options?: {
     });
   };
 
+  const markBooked = (booking: Booking) => {
+    bookedId.current = booking.productId;
+    options?.onPlaced?.(booking);
+  };
+
   const ui = (
     <>
       {ORDER_BOOKING_ENABLED && product && (
@@ -91,10 +103,7 @@ export function useQuotaBooking(options?: {
               : undefined
           }
           onNotice={notice}
-          onBooked={(booking) => {
-            bookedId.current = booking.productId;
-            options?.onPlaced?.(booking);
-          }}
+          onBooked={markBooked}
         />
       )}
       <Toaster items={toasts} onRemove={removeToast} />
@@ -111,7 +120,7 @@ export function useQuotaBooking(options?: {
     setProduct(next);
   };
 
-  return { book, notice, ui };
+  return { book, notice, markBooked, ui };
 }
 
 /**

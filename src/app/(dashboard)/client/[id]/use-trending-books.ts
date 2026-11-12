@@ -25,6 +25,7 @@ import { bookFillThb, isBookingOpen } from "@/app/(dashboard)/orders/order-book"
 import { useBooksByIds } from "@/app/(dashboard)/orders/use-order-books";
 import type { OrderBook } from "@/types/domain";
 import {
+  isRankedSort,
   sortTrendingItems,
   TRENDING_BOOKABLE_IDS,
   type TrendingGroup,
@@ -49,7 +50,7 @@ export function bookForItem(
 
 /**
  * A group's rows as a surface should render them: open products only, in the
- * group's own ranking, then reordered by whichever sort is active.
+ * group's own ranking, then narrowed by whichever view is active.
  *
  * One function for the card grid and the full table both, because the order of
  * the three steps is load-bearing and was getting written out at each call
@@ -63,7 +64,10 @@ export function trendingRows(
   sort: TrendingSort,
 ): TrendingItem[] {
   const open = openTrendingItems(group.items, books);
-  return sortTrendingItems(group.measure === "fill" ? byFill(open, books) : open, sort);
+  // The editorial picks are unranked, so they skip the fill ranking and stay
+  // in the catalogue's order.
+  const ranked = group.measure === "fill" && isRankedSort(sort) ? byFill(open, books) : open;
+  return sortTrendingItems(ranked, sort);
 }
 
 /**

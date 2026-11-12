@@ -130,6 +130,10 @@ export function DayCell({
   const relation = dayRelation(day, today);
   const isToday = relation === "today";
   const isPast = relation === "past";
+  /** Saturday and Sunday sit on a grey ground, so the working week reads as
+   *  the five white columns between them — in every week on screen, including
+   *  the leading and trailing days, whose dates fade but whose ground does not. */
+  const isWeekend = day.getDay() === 0 || day.getDay() === 6;
   const pillTone = PILL_TONE[relation];
   const pillHover = PILL_HOVER[relation];
 
@@ -146,10 +150,9 @@ export function DayCell({
   // `useVisibleRows`, which the Company Events grid on a stock shares.
   const { stackRef, rows } = useVisibleRows();
 
-  // The holiday strip is never the thing that gets dropped: it is the one line
-  // that changes how every other line in the cell should be read, so it is paid
-  // for off the top and the rest of the stack competes for what is left.
-  const budget = Math.max(0, rows - (holiday ? 1 : 0));
+  // A closure takes no row: it is marked by the cell's tint and an icon beside
+  // the date, so every row goes to the pills.
+  const budget = rows;
   // "+N more" occupies a row of its own, so it can only be afforded by giving up
   // a pill. When even one row is too many, everything folds into the counter.
   const capped = cellRows.length > budget;
@@ -336,7 +339,23 @@ export function DayCell({
         } ${
           isToday && inMonth
             ? "bg-[var(--fill-p1-200)] hover:bg-[var(--fill-p1-300)]!"
-            : `${inMonth ? "bg-card" : "bg-[var(--bg-default-secondary)]/60"} hover:bg-[rgba(0,0,0,0.045)]!`
+            : `${
+                // A market closure tints the whole cell; its strip goes a shade
+                // deeper (below) so it still reads on top of it. Ahead
+                // of the weekend grey: a closure is the rarer, louder fact.
+                holiday
+                  ? inMonth
+                    ? "bg-[var(--fill-rose-100)]"
+                    : "bg-[var(--fill-rose-100)]/60"
+                  : // Weekends keep their grey in the leading and trailing weeks
+                    // too, so the columns read straight down the grid; only the
+                    // date fades there.
+                    isWeekend
+                    ? "bg-[var(--fill-gray-100)]"
+                    : !inMonth
+                      ? "bg-[var(--bg-default-secondary)]/60"
+                      : "bg-card"
+              } hover:bg-[rgba(0,0,0,0.045)]!`
         }`}
       >
         {/* The date itself carries the closure as well as the strip below it.
@@ -344,37 +363,45 @@ export function DayCell({
             the numbers, not a read of every cell, and a rose date answers it
             without the reader entering the cell at all. Today still outranks
             it: there is only ever one of those. */}
-        <span
-          className={`flex size-6 shrink-0 items-center justify-center rounded-full type-caption font-semibold ${
-            isToday
-              ? "bg-primary-action text-white"
-              : inMonth
-                ? "text-foreground"
-                : "text-muted-foreground/50"
-          }`}
-          style={
-            !isToday && holiday
-              ? { color: HOLIDAY_PALETTE.text, opacity: inMonth ? 1 : 0.5 }
-              : undefined
-          }
-        >
-          {day.getDate()}
-        </span>
-        <div ref={stackRef} className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
-          {/* Inert on every device, unlike the pills. There is nothing behind a
-              closure to open — no holders, no record, no note — so it is a
-              label, and the cell around it is what opens the day. */}
+        {/* The date, and in the top-right corner the closure's mark when the
+            market is shut.
+            An icon rather than a strip: the cell's tint already says "closed",
+            and a strip spent one of the few rows a cell has on saying it again.
+            The name is in the tooltip and in the day's popover. */}
+        <div className="flex shrink-0 items-center justify-between gap-1">
+          <span
+            className={`flex size-6 shrink-0 items-center justify-center rounded-full type-caption font-semibold ${
+              isToday
+                ? "bg-primary-action text-white"
+                : inMonth
+                  ? "text-foreground"
+                  : "text-muted-foreground/50"
+            }`}
+            style={
+              !isToday && holiday
+                ? { color: HOLIDAY_PALETTE.text, opacity: inMonth ? 1 : 0.5 }
+                : undefined
+            }
+          >
+            {day.getDate()}
+          </span>
           {holiday && (
             <span
-              className={PILL_SHELL}
-              style={{ backgroundColor: HOLIDAY_PALETTE.tint, color: HOLIDAY_PALETTE.text }}
+              role="img"
+              aria-label={`${holiday.name} · ${holiday.market} closed`}
               title={`${holiday.name} · ${holiday.market} closed`}
+              className="flex shrink-0"
+              // `-800`: a step darker than the date beside it, so the mark
+              // holds its own on the rose cell rather than melting into it.
+              // Not faded outside the month, unlike the date: a closure on a
+              // leading or trailing day is still worth seeing at a glance.
+              style={{ color: "var(--fill-rose-800)" }}
             >
-              <HolidayIcon size={11} weight="fill" className="shrink-0" />
-              <span className="truncate">{holiday.name}</span>
+              <HolidayIcon size={16} weight="fill" />
             </span>
           )}
-
+        </div>
+        <div ref={stackRef} className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
           {/* On a pointer device a pill goes straight to what it names, and
               `stopPropagation` keeps that click off the cell behind it — landing
               on a day list you'd only have to click through is a wasted step

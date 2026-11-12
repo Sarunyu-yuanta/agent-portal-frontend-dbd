@@ -2,7 +2,14 @@
 
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Button, Modal, Toaster, Tooltip } from "@sarunyu/system-one";
-import { CalendarDotIcon, CaretLeftIcon, CaretRightIcon, PlusIcon } from "@phosphor-icons/react";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CalendarDotIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+  PlusIcon,
+} from "@phosphor-icons/react";
 import { useNotes } from "@/contexts/notes-context";
 import { useToasts } from "@/hooks/use-toasts";
 import type { Note } from "@/types/domain";
@@ -227,6 +234,15 @@ export function CalendarView({
   }
 
   const today = new Date();
+  /**
+   * Which way today lies from the month on screen — the Today button's icon
+   * points there once the reader has paged away, so it says where it will take
+   * them. On today's own month it is the plain calendar mark.
+   */
+  const monthOffset =
+    viewDate.getFullYear() * 12 + viewDate.getMonth() - (today.getFullYear() * 12 + today.getMonth());
+  const TodayIcon =
+    monthOffset > 0 ? ArrowLeftIcon : monthOffset < 0 ? ArrowRightIcon : CalendarDotIcon;
   const days = monthGrid(viewDate);
 
   /**
@@ -283,7 +299,7 @@ export function CalendarView({
                 variant="plain"
                 size="sm"
                 className="shrink-0"
-                leftIcon={<CalendarDotIcon size={15} />}
+                leftIcon={<TodayIcon size={15} />}
                 onClick={() => setViewDate(new Date(today.getFullYear(), today.getMonth(), 1))}
               >
                 Today

@@ -14,6 +14,8 @@ import {
   PRODUCT_TRENDING_GROUPS,
   PRODUCT_TRENDING_UPDATED_AT,
   DEFAULT_TRENDING_SORT,
+  emptyTrendingMessage,
+  isRankedSort,
   normalizeTrendingSort,
   TRENDING_CARD_ROWS,
   TRENDING_SORT_PARAM,
@@ -28,9 +30,12 @@ function TrendingRow({
   item,
   book,
   showBorder,
+  ranked,
   onSelect,
 }: {
   item: TrendingItem;
+  /** Whether to show the rank badge — not on the unranked editorial views. */
+  ranked: boolean;
   /** This product's order book, or `null` on a desk that keeps none. */
   book: OrderBook | null;
   showBorder: boolean;
@@ -45,7 +50,7 @@ function TrendingRow({
       }`}
     >
       <span className="flex gap-3 items-center w-full">
-        <RankBadge rank={item.rank} />
+        {ranked && <RankBadge rank={item.rank} />}
         <span className="flex flex-col min-w-0 flex-1">
           <span className="text-body font-bold text-foreground truncate">{item.title}</span>
           <span className="type-caption text-muted-foreground truncate">{item.subtitle}</span>
@@ -73,7 +78,7 @@ function TrendingRow({
       {/* Its own line under the row, indented past the rank badge so the bars
           down a card line up with each other rather than with the titles. */}
       {book && (
-        <span className="flex w-full pl-9">
+        <span className={`flex w-full ${ranked ? "pl-9" : ""}`}>
           <TrendingFill book={book} />
         </span>
       )}
@@ -85,12 +90,14 @@ function TrendingGroupCard({
   group,
   items,
   books,
+  sort,
   onSelect,
   onViewAll,
 }: {
   group: TrendingGroup;
   /** The group's rows in the active sort's order. */
   items: TrendingItem[];
+  sort: TrendingSort;
   books: Map<string, OrderBook>;
   onSelect: (target: TrendingTarget) => void;
   onViewAll: () => void;
@@ -112,12 +119,18 @@ function TrendingGroupCard({
         )}
       </div>
       <div className="flex flex-col p-3 w-full">
+        {shown.length === 0 && (
+          <p className="type-caption text-muted-foreground text-center py-8">
+            {emptyTrendingMessage(sort)}
+          </p>
+        )}
         {shown.map((item, i) => (
           <TrendingRow
             key={`${group.id}-${item.rank}`}
             item={item}
             book={bookForItem(item, books)}
             showBorder={i < shown.length - 1}
+            ranked={isRankedSort(sort)}
             onSelect={() => onSelect(item.target)}
           />
         ))}
@@ -221,6 +234,7 @@ export function ProductTrendingTab({
               group={group}
               items={items}
               books={books}
+              sort={sort}
               onSelect={select}
               onViewAll={() => nav.onTrendingSeeAll(group.id, sort)}
             />

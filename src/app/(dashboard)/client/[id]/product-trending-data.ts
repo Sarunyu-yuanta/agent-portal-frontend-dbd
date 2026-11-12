@@ -81,9 +81,9 @@ export type TrendingItem = {
   /** Week-on-week change in sales, pre-formatted with its sign. */
   changePct?: string;
   trend?: Trend;
-  /** Mock: picked by Yuanta's desk — rises to the top under "Yuanta Highlight". */
+  /** Mock: picked by Yuanta's desk — the only rows shown under "Yuanta Highlight". */
   highlight: boolean;
-  /** Mock: in line with the CIO's house view — rises to the top under "CIO View". */
+  /** Mock: in line with the CIO's house view — the only rows shown under "CIO View". */
   cioView: boolean;
   target: TrendingTarget;
   /**
@@ -230,8 +230,8 @@ function group<T>(
       orders,
       changePct,
       trend,
-      // Invented like the sales: a fixed pattern, so the two editorial sorts
-      // don't lift the same rows.
+      // Invented like the sales: a fixed pattern, so the two editorial views
+      // don't pick the same rows.
       highlight: i % 2 === 0,
       cioView: i % 3 !== 1,
       ...row(item),
@@ -404,21 +404,38 @@ export function normalizeTrendingSort(value: string | null | undefined): Trendin
 }
 
 /**
- * A group's rows in the order a sort asks for, re-ranked 1..n so the podium
- * follows it.
+ * Whether `sort` is a ranking. Only "รายการขายดี" is: the two editorial views
+ * are a desk's picks, a set with no order to them, so they show no rank
+ * numbers and no "อันดับ" column.
+ */
+export function isRankedSort(sort: TrendingSort): boolean {
+  return sort === "best-seller";
+}
+
+/**
+ * A group's rows as a sort asks for them, numbered 1..n.
  *
- * Reorders, never drops. The editorial sorts lift their picks to the top (by
- * sales among themselves) and leave the rest below, still by sales.
+ * "รายการขายดี" keeps every row in the group's own ranking. The two editorial
+ * views are curated shelves instead: only the products that desk picked, in
+ * the catalogue's order, unranked — so a card can come up short, or empty.
+ * `rank` is still filled in there, but only as a stable row key; nothing
+ * shows it (see `isRankedSort`).
  *
- * What *does* drop is a desk's closed products, and it happens before this —
- * see `openTrendingItems`. Keeping the two apart matters for the ranks: this
- * renumbers whatever it is handed, so filtering afterwards would leave the
- * gaps renumbering exists to close.
+ * A desk's closed products are dropped before this — see `openTrendingItems`.
+ * Both filters have to run before the renumbering here, or the podium reads
+ * "1, 2, 4" with a gap where a dropped row was.
  */
 export function sortTrendingItems(items: TrendingItem[], sort: TrendingSort): TrendingItem[] {
   if (sort === "best-seller") return reranked(items);
   const picked = sort === "highlight" ? (i: TrendingItem) => i.highlight : (i: TrendingItem) => i.cioView;
-  return reranked([...items.filter(picked), ...items.filter((i) => !picked(i))]);
+  return reranked(items.filter(picked));
+}
+
+/** What an empty card or table says under `sort` — only the curated views can be empty by choice. */
+export function emptyTrendingMessage(sort: TrendingSort): string {
+  if (sort === "best-seller") return "ยังไม่มีสินค้าที่เปิดขายในกลุ่มนี้";
+  const label = TRENDING_SORTS.find((f) => f.id === sort)?.label;
+  return `${label} ยังไม่ได้เลือกสินค้าในกลุ่มนี้`;
 }
 
 /** A group's full ranking — the sub-page its card's "ดูทั้งหมด" opens. */

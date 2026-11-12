@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   CaretRightIcon,
   IdentificationCardIcon,
   ShieldCheckIcon,
 } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SlideSteps } from "@/components/ui/slide-steps";
 import { ResponsiveBottomSheetModal } from "@/components/ResponsiveBottomSheetModal";
 import { HolderContact, HolderContactOverlay } from "../calendar/HolderContact";
 import {
@@ -15,7 +16,6 @@ import {
 } from "../use-kyc-notification-feed";
 import { CardCount, RowIcon } from "./CardHeader";
 import { groupQueueByBucket, type QueueItem } from "./dashboard-data";
-import { useIsoLayoutEffect } from "@/hooks/use-iso-layout-effect";
 
 /**
  * Whose KYC is about to lapse.
@@ -91,27 +91,6 @@ export function KycAlertsPanel({
     name: string;
   } | null>(null);
   const atSheetContact = sheetContact !== null;
-
-  const listRef = useRef<HTMLDivElement>(null);
-  const contactRef = useRef<HTMLDivElement>(null);
-  const [trackHeight, setTrackHeight] = useState<number | undefined>(undefined);
-
-  /** The track slides; the box around it resizes to whichever pane is showing.
-   *  Both are animated and both have to be — sliding alone leaves the box at the
-   *  taller pane's height with dead space under the shorter one. Measured
-   *  because the list grows with the number of expiries and the contact pane
-   *  with how many ways there are to reach someone. */
-  useIsoLayoutEffect(() => {
-    const measure = () => {
-      const active = atSheetContact ? contactRef.current : listRef.current;
-      if (active) setTrackHeight(active.offsetHeight);
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    if (listRef.current) observer.observe(listRef.current);
-    if (contactRef.current) observer.observe(contactRef.current);
-    return () => observer.disconnect();
-  }, [atSheetContact, allOpen]);
 
   const openSheetContact = (row: QueueItem) => {
     const next = { clientId: row.clientIds[0], name: row.title };
@@ -191,71 +170,43 @@ export function KycAlertsPanel({
               is a drill-in, not a different surface, and Back has to land on the
               list exactly as it was. Lifted from `AlertDetail`, which does the
               same thing with the same `HolderContact` on the other side. */}
-          <div
-            className="relative overflow-hidden transition-[height] duration-200 ease-out"
-            style={{ height: trackHeight }}
-          >
-            {/* `items-start` is load-bearing: a flex row stretches its children
-                to the tallest, which here is the track — whose height comes from
-                measuring a pane. Both panes would then measure the same number
-                and the box would freeze at whatever it happened to be first. */}
-            <div
-              className="flex w-[200%] items-start transition-transform duration-200 ease-out"
-              style={{
-                transform: atSheetContact
-                  ? "translateX(-50%)"
-                  : "translateX(0)",
-              }}
-            >
-              {/* `inert` on whichever pane is off-screen — both stay mounted so
-                  they can slide, and without it Tab walks into a pane nobody can
-                  see and a screen reader reads out both. */}
-              <div
-                ref={listRef}
-                className="w-1/2 shrink-0 px-4 py-4"
-                inert={atSheetContact}
-              >
-                <div className="flex flex-col gap-5">
-                  {groupQueueByBucket(rows, new Date()).map((group) => (
-                    <div key={group.bucket} className="flex flex-col gap-2">
-                      <p className="type-caption font-semibold text-muted-foreground">
-                        {group.label}
-                      </p>
-                      <div className="overflow-hidden rounded-xl bg-[var(--bg-default-secondary)] divide-y divide-black/[0.05]">
-                        {group.items.map((row) => (
-                          <KycRow
-                            key={row.id}
-                            row={row}
-                            onOpen={() => openSheetContact(row)}
-                          />
-                        ))}
-                      </div>
+          <SlideSteps index={atSheetContact ? 1 : 0} className="relative">
+            <div className="px-4 py-4">
+              <div className="flex flex-col gap-5">
+                {groupQueueByBucket(rows, new Date()).map((group) => (
+                  <div key={group.bucket} className="flex flex-col gap-2">
+                    <p className="type-caption font-semibold text-muted-foreground">
+                      {group.label}
+                    </p>
+                    <div className="overflow-hidden rounded-xl bg-[var(--bg-default-secondary)] divide-y divide-black/[0.05]">
+                      {group.items.map((row) => (
+                        <KycRow
+                          key={row.id}
+                          row={row}
+                          onOpen={() => openSheetContact(row)}
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div
-                ref={contactRef}
-                className="w-1/2 shrink-0 py-2"
-                inert={!atSheetContact}
-              >
-                {sheetShown && (
-                  /* `variant="sheet"` even on a pointer device: it is what drops
-                     the pane's own close button, and the modal this sits in
-                     already has one. Two X's stacked in one corner is two
-                     answers to the same question. */
-                  <HolderContact
-                    clientId={sheetShown.clientId}
-                    name={sheetShown.name}
-                    variant="sheet"
-                    onBack={() => setSheetContact(null)}
-                    onClose={closeSheet}
-                  />
-                )}
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+            <div className="py-2">
+              {sheetShown && (
+                /* `variant="sheet"` even on a pointer device: it is what drops
+                   the pane's own close button, and the modal this sits in
+                   already has one. Two X's stacked in one corner is two
+                   answers to the same question. */
+                <HolderContact
+                  clientId={sheetShown.clientId}
+                  name={sheetShown.name}
+                  variant="sheet"
+                  onBack={() => setSheetContact(null)}
+                  onClose={closeSheet}
+                />
+              )}
+            </div>
+          </SlideSteps>
         </div>
       </ResponsiveBottomSheetModal>
 

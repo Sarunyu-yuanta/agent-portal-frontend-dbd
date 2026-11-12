@@ -21,7 +21,7 @@
  * "ส่งให้ลูกค้าดำเนินการ" sends them — the form has no override.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import {
   Alert,
@@ -35,7 +35,6 @@ import {
   type ToastStatus,
 } from "@sarunyu/system-one";
 import {
-  ArrowLeftIcon,
   CaretRightIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -45,10 +44,10 @@ import {
   XCircleIcon,
 } from "@phosphor-icons/react";
 import { ResponsiveBottomSheetModal } from "@/components/ResponsiveBottomSheetModal";
+import { SLIDE_MS, SlideSteps } from "@/components/ui/slide-steps";
 import { usePrivacy } from "@/contexts/privacy-context";
 import { useOrders } from "@/contexts/orders-context";
 import { useClients } from "@/hooks/use-api";
-import { useIsoLayoutEffect } from "@/hooks/use-iso-layout-effect";
 import { getClientProfile } from "@/data/client-profiles";
 import { getCallLogs } from "@/data/call-log-data";
 import { IC_NAME, IC_TEAM } from "@/lib/current-ic";
@@ -65,8 +64,11 @@ import type {
   RequirementStatus,
 } from "@/types/domain";
 import { bookingModeFor, type BookableProduct } from "./bookable-products";
+import { BackButton } from "./BackButton";
+import { ProposalSteps, type ProposalStep, type ProposalSubject } from "./SendProposalDialog";
+import { proposalSentMessage } from "./useSendProposal";
 import { ORDER_WORDS } from "./order-words";
-import { SHEET_PANEL, SheetRow } from "./detail-sheet-ui";
+import { SHEET_DASHED, SHEET_PANEL, SheetBlock, SheetRow } from "./detail-sheet-ui";
 import {
   CALL_DIRECTION_LABEL,
   EVIDENCE_CHANNEL,
@@ -85,20 +87,55 @@ import {
   isBookingOpen,
   minTicketFor,
 } from "./order-book";
-import { requestableKeys, shortRequirementLabel } from "./order-requirements";
-import { useClientReadiness, useOrderBook, useRosterReadiness } from "./use-order-books";
+import { clientReadiness, requestableKeys, shortRequirementLabel } from "./order-requirements";
+import {
+  useClientReadiness,
+  useOrderBook,
+  useRequestsFor,
+  useRosterReadiness,
+} from "./use-order-books";
+
+/**
+ * Steps that come before the client list, in the same modal — Order
+ * Management's "สร้าง Order" asks for the asset and the product first. They are
+ * leading panes of the booking's own track, so the whole flow slides as one
+ * instead of one modal closing and another opening.
+ */
+export type BookingLead = {
+  /** One pane per step, in order. */
+  panes: ReactNode[];
+  /** The lead step showing, or `null` once a product is chosen. */
+  index: number | null;
+  /** The modal's title while a lead step is showing. */
+  title: string;
+  /** Back from the lead step showing, when there is a step before it. */
+  onBack?: () => void;
+};
 
 export function OrderBookingModal({
   open,
   product,
+  lead,
   onClose,
   onNotice,
   onBooked,
   onBack,
   fixedClientId,
+  mode = "order",
+  subject = null,
 }: {
   open: boolean;
-  product: BookableProduct;
+  /** `null` only with a `lead` that has not reached a product yet. */
+  product: BookableProduct | null;
+  lead?: BookingLead;
+  /**
+   * What the steps after the lead do. `"proposal"` sends the subject's
+   * Proposal instead of booking — clients (many), then channels — on the same
+   * track, so "สร้าง Order" can do either from one modal.
+   */
+  mode?: "order" | "proposal";
+  /** The product a Proposal goes out for — proposal mode only. */
+  subject?: ProposalSubject | null;
   /**
    * Book for this client and no other — opened from the client's own profile,
    * where choosing a client again would be a step with one right answer. The
@@ -125,20 +162,106 @@ export function OrderBookingModal({
   const [clientId, setClientId] = useState(fixedClientId ?? "");
   /** Leaving the form: to the client list, or — with a fixed client — out. */
   const leaveForm = fixedClientId ? (onBack ?? onClose) : () => setClientId("");
+  /**
+   * On the summary rather than the form — the step between filling the order
+   * in and sending it. Held here with the client, because the arrow that
+   * steps back from it is in the title row too.
+   */
+  const [reviewing, setReviewing] = useState(false);
   // Reset on every open, during render rather than in an effect — the same
   // reason the form below remounts: a reopened form must not still hold the
   // last client.
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
     setWasOpen(open);
-    if (open) setClientId(fixedClientId ?? "");
+    if (open) {
+      setClientId(fixedClientId ?? "");
+      setReviewing(false);
+    }
+  }
+
+  /** Proposal mode's step, held here for the title row's arrow. */
+  const [proposalStep, setProposalStep] = useState<ProposalStep>("clients");
+  const [subjectId, setSubjectId] = useState(subject?.id);
+  if (subject?.id !== subjectId) {
+    setSubjectId(subject?.id);
+    setProposalStep("clients");
+  }
+  if (open !== wasOpen && open) setProposalStep("clients");
+  /**
+   * The last height the steps' track settled on. Switching between order and
+   * Proposal swaps the body below for a different component — a new track —
+   * and without this the modal would jump to the new height in one frame.
+   * Cleared on open, so a fresh modal opens at its own height.
+   */
+  const [trackHeight, setTrackHeight] = useState<number | undefined>(undefined);
+  if (open !== wasOpen && open) setTrackHeight(undefined);
+  const { sendProposal } = useOrders();
+  const { data: subjectBook } = useOrderBook(subject?.id ?? "");
+
+  const proposing = mode === "proposal";
+  const target = proposing ? subject : product;
+  const atLead = lead !== undefined && (lead.index !== null || !target);
+  if (!target && !lead) return null;
+
+  if (proposing) {
+    return (
+      <ResponsiveBottomSheetModal
+        open={open}
+        onClose={onClose}
+        title={
+          atLead || !subject
+            ? (lead?.title ?? "")
+            : `ส่ง Proposal · ${subject.underlying}${subject.coupon ? ` ${subject.coupon}` : ""}`
+        }
+        titleId="order-booking-title"
+        desktopMaxWidth="max-w-[614px]"
+        desktopTitleIcon={
+          atLead ? (
+            lead?.onBack ? <BackButton label="ย้อนกลับ" onClick={lead.onBack} /> : undefined
+          ) : proposalStep === "channels" ? (
+            <BackButton label="ย้อนกลับ" onClick={() => setProposalStep("clients")} />
+          ) : onBack ? (
+            <BackButton label="ย้อนกลับ" onClick={onBack} />
+          ) : undefined
+        }
+      >
+        <ProposalSteps
+          key={open ? "open" : "closed"}
+          variant="sheet"
+          product={subject}
+          book={subjectBook}
+          step={proposalStep}
+          onStepChange={setProposalStep}
+          lead={lead}
+          onListBack={onBack}
+          initialPicked={fixedClientId ? [fixedClientId] : undefined}
+          initialHeight={trackHeight}
+          onHeightChange={setTrackHeight}
+          onConfirm={(clientIds, channels) => {
+            if (!subject) return;
+            void (async () => {
+              // The rows actually written, not the ids asked for — see
+              // `useSendProposal`.
+              const rows = await sendProposal({ productId: subject.id, clientIds, channels });
+              onClose();
+              onNotice(proposalSentMessage(subject.underlying, rows), "success");
+            })();
+          }}
+        />
+      </ResponsiveBottomSheetModal>
+    );
   }
 
   return (
     <ResponsiveBottomSheetModal
       open={open}
       onClose={onClose}
-      title={`ทำรายการ${ORDER_WORDS[bookingModeFor(product)].action} ${product.underlying} ${product.coupon}`}
+      title={
+        atLead || !product
+          ? (lead?.title ?? "")
+          : `ทำรายการ${ORDER_WORDS[bookingModeFor(product)].action} ${product.underlying} ${product.coupon}`
+      }
       titleId="order-booking-title"
       // Two columns of short fields and one amount — past about this width the
       // grid stops being two columns of a form and becomes two columns of a
@@ -148,7 +271,11 @@ export function OrderBookingModal({
       // the client list, and from the list to whatever opened it, if that was
       // a step of its own (`onBack`).
       desktopTitleIcon={
-        clientId ? (
+        atLead ? (
+          lead?.onBack ? <BackButton label="ย้อนกลับ" onClick={lead.onBack} /> : undefined
+        ) : clientId && reviewing ? (
+          <BackButton label="กลับไปแก้ไข" onClick={() => setReviewing(false)} />
+        ) : clientId ? (
           fixedClientId && !onBack ? undefined : <BackButton onClick={leaveForm} />
         ) : onBack ? (
           <BackButton onClick={onBack} />
@@ -161,8 +288,18 @@ export function OrderBookingModal({
       <BookingForm
         key={open ? "open" : "closed"}
         product={product}
+        lead={lead}
+        onListBack={fixedClientId ? undefined : onBack}
         clientId={clientId}
-        onClientChange={(id) => (id ? setClientId(id) : leaveForm())}
+        onClientChange={(id) => {
+          setReviewing(false);
+          if (id) setClientId(id);
+          else leaveForm();
+        }}
+        reviewing={reviewing}
+        onReviewChange={setReviewing}
+        initialHeight={trackHeight}
+        onHeightChange={setTrackHeight}
         clientLocked={Boolean(fixedClientId)}
         onClose={onClose}
         onNotice={onNotice}
@@ -172,42 +309,34 @@ export function OrderBookingModal({
   );
 }
 
-function BackButton({ onClick }: { onClick: () => void }) {
-  return (
-    <Button
-      variant="plain-black"
-      size="icon-sm"
-      onClick={onClick}
-      aria-label="ย้อนกลับไปเลือกลูกค้า"
-      title="ย้อนกลับไปเลือกลูกค้า"
-      className="-ml-1 shrink-0"
-    >
-      <ArrowLeftIcon size={20} />
-    </Button>
-  );
-}
-
-/**
- * How long the two panes take to slide past each other.
- *
- * A number here *and* `duration-200` in the markup, because only one of the two
- * can be a Tailwind class: the timer that retires the off-screen pane has to
- * outlast the transition, and a class cannot be read back. Keep them in step.
- */
-const SLIDE_MS = 200;
-
 function BookingForm({
   product,
+  lead,
+  onListBack,
   clientId,
   onClientChange: setClientId,
+  reviewing,
+  onReviewChange,
+  initialHeight,
+  onHeightChange,
   clientLocked = false,
   onClose,
   onNotice,
   onBooked: onBookedProp,
 }: {
-  product: BookableProduct;
+  /** `null` until a lead step has chosen one — the client panes stay empty. */
+  product: BookableProduct | null;
+  lead?: Pick<BookingLead, "panes" | "index">;
+  /** Back from the client list on a phone, where the title row has no arrow. */
+  onListBack?: () => void;
   clientId: string;
   onClientChange: (id: string) => void;
+  /** On the summary step — after the form, before anything is sent. */
+  reviewing: boolean;
+  onReviewChange: (next: boolean) => void;
+  /** See `SlideSteps` — carried across the order / Proposal swap. */
+  initialHeight?: number;
+  onHeightChange?: (height: number) => void;
   /** The client was fixed by the opener — no "เปลี่ยน". */
   clientLocked?: boolean;
   onClose: () => void;
@@ -223,7 +352,17 @@ function BookingForm({
   const [booking, setBooking] = useState(false);
   /** The attached proof of the client's instruction — every desk, see `evidenceRequired`. */
   const [evidence, setEvidence] = useState<OrderEvidence | null>(null);
-  const needsEvidence = evidenceRequired(bookingModeFor(product));
+  const needsEvidence = product ? evidenceRequired(bookingModeFor(product)) : false;
+
+  // A different product is a different order: an amount or a proof typed for
+  // the last one must not carry over when a lead step picks another. Reset
+  // during render, as the modal does for its client.
+  const [productId, setProductId] = useState(product?.id);
+  if (product?.id !== productId) {
+    setProductId(product?.id);
+    setRaw("");
+    setEvidence(null);
+  }
 
   const client = clients.find((c) => c.id === clientId) ?? null;
   const atForm = client !== null;
@@ -249,35 +388,39 @@ function BookingForm({
     return () => clearTimeout(t);
   }, [clientId]);
 
-  const readiness = useClientReadiness(shown ?? PLACEHOLDER_CLIENT, product);
+  // Built from the request store directly rather than `useClientReadiness`,
+  // which needs a product — and before a lead step picks one there is none.
+  const requests = useRequestsFor(shown?.id ?? "", product?.id ?? "");
+  const readiness = useMemo(
+    () => (shown && product ? clientReadiness(shown, product, requests) : null),
+    [shown, product, requests],
+  );
+  const checks = readiness?.items ?? [];
   /** The gate on the amount section — and the one on the booking itself.
    *  Keyed off the live selection, not `shown`: the footer outlives the slide
    *  back to the list, and nothing on it may stay armed once Back is pressed. */
-  const ready = atForm && readiness.status === "ready";
+  const ready = atForm && readiness?.status === "ready";
+
+  /** Lead steps first (when the opener has any), then the list, then the form. */
+  const leadCount = lead?.panes.length ?? 0;
+  const stepIndex =
+    lead && (lead.index !== null || !product)
+      ? (lead.index ?? 0)
+      : leadCount + (atForm ? (reviewing ? 2 : 1) : 0);
 
   /** The modal's scroller — the customer list needs it to reset on search. */
   const bodyRef = useRef<HTMLDivElement>(null);
-  const pickerRef = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLDivElement>(null);
-  const [trackHeight, setTrackHeight] = useState<number | undefined>(undefined);
-
-  /** The track slides; the modal resizes to whichever pane is showing. Both are
-   *  animated and both have to be — sliding alone leaves the box at the taller
-   *  pane's height with dead space under the shorter one. Measured, because
-   *  neither pane has a height anyone could write down: the list grows with the
-   *  roster and the form with how much is wrong with the client. */
-  useIsoLayoutEffect(() => {
-    const measure = () => {
-      const active = atForm ? formRef.current : pickerRef.current;
-      if (active) setTrackHeight(active.offsetHeight);
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    if (pickerRef.current) observer.observe(pickerRef.current);
-    if (formRef.current) observer.observe(formRef.current);
-    return () => observer.disconnect();
-  }, [atForm]);
-
+  // Each lead step opens at its top: the product list is long, and arriving
+  // on it at the client list's scroll offset would hide its search.
+  const leadIndex = lead?.index;
+  useEffect(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = 0;
+  }, [leadIndex]);
+  // The summary opens at its top — it is reached from the bottom of a long
+  // form. Only on the way in: Back lands on the form where it was left.
+  useEffect(() => {
+    if (reviewing && bodyRef.current) bodyRef.current.scrollTop = 0;
+  }, [reviewing]);
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* No padding of its own — each pane pads itself.
@@ -304,59 +447,54 @@ function BookingForm({
             form is a drill-in from the row the IC just pressed, and Back has to
             land on the list exactly as it was — same scroll position, same
             search. */}
-        {/* `overflow-clip`, because the off-screen pane keeps its own height.
-            `items-start` below stops the panes stretching to each other, which
-            is what the measured height depends on — but it also means the
-            taller pane hangs out of the track, and an overhang inside a
-            scroller is scrollable space. With the customer list (tall) parked
-            beside a form whose later steps are hidden (short), that was ~300px
-            of blank scroll under the form.
-
-            `clip` rather than `hidden`: `hidden` would make this the scrollport
-            the picker's sticky search header sticks to, and this box never
-            scrolls — the header would have scrolled away with its rows. A
-            `clip` box is not a scroll container, so the header still sticks to
-            the scroller above. */}
-        <div
-          className="overflow-clip transition-[height] duration-200 ease-out"
-          style={{ height: trackHeight }}
+        {/* The off-screen pane keeps its own height, so an overhang would be
+            blank scroll inside `bodyRef` — `SlideSteps` clips it with
+            `overflow-clip`, not `hidden`, so the picker's sticky search header
+            still sticks to that scroller. It also `inert`s the hidden pane. */}
+        <SlideSteps
+          index={stepIndex}
+          initialHeight={initialHeight}
+          onHeightChange={onHeightChange}
         >
-          {/* `items-start` is load-bearing: a flex row stretches its children to
-              the tallest, which here is the track — whose height comes from
-              measuring a pane. Both panes would then measure the same number and
-              the box would freeze at whatever it happened to be first. */}
-          <div
-            className="flex w-[200%] items-start transition-transform duration-200 ease-out"
-            style={{ transform: atForm ? "translateX(-50%)" : "translateX(0)" }}
-          >
-            {/* `inert` on whichever pane is off-screen — both stay mounted so
-                they can slide, and without it Tab walks into a pane nobody can
-                see and a screen reader reads out both. */}
-            <div ref={pickerRef} className="w-1/2 shrink-0" inert={atForm}>
-              <CustomerPicker
-                product={product}
-                scrollerRef={bodyRef}
-                onSelect={(id) => {
-                  // Together, and in this order: the pane has to be about
-                  // someone before it starts sliding into view.
-                  setShownId(id);
-                  setClientId(id);
-                  // A different customer is a different order — never carry the
-                  // last one's amount over to them.
-                  setRaw("");
-                }}
-              />
-            </div>
+          {[
+            ...(lead?.panes ?? []).map((pane, i) => (
+              <Fragment key={`lead-${i}`}>{pane}</Fragment>
+            )),
+            <div key="customers">
+              {product && (
+                <>
+                  {/* A phone's sheet has no arrow in its title row, so the way
+                      back to the lead step sits at the top of the list. */}
+                  {isMobile && onListBack && (
+                    <div className="px-4 pt-3">
+                      <BackButton label="ย้อนกลับ" onClick={onListBack} />
+                    </div>
+                  )}
+                  <CustomerPicker
+                    product={product}
+                    scrollerRef={bodyRef}
+                    onSelect={(id) => {
+                      // Together, and in this order: the pane has to be about
+                      // someone before it starts sliding into view.
+                      setShownId(id);
+                      setClientId(id);
+                      // A different customer is a different order — never carry the
+                      // last one's amount over to them.
+                      setRaw("");
+                    }}
+                  />
+                </>
+              )}
+            </div>,
             <div
-              ref={formRef}
+              key="form"
               // `pt-5`, matching the gap between every section below it: the
               // first block was sitting nearer the title than the blocks are to
               // each other, which read as the header's padding rather than as
               // the form starting.
-              className="w-1/2 shrink-0 px-4 pb-4 pt-5 md:px-6"
-              inert={!atForm}
+              className="px-4 pb-4 pt-5 md:px-6"
             >
-              {shown && (
+              {shown && product && (
                 <>
                   {/* The bottom sheet's header is its own and takes no icon, so
                       on a phone the back arrow opens the body instead of
@@ -447,8 +585,8 @@ function BookingForm({
                     <Alert
                       status="warning"
                       message={`${ORDER_WORDS[bookingModeFor(product)].prereq}ยังไม่ครบ (${
-                        readiness.items.filter((i) => i.status === "passed").length
-                      }/${readiness.items.length}) — ทำให้ครบก่อนจึงจะ${
+                        checks.filter((i) => i.status === "passed").length
+                      }/${checks.length}) — ทำให้ครบก่อนจึงจะ${
                         ORDER_WORDS[bookingModeFor(product)].action
                       }ได้`}
                       multiline
@@ -457,9 +595,29 @@ function BookingForm({
                   )}
                 </>
               )}
-            </div>
-          </div>
-        </div>
+            </div>,
+            // The order as it will go — read through once before it is sent,
+            // with nothing on it left to edit. Changing anything is Back.
+            <div key="summary" className="px-4 pb-4 pt-5 md:px-6">
+              {shown && product && (
+                <>
+                  {isMobile && (
+                    <div className="mb-2">
+                      <BackButton label="กลับไปแก้ไข" onClick={() => onReviewChange(false)} />
+                    </div>
+                  )}
+                  <BookingSummary
+                    product={product}
+                    client={shown}
+                    raw={raw}
+                    evidence={evidence}
+                    cashAvailable={cashInCurrency(clientCashThb(shown), product.currency)}
+                  />
+                </>
+              )}
+            </div>,
+          ]}
+        </SlideSteps>
       </div>
 
       {/* Only on the second screen. Both of its buttons are about an order that
@@ -473,7 +631,7 @@ function BookingForm({
           track was still animating its height, and the two read as a stumble.
           `ready` is false the moment Back is pressed, so nothing here is live
           during the slide out. */}
-      {shown && (
+      {shown && product && (
         <Footer
           ready={ready}
           evidence={evidence}
@@ -481,6 +639,8 @@ function BookingForm({
           cashAvailable={cashInCurrency(clientCashThb(shown), product.currency)}
           raw={raw}
           booking={booking}
+          reviewing={reviewing}
+          onReview={() => onReviewChange(true)}
           onCancel={onClose}
           onBooked={async (amount) => {
             setBooking(true);
@@ -489,7 +649,7 @@ function BookingForm({
               clientId: shown.id,
               clientName: shown.name,
               amount,
-              checks: readiness.items,
+              checks,
               // `?? undefined`, so a desk that does not ask for it sends
               // nothing rather than an explicit null the store would have to
               // know to ignore.
@@ -1295,22 +1455,36 @@ function AmountSection({
             {/* The same size as the figure and hard against it — the two are
                 one number read as one word, the way `$408` is. No gap, so the
                 only space between them is the glyph's own sidebearing. */}
-            <span className="text-[48px] leading-[1.1] font-bold">{symbol}</span>
-            <input
-              id="booking-amount"
-              value={raw}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0"
-              inputMode="numeric"
-              disabled={blocked}
-              aria-invalid={showError}
-              // Sized to its content, and left-aligned, so the digits start
-              // immediately after the symbol. Centred with a character of slack
-              // put half that slack between the two and pushed them apart;
-              // left-aligned it all falls to the right, where the caret goes.
-              size={Math.max(raw.length, 1)}
-              className="min-w-0 border-0 bg-transparent p-0 text-left text-[48px] leading-[1.1] font-bold tabular-nums outline-none placeholder:text-[var(--text-default-placeholder)] disabled:cursor-not-allowed"
-            />
+            <span className="text-[48px] leading-[1.3] font-bold">{symbol}</span>
+            {/* Sized to the digits themselves, so the field never has more text
+                than room and never scrolls. `size` was the old way, but it
+                counts characters at an average width — 48px bold digits and
+                commas are wider, so the figure overflowed its box, scrolled
+                sideways, and lost its tops to the tight line-height.
+
+                The input and an invisible copy of its text share one grid
+                cell: the copy sets the width, the input fills it. Left-aligned,
+                so the digits start right after the symbol. The copy's
+                `pr-[0.1em]` leaves the caret room at the end. */}
+            <span className="inline-grid">
+              <span
+                aria-hidden
+                className="invisible whitespace-pre pr-[0.1em] text-[48px] leading-[1.3] font-bold tabular-nums [grid-area:1/1]"
+              >
+                {raw || "0"}
+              </span>
+              <input
+                id="booking-amount"
+                value={raw}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0"
+                inputMode="numeric"
+                disabled={blocked}
+                aria-invalid={showError}
+                size={1}
+                className="w-full min-w-0 border-0 bg-transparent p-0 text-left text-[48px] leading-[1.3] font-bold tabular-nums outline-none [grid-area:1/1] placeholder:text-[var(--text-default-placeholder)] disabled:cursor-not-allowed"
+              />
+            </span>
           </div>
 
           {/* One line under the figure, where the reference puts its balance.
@@ -1741,6 +1915,126 @@ function EvidenceSection({
   );
 }
 
+// ── Reviewing before it is sent ──────────────────────────────────────────────
+
+/**
+ * The order read back, between the form and the send.
+ *
+ * Everything the IC decided on the screen before — who, how much, on what
+ * proof — as statements rather than fields, in the order a supervisor would
+ * check them. Nothing here is editable: a summary that can be changed is a
+ * second form, and the point is to see the one that is about to go.
+ */
+function BookingSummary({
+  product,
+  client,
+  raw,
+  evidence,
+  cashAvailable,
+}: {
+  product: BookableProduct;
+  client: Client;
+  raw: string;
+  evidence: OrderEvidence | null;
+  cashAvailable: number;
+}) {
+  const { isPrivate } = usePrivacy();
+  const { data: book } = useOrderBook(product.id);
+  const { amount } = amountCheck(
+    product,
+    book ? bookingRemaining(book) : null,
+    book ? !isBookingOpen(book) : false,
+    cashAvailable,
+    raw,
+  );
+  const words = ORDER_WORDS[bookingModeFor(product)];
+  const channel = evidence ? EVIDENCE_CHANNEL[evidence.channel] : null;
+  const ChannelIcon = channel?.icon;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col items-center gap-1 text-center">
+        <p className="type-body-2 !font-semibold text-foreground">สรุปรายการ{words.action}</p>
+        <p className="type-caption text-muted-foreground">
+          ตรวจสอบให้ถูกต้องก่อน{words.action}
+        </p>
+      </div>
+
+      {/* The figure first and largest: it is the one value a slip of the
+          keyboard can make wrong by a factor of ten. */}
+      <div className={`flex flex-col items-center gap-1 ${SHEET_PANEL} py-4`}>
+        <span className="type-caption text-muted-foreground">
+          {`Notional Amount (${product.currency})`}
+        </span>
+        <span className="text-[32px] leading-[1.3] font-bold tabular-nums text-primary-action">
+          {formatOrderAmount(amount, product.currency)}
+        </span>
+      </div>
+
+      <SheetBlock title="รายละเอียดคำสั่ง">
+        <SheetRow label="สินค้า">
+          <span className="truncate text-body-sm font-semibold text-foreground">
+            {product.underlying}
+            {product.coupon && (
+              <span className="ml-1.5 text-primary-action">{product.coupon}</span>
+            )}
+          </span>
+        </SheetRow>
+        {product.productType && <SheetRow label="ประเภท" value={product.productType} />}
+        <SheetRow label="ลูกค้า" value={`${client.id} - ${maskName(client.name, isPrivate)}`} />
+        <SheetRow label="Account No" value={getClientProfile(client.id).accountNo} />
+        <SheetRow label="IC" value={`${IC_NAME} · ${IC_TEAM}`} />
+      </SheetBlock>
+
+      {evidence && channel && (
+        <>
+          <div className={SHEET_DASHED} />
+          <SheetBlock title="หลักฐานการรับคำสั่ง">
+            <SheetRow label="ช่องทาง">
+              <span className="inline-flex items-center gap-1.5 text-body-sm font-semibold text-foreground">
+                {ChannelIcon && (
+                  <ChannelIcon size={15} weight="fill" className="shrink-0 text-muted-foreground" />
+                )}
+                {channel.label}
+              </span>
+            </SheetRow>
+            {evidence.source === "call-log" && evidence.callLog ? (
+              <>
+                <SheetRow
+                  label="สายจาก Call Log"
+                  value={`${evidence.callLog.date} ${evidence.callLog.time}`}
+                />
+                <SheetRow
+                  label="ประเภทสาย"
+                  value={`${CALL_DIRECTION_LABEL[evidence.callLog.direction]} · ${evidence.callLog.duration}`}
+                />
+              </>
+            ) : (
+              <SheetRow label="ไฟล์">
+                <span className="text-right text-body-sm font-semibold break-all text-foreground">
+                  {evidence.fileName}
+                  {evidence.fileSize != null && (
+                    <span className="ml-1 font-normal text-muted-foreground">
+                      ({formatFileSize(evidence.fileSize)})
+                    </span>
+                  )}
+                </span>
+              </SheetRow>
+            )}
+            {evidence.note && (
+              <SheetRow label="หมายเหตุ">
+                <span className="text-right text-body-sm font-semibold whitespace-pre-line text-foreground">
+                  {evidence.note}
+                </span>
+              </SheetRow>
+            )}
+          </SheetBlock>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Footer ───────────────────────────────────────────────────────────────────
 
 function Footer({
@@ -1750,6 +2044,8 @@ function Footer({
   cashAvailable,
   raw,
   booking,
+  reviewing,
+  onReview,
   onCancel,
   onBooked,
 }: {
@@ -1762,6 +2058,9 @@ function Footer({
   cashAvailable: number;
   raw: string;
   booking: boolean;
+  /** On the summary: the primary sends. On the form it only moves on to it. */
+  reviewing: boolean;
+  onReview: () => void;
   onCancel: () => void;
   onBooked: (amount: number) => void;
 }) {
@@ -1785,36 +2084,29 @@ function Footer({
 
   return (
     <div className="flex shrink-0 flex-col gap-2 border-t border-border px-4 py-3 md:px-6">
+      {/* Two screens, one footer. The form's primary only moves on to the
+          summary — same gate, so the summary is never reached with an order
+          that could not be sent. The summary's primary is the one that sends,
+          and it re-checks: a check can lapse while the IC is reading. */}
       <div className="flex items-center justify-end gap-2">
-        <Button variant="outline" size="md" onClick={onCancel}>
+        {/* Cancel on both screens — the way back from the summary is the
+            arrow in the title row (or atop the sheet on a phone). */}
+        <Button variant="outline" size="md" disabled={booking} onClick={onCancel}>
           Cancel
         </Button>
         <Button
           variant={canBook ? "primary" : "disabled"}
           size="md"
           disabled={!canBook}
-          onClick={() => onBooked(amount)}
+          onClick={() => (reviewing ? onBooked(amount) : onReview())}
         >
-          {booking ? words.actionBusy : words.action}
+          {!reviewing
+            ? "ตรวจสอบรายการ"
+            : booking
+              ? words.actionBusy
+              : `ยืนยัน${words.action}`}
         </Button>
       </div>
     </div>
   );
 }
-
-/**
- * Stands in while no customer is chosen, so {@link useClientReadiness} can be
- * called unconditionally.
- *
- * Its verdict is never read — the button is already disabled on `client` being
- * null — and it is deliberately a client who would fail every check, so that a
- * future edit that *did* start reading it could not accidentally let a booking
- * through with nobody selected.
- */
-const PLACEHOLDER_CLIENT = {
-  id: "",
-  name: "",
-  riskProfile: "",
-  aum: 0,
-  cashIdlePct: 0,
-} as unknown as Client;

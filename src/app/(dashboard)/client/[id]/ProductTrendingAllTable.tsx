@@ -20,6 +20,8 @@ import {
   headerBorderStyle,
 } from "./fixed-income-shared";
 import {
+  emptyTrendingMessage,
+  isRankedSort,
   TRENDING_SORTS,
   type TrendingSort,
   type TrendingGroup,
@@ -223,7 +225,9 @@ export function ProductTrendingAllTable({
   const fill = showsFill(group);
   /** A column per figure the group actually has — see `TrendingMeasure`. */
   const cols = COLS.filter((c) =>
-    c.key === "fill"
+    c.key === "rank"
+      ? isRankedSort(sort)
+      : c.key === "fill"
       ? fill
       : group.measure === "sales" || (c.key !== "sales" && c.key !== "orders" && c.key !== "change"),
   );
@@ -276,6 +280,11 @@ export function ProductTrendingAllTable({
                 ))}
               </div>
               <div className={`flex flex-col ${minWidth}`}>
+                {paged.length === 0 && (
+                  <p className="type-caption text-muted-foreground text-center py-10">
+                    {emptyTrendingMessage(sort)}
+                  </p>
+                )}
                 {paged.map((item, i) => (
                   <button
                     key={item.rank}

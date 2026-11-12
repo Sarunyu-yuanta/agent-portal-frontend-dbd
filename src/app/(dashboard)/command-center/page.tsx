@@ -300,7 +300,9 @@ function DashboardPageInner() {
                 <h2 className="type-h5 font-bold text-primary-action">
                   Hello, {NOTE_AUTHOR.split(" ")[0]}
                 </h2>
-                <p className="text-label text-primary-action/70">{thaiFullDate(today)}</p>
+                <p className="truncate text-label text-primary-action/70" title={thaiFullDate(today, "long")}>
+                  {thaiFullDate(today)}
+                </p>
                 </Card>
               </div>
 
@@ -425,13 +427,14 @@ function DashboardPageInner() {
   );
 }
 
-/** "วันพฤหัสบดีที่ 24 กันยายน 2569" — Buddhist era, matching the dates House
- *  View and the asset summaries are authored in. */
-function thaiFullDate(day: Date): string {
+/** "พฤหัสบดี 24 ก.ย. 2569" — Buddhist era, matching the dates House View and
+ *  the asset summaries are authored in. Short month by default so the hero
+ *  card's date stays on one line; `"long"` spells it out for the tooltip. */
+function thaiFullDate(day: Date, month: "short" | "long" = "short"): string {
   return day.toLocaleDateString("th-TH", {
     weekday: "long",
     day: "numeric",
-    month: "long",
+    month,
     year: "numeric",
   });
 }

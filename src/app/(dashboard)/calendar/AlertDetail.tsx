@@ -1,8 +1,9 @@
 "use client";
 
 import { Avatar } from "@sarunyu/system-one";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { CaretRightIcon, LightningIcon, XIcon } from "@phosphor-icons/react";
+import { SlideSteps } from "@/components/ui/slide-steps";
 import { usePrivacy } from "@/contexts/privacy-context";
 import { getInitial } from "@/lib/client-utils";
 import { maskName } from "@/lib/mask-name";
@@ -10,7 +11,6 @@ import { dayLabel, weekdayLabel } from "./calendar-grid";
 import type { DayItem } from "./day-items";
 import { HolderContact } from "./HolderContact";
 import { itemBadge } from "./source-badge";
-import { useIsoLayoutEffect } from "@/hooks/use-iso-layout-effect";
 
 /**
  * What a desk event opens into.
@@ -89,35 +89,6 @@ export function AlertDetail({
   const [shown, setShown] = useState<string | null>(null);
   const contact = holders.find((h) => h.id === shown);
   const atContact = contactId !== null;
-
-  /**
-   * The track slides; the box around it resizes to whichever pane is showing.
-   *
-   * Both are animated, and both have to be. Sliding alone would leave the box at
-   * the height of the taller pane with dead space under the shorter one; resizing
-   * alone is just a jump with extra steps.
-   *
-   * Measured rather than guessed: the list grows with the number of holders and
-   * the contact pane with how many ways there are to reach someone, so neither
-   * has a height worth hard-coding. `ResizeObserver` covers the panes changing
-   * under their own steam — a LINE ID appearing for one client and not another.
-   */
-  const boxRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-  const contactRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState<number | undefined>(undefined);
-
-  useIsoLayoutEffect(() => {
-    const measure = () => {
-      const active = atContact ? contactRef.current : listRef.current;
-      if (active) setHeight(active.offsetHeight);
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    if (listRef.current) observer.observe(listRef.current);
-    if (contactRef.current) observer.observe(contactRef.current);
-    return () => observer.disconnect();
-  }, [atContact]);
 
   const listPane = (
     <div className="flex w-full flex-col">
@@ -281,41 +252,22 @@ export function AlertDetail({
   );
 
   return (
-    <div
-      ref={boxRef}
-      className={`relative overflow-hidden transition-[height] duration-200 ease-out ${
-        isSheet ? "w-full" : "w-full max-w-md"
-      }`}
-      style={{ height }}
+    // The list and a holder's contact slide past each other; the box resizes
+    // to whichever is showing (measured — neither has a fixed height).
+    <SlideSteps
+      index={atContact ? 1 : 0}
+      className={`relative ${isSheet ? "w-full" : "w-full max-w-md"}`}
     >
-      {/* `items-start` is load-bearing, not cosmetic. A flex row stretches its
-          children to the tallest by default, which here means to the track —
-          whose height comes from the box, whose height comes from measuring a
-          pane. Both panes then measure the same number, the measurement feeds
-          itself, and the box freezes at whatever it happened to be first. Let
-          the panes keep their own heights and the loop is gone. */}
-      <div
-        className="flex w-[200%] items-start transition-transform duration-200 ease-out"
-        style={{ transform: atContact ? "translateX(-50%)" : "translateX(0)" }}
-      >
-        {/* `inert` on whichever pane is off-screen. Both are in the DOM the whole
-            time, so without it Tab walks into a panel nobody can see and a
-            screen reader reads out both. */}
-        <div ref={listRef} className="w-1/2 shrink-0" inert={atContact}>
-          {listPane}
-        </div>
-        <div ref={contactRef} className="w-1/2 shrink-0" inert={!atContact}>
-          {contact && (
-            <HolderContact
-              clientId={contact.id}
-              name={contact.name}
-              variant={variant}
-              onBack={() => setContactId(null)}
-              onClose={onClose}
-            />
-          )}
-        </div>
-      </div>
-    </div>
+      {listPane}
+      {contact && (
+        <HolderContact
+          clientId={contact.id}
+          name={contact.name}
+          variant={variant}
+          onBack={() => setContactId(null)}
+          onClose={onClose}
+        />
+      )}
+    </SlideSteps>
   );
 }
